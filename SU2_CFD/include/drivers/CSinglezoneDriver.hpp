@@ -98,6 +98,11 @@ public:
   void StaticMeshUpdate() override;
 
   /*!
+   * \brief Perform a mesh deformation as initial condition (multiple zone).
+   */
+  void SetInitialMesh() override;
+
+  /*!
    * \brief Monitor
    * \param ExtIter
    */
