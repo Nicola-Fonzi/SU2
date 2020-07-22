@@ -3646,7 +3646,7 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
   /*--- If it is not specified, set the mesh motion mach number
    equal to the freestream value. ---*/
 
-  if (GetGrid_Movement() && Mach_Motion == 0.0)
+  if (GetDynamic_Grid() && Mach_Motion == 0.0)
     Mach_Motion = Mach;
 
   /*--- Set the boolean flag if we are in a rotating frame (source term). ---*/
