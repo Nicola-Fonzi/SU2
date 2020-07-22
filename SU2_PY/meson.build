@@ -74,7 +74,7 @@ install_data(['FSI_tools/__init__.py',
               'FSI_tools/FSIInterface.py',
               'FSI_tools/FSI_config.py',
               'FSI_tools/switch.py'],
-	      install_dir: join_paths(get_option('bindir'), 'FSI'))
+	      install_dir: join_paths(get_option('bindir'), 'FSI_tools'))
 
 install_data(['Tester/__init__.py',
               'Tester/FoilTest.py',],
@@ -87,4 +87,4 @@ install_data(['Tester3D/__init__.py',
 install_data(['Tester3D/io/readHistoryModal.m',
               'Tester3D/io/readHistoryNodal.m',
               'Tester3D/io/writef06.m'],
-        install_dir: join_paths(get_option('bindir'), 'Tester3D'))
+        install_dir: join_paths(get_option('bindir'), 'Tester3D/io'))
