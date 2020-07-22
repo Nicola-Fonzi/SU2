@@ -27,6 +27,7 @@
 
 
  #include "../include/drivers/CDriver.hpp"
+ #include "../include/drivers/CSinglezoneDriver.hpp"
 
 void CDriver::PythonInterface_Preprocessing(CConfig **config, CGeometry ****geometry, CSolver *****solver){
 
@@ -906,6 +907,12 @@ void CFluidDriver::SetInitialMesh() {
     }
   }
   //}
+}
+
+void CSinglezoneDriver::SetInitialMesh() {
+
+  StaticMeshUpdate();
+
 }
 
 void CFluidDriver::SetVertexTtotal(unsigned short iMarker, unsigned long iVertex, passivedouble val_Ttotal_passive){
