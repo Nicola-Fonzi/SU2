@@ -194,13 +194,16 @@ class Solver:
 
     try :
       self.IdentificationNode = self.Config['IDENTIFICATION_NODE']
-      self.IdentificationMaxF = self.Config['IDENTIFICATION_FMAX']
-      self.IdentificationMinF = self.Config['IDENTIFICATION_FMIN']
       self.IdentificationAmp = self.Config['IDENTIFICATION_AMPLITUDE']
       self.IdentificationTime = self.Config['IDENTIFICATION_TIME']
       self.IdentificationType = self.Config['IDENTIFICATION_TYPE']
     except KeyError :
       self.IdentificationTime = -1.0
+
+    if self.IdentificationTime>=0:
+      if self.IdentificationType=='SWEEP':
+        self.IdentificationMaxF = self.Config['IDENTIFICATION_FMAX']
+        self.IdentificationMinF = self.Config['IDENTIFICATION_FMIN']
 
     self.nDim= int()
     self.nElem = int()
@@ -532,7 +535,7 @@ class Solver:
     eps = 1e-6
 
     self.__SetLoads()
-    if self.IdentificationTime < 0:
+    if self.IdentificationTime >= 0:
       self.__Identify(t1)
 
     # Prediction step
@@ -600,10 +603,10 @@ class Solver:
       for iPoint in range(self.nPoint):
         if self.node[iPoint].GetID() == self.IdentificationNode:
           break
-      if self.IdentificationType=='SINE':
+      if self.IdentificationType=='SWEEP':
         fmax = self.IdentificationMaxF
         fmin = self.IdentificationMinF
-        df = 4.*(1./self.stopTime)
+        df = 4.*(1./(self.stopTime-self.IdentificationTime))
         F = self.IdentificationAmp
         f = fmin
         fz = 0
