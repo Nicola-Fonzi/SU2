@@ -3,11 +3,11 @@
 ## \file SolidSolverTester.py
 #  \brief Structural solver tester (one or two degree of freedom) used for testing the Py wrapper for external FSI coupling.
 #  \author David Thomas
-#  \version 7.0.6 "Blackbird"
+#  \version 7.0.2 "Blackbird"
 #
 # SU2 Project Website: https://su2code.github.io
-# 
-# The SU2 Project is maintained by the SU2 Foundation 
+#
+# The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
 # Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
@@ -16,7 +16,7 @@
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -34,7 +34,7 @@ import numpy as np
 import scipy as sp
 import scipy.linalg as linalg
 from math import *
-from util import switch
+from FSI_tools.switch import switch
 
 # ----------------------------------------------------------------------
 #  Config class
@@ -111,12 +111,12 @@ class Point:
 
 class Solver:
   """Description"""
-  
+
   def __init__(self, config_fileName):
     """ Description. """
 
     self.Config_file = config_fileName
-    self.Config = {}    
+    self.Config = {}
 
     print("\n------------------------------ Configuring the structural tester solver for FSI simulation ------------------------------")
     self.__readConfig()
@@ -131,7 +131,7 @@ class Solver:
       print("Structural model : pitching-plunging airfoil.")
     else:
       self.nDof = 0
-      
+
 
     # Structural properties
     self.m = self.Config['SPRING_MASS'] # airfoil mass [kg]
@@ -151,7 +151,7 @@ class Solver:
     self.stopTime = self.Config['STOP_TIME']
     self.deltaT = self.Config['DELTA_T']
     self.rhoAlphaGen = self.Config['RHO']
-    
+
     self.nDim= int()
     self.nElem = int()
     self.nPoint = int()
@@ -164,7 +164,7 @@ class Solver:
 
     print("\n------------------------------ Creating the structural model ------------------------------")
     self.__setStructuralMatrices()
-  
+
     print("\n------------------------------ Setting the integration parameters ------------------------------")
     self.__setIntegrationParameters()
     self.__setInitialConditions()
@@ -174,9 +174,9 @@ class Solver:
 
     with open(self.Config_file) as configfile:
       while 1:
-	line = configfile.readline()
-	if not line:
-	  break
+        line = configfile.readline()
+        if not line:
+          break
 
         # remove line returns
         line = line.strip('\r\n')
@@ -189,122 +189,131 @@ class Solver:
         this_value = line[1].strip()
 
         for case in switch(this_param):
-	  #integer values
-	  #if case("NB_FSI_ITER")		:
-	    #self.Config[this_param] = int(this_value)
-	    #break
+          #integer values
+          #if case("NB_FSI_ITER")		:
+            #self.Config[this_param] = int(this_value)
+            #break
 
-	  #float values
-	  if case("DELTA_T")			: pass
-	  if case("START_TIME")		      	: pass
-	  if case("STOP_TIME")		      	: pass
-	  if case("SPRING_MASS")		: pass
-	  if case("INERTIA_FLEXURAL")		: pass
-	  if case("SPRING_STIFFNESS")		: pass
-	  if case("SPRING_DAMPING")		: pass
-	  if case("TORSIONAL_STIFFNESS")	: pass
-	  if case("TORSIONAL_DAMPING")		: pass
-	  if case("CORD")		      	: pass
-	  if case("FLEXURAL_AXIS")	      	: pass
-	  if case("GRAVITY_CENTER")	      	: pass
-	  if case("INITIAL_DISP")	      	: pass
-	  if case("INITIAL_ANGLE")	      	: pass
-	  if case("RHO")	      		: 
-	    self.Config[this_param] = float(this_value)
-	    break
+          #float values
+          if case("DELTA_T")			: pass
+          if case("START_TIME")		      	: pass
+          if case("STOP_TIME")		      	: pass
+          if case("SPRING_MASS")		: pass
+          if case("INERTIA_FLEXURAL")		: pass
+          if case("SPRING_STIFFNESS")		: pass
+          if case("SPRING_DAMPING")		: pass
+          if case("TORSIONAL_STIFFNESS")	: pass
+          if case("TORSIONAL_DAMPING")		: pass
+          if case("CORD")		      	: pass
+          if case("FLEXURAL_AXIS")	      	: pass
+          if case("GRAVITY_CENTER")	      	: pass
+          if case("INITIAL_DISP")	      	: pass
+          if case("INITIAL_ANGLE")	      	: pass
+          if case("RHO")	      		:
+            self.Config[this_param] = float(this_value)
+            break
 
-	  #string values
-	  if case("TIME_MARCHING")	: pass
-	  if case("MESH_FILE")			: pass
-	  if case("CSD_SOLVER")		      	: pass
-	  if case("MOVING_MARKER")		: pass
-	  if case("STRUCT_TYPE")		:
-	    self.Config[this_param] = this_value
-	    break
+          #string values
+          if case("TIME_MARCHING")	: pass
+          if case("MESH_FILE")			: pass
+          if case("CSD_SOLVER")		      	: pass
+          if case("MOVING_MARKER")		: pass
+          if case("STRUCT_TYPE")		:
+            self.Config[this_param] = this_value
+            break
 
- 	  if case():
-	    print(this_param + " is an invalid option !")
+          if case():
+            print(this_param + " is an invalid option !")
             break
 
   def __readSU2Mesh(self):
     """ Description. """
-    
+
     with open(self.Mesh_file, 'r') as meshfile:
       print('Opened mesh file ' + self.Mesh_file + '.')
       while 1:
         line = meshfile.readline()
-	if not line:
-	  break
-        
-	pos = line.find('NDIM')
-	if pos != -1:
-	  line = line.strip('\r\n')
-          line = line.split("=",1)
-	  self.nDim = int(line[1])
-	  continue
-	
-	pos = line.find('NELEM')
-	if pos != -1:
-	  line = line.strip('\r\n')
-          line = line.split("=",1)
-	  self.nElem = int(line[1])
-	  continue
+        if not line:
+          break
 
-	pos = line.find('NPOIN')
-	if pos != -1:
-	  line = line.strip('\r\n')
+        pos = line.find('NDIM')
+        if pos != -1:
+          line = line.strip('\r\n')
+          line = line.replace(" ","")
           line = line.split("=",1)
-	  self.nPoint = int(line[1])
+          self.nDim = int(line[1])
+          continue
+
+        pos = line.find('NELEM')
+        if pos != -1:
+          line = line.strip('\r\n')
+          line = line.replace(" ","")
+          line = line.split("=",1)
+          self.nElem = int(line[1])
+          continue
+
+        pos = line.find('NPOIN')
+        if pos != -1:
+          line = line.strip('\r\n')
+          line = line.replace(" ","")
+          line = line.split("=",1)
+          self.nPoint = int(line[1])
           for iPoint in range(self.nPoint):
-	    self.node.append(Point())
-	    line = meshfile.readline()
-	    line = line.strip('\r\n')
-	    line = line.split(' ',self.nDim)
-	    x = float(line[0])
-	    y = float(line[1])
+            self.node.append(Point())
+            line = meshfile.readline()
+            line = line.strip('\r\n')
+            line = line.strip()
+            line = line.split()
+            x = float(line[0])
+            y = float(line[1])
             z = 0.0
-	    if self.nDim == 3:
-	      z = float(line[2])
-	    self.node[iPoint].SetCoord((x,y,z))
+            if self.nDim == 3:
+              z = float(line[2])
+            self.node[iPoint].SetCoord((x,y,z))
             self.node[iPoint].SetCoord0((x,y,z))
-	    self.node[iPoint].SetCoord_n((x,y,z))
-	  continue
+            self.node[iPoint].SetCoord_n((x,y,z))
+          continue
 
-	pos = line.find('NMARK')
-	if pos != -1:
-	  line = line.strip('\r\n')
+        pos = line.find('NMARK')
+        if pos != -1:
+          line = line.strip('\r\n')
+          line = line.replace(" ","")
           line = line.split("=",1)
-	  self.nMarker = int(line[1])
-	  continue
+          self.nMarker = int(line[1])
+          continue
 
-	pos = line.find('MARKER_TAG')
-	if pos != -1:
-	  line = line.strip('\r\n')
-	  line = line.replace(" ", "")
+        pos = line.find('MARKER_TAG')
+        if pos != -1:
+          line = line.strip('\r\n')
+          line = line.replace(" ","")
           line = line.split("=",1)
-	  markerTag = line[1]
-	  if markerTag == self.FSI_marker:
-	    self.markers[markerTag] = []
-	    line = meshfile.readline()
-	    line = line.strip('\r\n')
-	    line = line.split("=",1)
-	    nElem = int(line[1])
-	    for iElem in range(nElem):
-	      line = meshfile.readline()
-	      line = line.strip('\r\n')
-	      line = line.split(' ',1)
-	      elemType = int(line[0])
-	      if elemType == 3:
-	        nodes = line[1].split(' ', 1)
-		if not int(nodes[0]) in self.markers[markerTag]:
-		   self.markers[markerTag].append(int(nodes[0]))
-		if not int(nodes[1]) in self.markers[markerTag]:
-		   self.markers[markerTag].append(int(nodes[1]))
-	      else:
-		print("Element type {} is not recognized !!".format(elemType))
-	    continue
-	  else:
-	    continue
+          markerTag = line[1]
+          if markerTag == self.FSI_marker:
+            self.markers[markerTag] = []
+            line = meshfile.readline()
+            line = line.strip('\r\n')
+            line = line.replace(" ","")
+            line = line.split("=",1)
+            nElem = int(line[1])
+            for iElem in range(nElem):
+              line = meshfile.readline()
+              line = line.strip('\r\n')
+              line = line.strip()
+              line = line.split(' ',1)
+              elemType = int(line[0])
+              if elemType == 3:
+                nodes = line[1]
+                nodes = nodes.strip()
+                nodes = nodes.split(' ', 1)
+                if not int(nodes[0]) in self.markers[markerTag]:
+                   self.markers[markerTag].append(int(nodes[0]))
+                if not int(nodes[1]) in self.markers[markerTag]:
+                   self.markers[markerTag].append(int(nodes[1]))
+              else:
+                print("Element type {} is not recognized !!".format(elemType))
+            continue
+          else:
+            continue
 
     print("Number of dimensions: {}".format(self.nDim))
     print("Number of elements: {}".format(self.nElem))
@@ -317,7 +326,7 @@ class Solver:
 
   def __setStructuralMatrices(self):
     """ Descriptions. """
-    
+
     self.M = np.zeros((self.nDof, self.nDof))
     self.K = np.zeros((self.nDof, self.nDof))
     self.C = np.zeros((self.nDof, self.nDof))
@@ -337,7 +346,7 @@ class Solver:
     if self.Config['STRUCT_TYPE'] == "AIRFOIL":
       print('Setting pitching-plunging airfoil system')
       print('Number of DOF : ')
-      
+
       self.centerOfRotation = np.zeros((3,1))
       self.centerOfRotation[0] = self.xf
       self.centerOfRotation_n = np.zeros((3,1))
@@ -350,7 +359,7 @@ class Solver:
       self.C[1][1] = self.Ca
       self.K[0][0] = self.Kh
       self.K[1][1] = self.Ka
-      
+
       print('Airfoil mass : {} [kg]'.format(self.m))
       print('Airfoil cord : {} [m]'.format(self.c))
       print('Position of the flexural axis (from the leading edge) : {} [m]'.format(self.xf))
@@ -364,7 +373,7 @@ class Solver:
 
   def __setIntegrationParameters(self):
     """ Description. """
-    
+
     self.alpha_m = (2.0*self.rhoAlphaGen-1.0)/(self.rhoAlphaGen+1.0)
     self.alpha_f = (self.rhoAlphaGen)/(self.rhoAlphaGen+1.0)
     self.gamma = 0.5+self.alpha_f-self.alpha_m
@@ -397,9 +406,9 @@ class Solver:
 
     RHS = np.zeros((self.nDof,1))
     RHS += self.F
-    RHS -= self.C.dot(self.qdot) 
+    RHS -= self.C.dot(self.qdot)
     RHS -= self.K.dot(self.q)
-    self.qddot = linalg.solve(self.M, RHS) 
+    self.qddot = linalg.solve(self.M, RHS)
     self.a = np.copy(self.qddot)
 
     self.centerOfRotation[1] = self.q[0]
@@ -418,7 +427,7 @@ class Solver:
     newCenter = np.zeros((3,1))
     Centerdot = np.zeros((3,1))
     newVel = np.zeros((3,1))
-    
+
     if self.nDof == 2:
       dPsi = -(self.q[1] - self.q_n[1])
       newCenter[0] = self.centerOfRotation[0]
@@ -441,30 +450,30 @@ class Solver:
         Coord_n = self.node[iPoint].GetCoord_n()
 
         if self.Unsteady:
-	  r = Coord_n - self.centerOfRotation_n
-	else:
-	  r = Coord - self.centerOfRotation
+          r = Coord_n - self.centerOfRotation_n
+        else:
+          r = Coord - self.centerOfRotation
 
-	rotCoord = rotMatrix.dot(r)
+        rotCoord = rotMatrix.dot(r)
 
         newCoord = newCenter + rotCoord
         newVel[0] = Centerdot[0]+psidot*(newCoord[1]-newCenter[1])
-	newVel[1] = Centerdot[1]-psidot*(newCoord[0]-newCenter[0])
-	newVel[2] = Centerdot[2]+0.0
+        newVel[1] = Centerdot[1]-psidot*(newCoord[0]-newCenter[0])
+        newVel[2] = Centerdot[2]+0.0
 
         self.node[iPoint].SetCoord((newCoord[0], newCoord[1], newCoord[2]))
         self.node[iPoint].SetVel((newVel[0], newVel[1], newVel[2]))
 
-	if initialize:
-	  self.node[iPoint].SetCoord_n((newCoord[0], newCoord[1], newCoord[2]))
-	  self.node[iPoint].SetVel_n((newVel[0], newVel[1], newVel[2]))
+        if initialize:
+          self.node[iPoint].SetCoord_n((newCoord[0], newCoord[1], newCoord[2]))
+          self.node[iPoint].SetVel_n((newVel[0], newVel[1], newVel[2]))
 
     self.centerOfRotation = np.copy(newCenter)
 
   def __temporalIteration(self):
     """ Description. """
-    
-    eps = 1e-6 
+
+    eps = 1e-6
 
     self.__SetLoads()
 
@@ -496,12 +505,13 @@ class Solver:
       res = self.__ComputeResidual()
 
     self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
-      
+
 
   def __SetLoads(self):
     """ Description """
-    
-    makerID = self.markers.keys()[0]
+
+    makerID = list(self.markers.keys())
+    makerID = makerID[0]
     nodeList = self.markers[makerID]
 
     FX = 0.0
@@ -578,7 +588,8 @@ class Solver:
     self.__reset(self.qddot)
     self.__reset(self.a)
 
-    makerID = self.markers.keys()[0]
+    makerID = list(self.markers.keys())
+    makerID = makerID[0]
     nodeList = self.markers[makerID]
 
     for iPoint in nodeList:
@@ -589,15 +600,15 @@ class Solver:
   def applyload(self, iVertex, fx, fy, fz, time):
     """ Description """
 
-    makerID = self.markers.keys()[0]
+    makerID = list(self.markers.keys())
+    makerID = makerID[0]
     iPoint = self.getInterfaceNodeGlobalIndex(makerID, iVertex)
     self.node[iPoint].SetForce((fx,fy,fz))
 
   def getFSIMarkerID(self):
     """ Description. """
-    
-    list = self.markers.keys()
-    return list[0]
+    L = list(self.markers)
+    return L[0]
 
   def getNumberOfSolidInterfaceNodes(self, markerID):
     """ Description. """

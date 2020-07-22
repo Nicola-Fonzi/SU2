@@ -6,8 +6,8 @@
 #  \version 7.0.6 "Blackbird"
 #
 # SU2 Project Website: https://su2code.github.io
-# 
-# The SU2 Project is maintained by the SU2 Foundation 
+#
+# The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
 # Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
@@ -16,7 +16,7 @@
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -42,15 +42,15 @@ from petsc4py import PETSc
 # ----------------------------------------------------------------------
 
 class Interface:
-    """ 
+    """
     FSI interface class that handles fluid/solid solvers synchronisation and communication
     """
-   
+
     def __init__(self, FSI_config, FluidSolver, SolidSolver, have_MPI):
-	""" 
-	Class constructor. Declare some variables and do some screen outputs.
-	"""
-        
+        """
+        Class constructor. Declare some variables and do some screen outputs.
+        """
+
         if have_MPI == True:
           from mpi4py import MPI
           self.MPI = MPI
@@ -62,9 +62,9 @@ class Interface:
           self.have_MPI = False
           myid = 0
 
-	self.rootProcess = 0				#the root process is chosen to be MPI rank = 0
+        self.rootProcess = 0				#the root process is chosen to be MPI rank = 0
 
-	self.nDim = FSI_config['NDIM']			#problem dimension
+        self.nDim = FSI_config['NDIM']			#problem dimension
 
         self.haveFluidSolver = False			#True if the fluid solver is initialized on the current rank
         self.haveSolidSolver = False			#True if the solid solver is initialized on the current rank
@@ -87,16 +87,16 @@ class Interface:
         self.SolidHaloNodeList = {}			#contains the the indices (solid solver indexing) of the halo nodes for each partition
         self.solidIndexing = {}				#links between the solid solver indexing and the FSI indexing for the interface nodes
 
-	self.nLocalFluidInterfaceNodes = 0		#number of nodes (halo nodes included) on the fluid interface, on each partition
+        self.nLocalFluidInterfaceNodes = 0		#number of nodes (halo nodes included) on the fluid interface, on each partition
         self.nLocalFluidInterfaceHaloNode = 0		#number of halo nodes on the fluid intrface, on each partition
         self.nLocalFluidInterfacePhysicalNodes = 0	#number of physical (= non halo) nodes on the fluid interface, on each partition
-	self.nFluidInterfaceNodes = 0			#number of nodes on the fluid interface, sum over all the partitions
+        self.nFluidInterfaceNodes = 0			#number of nodes on the fluid interface, sum over all the partitions
         self.nFluidInterfacePhysicalNodes = 0		#number of physical nodes on the fluid interface, sum over all partitions
 
         self.nLocalSolidInterfaceNodes = 0     		#number of physical nodes on the solid interface, on each partition
         self.nLocalSolidInterfaceHaloNode = 0		#number of halo nodes on the solid intrface, on each partition
         self.nLocalSolidInterfacePhysicalNodes = 0	#number of physical (= non halo) nodes on the solid interface, on each partition
-	self.nSolidInterfaceNodes = 0			#number of nodes on the solid interface, sum over all partitions
+        self.nSolidInterfaceNodes = 0			#number of nodes on the solid interface, sum over all partitions
         self.nSolidInterfacePhysicalNodes = 0		#number of physical nodes on the solid interface, sum over all partitions
 
         if FSI_config['MATCHING_MESH'] == 'NO' and (FSI_config['MESH_INTERP_METHOD'] == 'RBF' or FSI_config['MESH_INTERP_METHOD'] == 'TPS'):
@@ -127,7 +127,7 @@ class Interface:
         self.solidInterfaceResidualnM1_array_X = None	#solid interface position residual at the previous BGS iteration
         self.solidInterfaceResidualnM1_array_Y = None
         self.solidInterfaceResidualnM1_array_Z = None
-       
+
         self.fluidInterface_array_DispX = None		#fluid interface displacement
         self.fluidInterface_array_DispY = None
         self.fluidInterface_array_DispZ = None
@@ -140,49 +140,49 @@ class Interface:
         self.solidLoads_array_Y = None
         self.solidLoads_array_Z = None
 
-	self.aitkenParam = FSI_config['AITKEN_PARAM']			#relaxation parameter for the BGS method
-	self.FSIIter = 0				#current FSI iteration
+        self.aitkenParam = FSI_config['AITKEN_PARAM']			#relaxation parameter for the BGS method
+        self.FSIIter = 0				#current FSI iteration
         self.unsteady = False				#flag for steady or unsteady simulation (default is steady)
 
-	# ---Some screen output ---
-	self.MPIPrint('Fluid solver : SU2_CFD')
-	self.MPIPrint('Solid solver : {}'.format(FSI_config['CSD_SOLVER']))
+        # ---Some screen output ---
+        self.MPIPrint('Fluid solver : SU2_CFD')
+        self.MPIPrint('Solid solver : {}'.format(FSI_config['CSD_SOLVER']))
 
-	if FSI_config['TIME_MARCHING'] == 'YES':
+        if FSI_config['TIME_MARCHING'] == 'YES':
           self.MPIPrint('Unsteady coupled simulation with physical time step : {} s'.format(FSI_config['UNST_TIMESTEP']))
           self.unsteady = True
-	else:
-	  self.MPIPrint('Steady coupled simulation')
+        else:
+          self.MPIPrint('Steady coupled simulation')
 
-	if FSI_config['MATCHING_MESH'] == 'YES':
-	  self.MPIPrint('Matching fluid-solid interface')
-	else:
+        if FSI_config['MATCHING_MESH'] == 'YES':
+          self.MPIPrint('Matching fluid-solid interface')
+        else:
           if FSI_config['MESH_INTERP_METHOD'] == 'TPS':
-	    self.MPIPrint('Non matching fluid-solid interface with Thin Plate Spline interpolation')
+            self.MPIPrint('Non matching fluid-solid interface with Thin Plate Spline interpolation')
           elif FSI_config['MESH_INTERP_METHOD'] == 'RBF':
             self.MPIPrint('Non matching fluid-solid interface with Radial Basis Function interpolation')
             self.RBF_rad = FSI_config['RBF_RADIUS']
-            self.MPIPrint('Radius value : {}'.format(self.RBF_rad))           
+            self.MPIPrint('Radius value : {}'.format(self.RBF_rad))
           else:
-	    self.MPIPrint('Non matching fluid-solid interface with Nearest Neighboor interpolation')
+            self.MPIPrint('Non matching fluid-solid interface with Nearest Neighboor interpolation')
 
-	self.MPIPrint('Solid predictor : {}'.format(FSI_config['DISP_PRED']))
+        self.MPIPrint('Solid predictor : {}'.format(FSI_config['DISP_PRED']))
 
-	self.MPIPrint('Maximum number of FSI iterations : {}'.format(FSI_config['NB_FSI_ITER']))
+        self.MPIPrint('Maximum number of FSI iterations : {}'.format(FSI_config['NB_FSI_ITER']))
 
-	self.MPIPrint('FSI tolerance : {}'.format(FSI_config['FSI_TOLERANCE']))
+        self.MPIPrint('FSI tolerance : {}'.format(FSI_config['FSI_TOLERANCE']))
 
-	if FSI_config['AITKEN_RELAX'] == 'STATIC':
-	  self.MPIPrint('Static Aitken under-relaxation with constant parameter {}'.format(FSI_config['AITKEN_PARAM']))
-	elif FSI_config['AITKEN_RELAX'] == 'DYNAMIC':
-	  self.MPIPrint('Dynamic Aitken under-relaxation with initial parameter {}'.format(FSI_config['AITKEN_PARAM']))
-	else:
-	  self.MPIPrint('No Aitken under-relaxation')
+        if FSI_config['AITKEN_RELAX'] == 'STATIC':
+          self.MPIPrint('Static Aitken under-relaxation with constant parameter {}'.format(FSI_config['AITKEN_PARAM']))
+        elif FSI_config['AITKEN_RELAX'] == 'DYNAMIC':
+          self.MPIPrint('Dynamic Aitken under-relaxation with initial parameter {}'.format(FSI_config['AITKEN_PARAM']))
+        else:
+          self.MPIPrint('No Aitken under-relaxation')
 
         self.MPIPrint('FSI interface is set')
 
     def MPIPrint(self, message):
-      """ 
+      """
       Print a message on screen only from the master process.
       """
 
@@ -198,30 +198,30 @@ class Interface:
       """
       Perform a synchronization barrier in case of parallel run with MPI.
       """
-      
+
       if self.have_MPI == True:
         self.comm.barrier()
 
     def connect(self, FSI_config, FluidSolver, SolidSolver):
-	"""
-	Connection between solvers. 
-	Creates the communication support between the two solvers.
-	Gets information about f/s interfaces from the two solvers.
-	"""
+        """
+        Connection between solvers.
+        Creates the communication support between the two solvers.
+        Gets information about f/s interfaces from the two solvers.
+        """
         if self.have_MPI == True:
           myid = self.comm.Get_rank()
-	  MPIsize = self.comm.Get_size()
+          MPIsize = self.comm.Get_size()
         else:
           myid = 0
           MPIsize = 1
-	
-	# --- Identify the fluid and solid interfaces and store the number of nodes on both sides (and for each partition) ---
+
+        # --- Identify the fluid and solid interfaces and store the number of nodes on both sides (and for each partition) ---
         self.fluidInterfaceIdentifier = None
         self.nLocalFluidInterfaceNodes = 0
         if FluidSolver != None:
-	    print('Fluid solver is initialized on process {}'.format(myid))
+            print('Fluid solver is initialized on process {}'.format(myid))
             self.haveFluidSolver = True
-            allMovingMarkersTags = FluidSolver.GetAllMovingMarkersTag()
+            allMovingMarkersTags = FluidSolver.GetAllDeformMeshMarkersTag()
             allMarkersID = FluidSolver.GetAllBoundaryMarkers()
             if not allMovingMarkersTags:
                 raise Exception('No interface for FSI was defined.')
@@ -229,23 +229,23 @@ class Interface:
                 if allMovingMarkersTags[0] in allMarkersID.keys():
                     self.fluidInterfaceIdentifier = allMarkersID[allMovingMarkersTags[0]]
             if self.fluidInterfaceIdentifier != None:
-	        self.nLocalFluidInterfaceNodes = FluidSolver.GetNumberVertices(self.fluidInterfaceIdentifier)
-	    if self.nLocalFluidInterfaceNodes != 0:
+                self.nLocalFluidInterfaceNodes = FluidSolver.GetNumberVertices(self.fluidInterfaceIdentifier)
+            if self.nLocalFluidInterfaceNodes != 0:
               self.haveFluidInterface = True
-	      print('Number of interface fluid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalFluidInterfaceNodes))
-	else:
-	    pass
+              print('Number of interface fluid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalFluidInterfaceNodes))
+        else:
+            pass
 
-	if SolidSolver != None:
-	    print('Solid solver is initialized on process {}'.format(myid))
+        if SolidSolver != None:
+            print('Solid solver is initialized on process {}'.format(myid))
             self.haveSolidSolver = True
-	    self.solidInterfaceIdentifier = SolidSolver.getFSIMarkerID()
-	    self.nLocalSolidInterfaceNodes = SolidSolver.getNumberOfSolidInterfaceNodes(self.solidInterfaceIdentifier)
-	    if self.nLocalSolidInterfaceNodes != 0:
+            self.solidInterfaceIdentifier = SolidSolver.getFSIMarkerID()
+            self.nLocalSolidInterfaceNodes = SolidSolver.getNumberOfSolidInterfaceNodes(self.solidInterfaceIdentifier)
+            if self.nLocalSolidInterfaceNodes != 0:
               self.haveSolidInterface = True
               print('Number of interface solid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalSolidInterfaceNodes))
-	else:
-	    pass
+        else:
+            pass
 
         # --- Exchange information about processors on which the solvers are defined and where the interface nodes are lying ---
         if self.have_MPI == True:
@@ -266,18 +266,18 @@ class Interface:
           else:
             sendBufSolidInterface = np.array(int(0))
           rcvBufFluid = np.zeros(MPIsize, dtype = int)
-	  rcvBufSolid = np.zeros(MPIsize, dtype = int)
+          rcvBufSolid = np.zeros(MPIsize, dtype = int)
           rcvBufFluidInterface = np.zeros(MPIsize, dtype = int)
-	  rcvBufSolidInterface = np.zeros(MPIsize, dtype = int)
+          rcvBufSolidInterface = np.zeros(MPIsize, dtype = int)
           self.comm.Allgather(sendBufFluid, rcvBufFluid)
           self.comm.Allgather(sendBufSolid, rcvBufSolid)
           self.comm.Allgather(sendBufFluidInterface, rcvBufFluidInterface)
           self.comm.Allgather(sendBufSolidInterface, rcvBufSolidInterface)
           for iProc in range(MPIsize):
-	    if rcvBufFluid[iProc] == 1:
+            if rcvBufFluid[iProc] == 1:
               self.fluidSolverProcessors.append(iProc)
             if rcvBufSolid[iProc] == 1:
-	      self.solidSolverProcessors.append(iProc)
+              self.solidSolverProcessors.append(iProc)
             if rcvBufFluidInterface[iProc] == 1:
               self.fluidInterfaceProcessors.append(iProc)
             if rcvBufSolidInterface[iProc] == 1:
@@ -285,19 +285,18 @@ class Interface:
           del sendBufFluid, sendBufSolid, rcvBufFluid, rcvBufSolid, sendBufFluidInterface, sendBufSolidInterface, rcvBufFluidInterface, rcvBufSolidInterface
         else:
           self.fluidSolverProcessors.append(0)
-	  self.solidSolverProcessors.append(0)
+          self.solidSolverProcessors.append(0)
           self.fluidInterfaceProcessors.append(0)
           self.solidInterfaceProcessors.append(0)
 
-	self.MPIBarrier()
-	
-	# --- Calculate the total number of nodes at the fluid interface (sum over all the partitions) ---
+        self.MPIBarrier()
+        # --- Calculate the total number of nodes at the fluid interface (sum over all the partitions) ---
         # Calculate the number of halo nodes on each partition
         self.nLocalFluidInterfaceHaloNode = 0
-	for iVertex in range(self.nLocalFluidInterfaceNodes):
+        for iVertex in range(self.nLocalFluidInterfaceNodes):
             if FluidSolver.IsAHaloNode(self.fluidInterfaceIdentifier, iVertex) == True:
               GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
-	      self.FluidHaloNodeList[GlobalIndex] = iVertex
+              self.FluidHaloNodeList[GlobalIndex] = iVertex
               self.nLocalFluidInterfaceHaloNode += 1
         # Calculate the number of physical (= not halo) nodes on each partition
         self.nLocalFluidInterfacePhysicalNodes = self.nLocalFluidInterfaceNodes - self.nLocalFluidInterfaceHaloNode
@@ -308,10 +307,10 @@ class Interface:
 
         # Same thing for the solid part
         self.nLocalSolidInterfaceHaloNode = 0
-	#for iVertex in range(self.nLocalSolidInterfaceNodes):
+        #for iVertex in range(self.nLocalSolidInterfaceNodes):
             #if SoliddSolver.IsAHaloNode(self.fluidInterfaceIdentifier, iVertex) == True:
               #GlobalIndex = SolidSolver.GetVertexGlobalIndex(self.solidInterfaceIdentifier, iVertex)
-	      #self.SolidHaloNodeList[GlobalIndex] = iVertex
+              #self.SolidHaloNodeList[GlobalIndex] = iVertex
               #self.nLocalSolidInterfaceHaloNode += 1
         self.nLocalSolidInterfacePhysicalNodes = self.nLocalSolidInterfaceNodes - self.nLocalSolidInterfaceHaloNode
         if self.have_MPI == True:
@@ -323,11 +322,11 @@ class Interface:
         # --- Calculate the total number of nodes (with and without halo) at the fluid interface (sum over all the partitions) and broadcast the number accross all processors ---
         sendBuffHalo = np.array(int(self.nLocalFluidInterfaceNodes))
         sendBuffPhysical = np.array(int(self.nLocalFluidInterfacePhysicalNodes))
-	rcvBuffHalo = np.zeros(1, dtype=int)
+        rcvBuffHalo = np.zeros(1, dtype=int)
         rcvBuffPhysical = np.zeros(1, dtype=int)
-        if self.have_MPI == True:			
+        if self.have_MPI == True:
           self.comm.barrier()
-	  self.comm.Allreduce(sendBuffHalo,rcvBuffHalo,op=self.MPI.SUM)
+          self.comm.Allreduce(sendBuffHalo,rcvBuffHalo,op=self.MPI.SUM)
           self.comm.Allreduce(sendBuffPhysical,rcvBuffPhysical,op=self.MPI.SUM)
           self.nFluidInterfaceNodes = rcvBuffHalo[0]
           self.nFluidInterfacePhysicalNodes = rcvBuffPhysical[0]
@@ -339,11 +338,11 @@ class Interface:
         # Same thing for the solid part
         sendBuffHalo = np.array(int(self.nLocalSolidInterfaceNodes))
         sendBuffPhysical = np.array(int(self.nLocalSolidInterfacePhysicalNodes))
-	rcvBuffHalo = np.zeros(1, dtype=int)
+        rcvBuffHalo = np.zeros(1, dtype=int)
         rcvBuffPhysical = np.zeros(1, dtype=int)
         if self.have_MPI == True:
-	  self.comm.barrier()
-	  self.comm.Allreduce(sendBuffHalo,rcvBuffHalo,op=self.MPI.SUM)
+          self.comm.barrier()
+          self.comm.Allreduce(sendBuffHalo,rcvBuffHalo,op=self.MPI.SUM)
           self.comm.Allreduce(sendBuffPhysical,rcvBuffPhysical,op=self.MPI.SUM)
           self.nSolidInterfaceNodes = rcvBuffHalo[0]
           self.nSolidInterfacePhysicalNodes = rcvBuffPhysical[0]
@@ -375,7 +374,7 @@ class Interface:
           if myid in self.fluidInterfaceProcessors:
             globalIndexStart = 0
             for iProc in range(myid):
-	        globalIndexStart += self.fluidPhysicalInterfaceNodesDistribution[iProc]
+                globalIndexStart += self.fluidPhysicalInterfaceNodesDistribution[iProc]
             globalIndexStop = globalIndexStart + self.nLocalFluidInterfacePhysicalNodes-1
           else:
             globalIndexStart = 0
@@ -387,8 +386,8 @@ class Interface:
           temp[0] = [0,self.nLocalFluidInterfacePhysicalNodes-1]
           self.fluidGlobalIndexRange = list()
           self.fluidGlobalIndexRange.append(temp)
-          
-	# Same thing for the solid part
+
+        # Same thing for the solid part
         if self.have_MPI == True:
           if myid in self.solidInterfaceProcessors:
             globalIndexStart = 0
@@ -404,14 +403,14 @@ class Interface:
           temp = {}
           temp[0] = [0,self.nSolidInterfacePhysicalNodes-1]
           self.solidGlobalIndexRange = list()
-          self.solidGlobalIndexRange.append(temp)        
+          self.solidGlobalIndexRange.append(temp)
 
-	self.MPIPrint('Total number of fluid interface nodes (halo nodes included) : {}'.format(self.nFluidInterfaceNodes))
-	self.MPIPrint('Total number of solid interface nodes (halo nodes included) : {}'.format(self.nSolidInterfaceNodes))
+        self.MPIPrint('Total number of fluid interface nodes (halo nodes included) : {}'.format(self.nFluidInterfaceNodes))
+        self.MPIPrint('Total number of solid interface nodes (halo nodes included) : {}'.format(self.nSolidInterfaceNodes))
         self.MPIPrint('Total number of fluid interface nodes : {}'.format(self.nFluidInterfacePhysicalNodes))
         self.MPIPrint('Total number of solid interface nodes : {}'.format(self.nSolidInterfacePhysicalNodes))
 
-	self.MPIBarrier()
+        self.MPIBarrier()
 
         # --- Create all the PETSc vectors required for parallel communication and parallel mesh mapping/interpolation (working for serial too) ---
         if self.have_MPI == True:
@@ -432,8 +431,8 @@ class Interface:
         self.solidInterface_array_DispY.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
         self.solidInterface_array_DispZ.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
         self.solidInterface_array_DispX.set(0.0)
-	self.solidInterface_array_DispY.set(0.0)
-	self.solidInterface_array_DispZ.set(0.0)
+        self.solidInterface_array_DispY.set(0.0)
+        self.solidInterface_array_DispZ.set(0.0)
 
         if self.have_MPI == True:
           self.fluidInterface_array_DispX = PETSc.Vec().create(self.comm)
@@ -536,30 +535,30 @@ class Interface:
         self.solidInterfaceResidualnM1_array_Z.set(0.0)
 
     def interfaceMapping(self,FluidSolver, SolidSolver, FSI_config):
-	""" 
-	Creates the one-to-one mapping between interfaces in case of matching meshes.
-	Creates the interpolation rules between interfaces in case of non-matching meshes.
-	"""
-	if self.have_MPI == True:
+        """
+        Creates the one-to-one mapping between interfaces in case of matching meshes.
+        Creates the interpolation rules between interfaces in case of non-matching meshes.
+        """
+        if self.have_MPI == True:
           myid = self.comm.Get_rank()
-	  MPIsize = self.comm.Get_size()
+          MPIsize = self.comm.Get_size()
         else:
           myid = 0
           MPIsize = 1
 
-	# --- Get the fluid interface from fluid solver on each partition ---
-	GlobalIndex = int()
+        # --- Get the fluid interface from fluid solver on each partition ---
+        GlobalIndex = int()
         localIndex = 0
         fluidIndexing_temp = {}
         self.localFluidInterface_array_X_init = np.zeros((self.nLocalFluidInterfacePhysicalNodes))
         self.localFluidInterface_array_Y_init = np.zeros((self.nLocalFluidInterfacePhysicalNodes))
         self.localFluidInterface_array_Z_init = np.zeros((self.nLocalFluidInterfacePhysicalNodes))
         for iVertex in range(self.nLocalFluidInterfaceNodes):
-	    GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
-	    posx = FluidSolver.GetVertexCoordX(self.fluidInterfaceIdentifier, iVertex)
-	    posy = FluidSolver.GetVertexCoordY(self.fluidInterfaceIdentifier, iVertex)
-	    posz = FluidSolver.GetVertexCoordZ(self.fluidInterfaceIdentifier, iVertex)
-	    if GlobalIndex in self.FluidHaloNodeList[myid].keys():
+            GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
+            posx = FluidSolver.GetVertexCoordX(self.fluidInterfaceIdentifier, iVertex)
+            posy = FluidSolver.GetVertexCoordY(self.fluidInterfaceIdentifier, iVertex)
+            posz = FluidSolver.GetVertexCoordZ(self.fluidInterfaceIdentifier, iVertex)
+            if GlobalIndex in self.FluidHaloNodeList[myid].keys():
               self.haloNodesPositionsInit[GlobalIndex] = (posx, posy, posz)
             else:
               fluidIndexing_temp[GlobalIndex] = self.__getGlobalIndex('fluid', myid, localIndex)
@@ -576,17 +575,17 @@ class Interface:
           self.fluidIndexing = fluidIndexing_temp.copy()
         del fluidIndexing_temp
 
-	# --- Get the solid interface from solid solver on each partition ---
+        # --- Get the solid interface from solid solver on each partition ---
         localIndex = 0
         solidIndexing_temp = {}
-	self.localSolidInterface_array_X = np.zeros(self.nLocalSolidInterfaceNodes)
+        self.localSolidInterface_array_X = np.zeros(self.nLocalSolidInterfaceNodes)
         self.localSolidInterface_array_Y = np.zeros(self.nLocalSolidInterfaceNodes)
         self.localSolidInterface_array_Z = np.zeros(self.nLocalSolidInterfaceNodes)
         for iVertex in range(self.nLocalSolidInterfaceNodes):
           GlobalIndex = SolidSolver.getInterfaceNodeGlobalIndex(self.solidInterfaceIdentifier, iVertex)
-	  posx = SolidSolver.getInterfaceNodePosX(self.solidInterfaceIdentifier, iVertex)
-	  posy = SolidSolver.getInterfaceNodePosY(self.solidInterfaceIdentifier, iVertex)
-	  posz = SolidSolver.getInterfaceNodePosZ(self.solidInterfaceIdentifier, iVertex)
+          posx = SolidSolver.getInterfaceNodePosX(self.solidInterfaceIdentifier, iVertex)
+          posy = SolidSolver.getInterfaceNodePosY(self.solidInterfaceIdentifier, iVertex)
+          posz = SolidSolver.getInterfaceNodePosZ(self.solidInterfaceIdentifier, iVertex)
           if GlobalIndex in self.SolidHaloNodeList[myid].keys():
             pass
           else:
@@ -605,14 +604,14 @@ class Interface:
         del solidIndexing_temp
 
 
-	# --- Create the PETSc parallel interpolation matrix ---
+        # --- Create the PETSc parallel interpolation matrix ---
         if FSI_config['MATCHING_MESH'] == 'NO' and (FSI_config['MESH_INTERP_METHOD'] == 'RBF' or FSI_config['MESH_INTERP_METHOD'] == 'TPS'):
           if self.have_MPI == True:
             self.MappingMatrixA = PETSc.Mat().create(self.comm)
             self.MappingMatrixB = PETSc.Mat().create(self.comm)
             self.MappingMatrixA_T = PETSc.Mat().create(self.comm)
             self.MappingMatrixB_T = PETSc.Mat().create(self.comm)
-            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' : 
+            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' :
               self.MappingMatrixA.setType('mpiaij')
               self.MappingMatrixB.setType('mpiaij')
               self.MappingMatrixA_T.setType('mpiaij')
@@ -627,7 +626,7 @@ class Interface:
             self.MappingMatrixB = PETSc.Mat().create()
             self.MappingMatrixA_T = PETSc.Mat().create()
             self.MappingMatrixB_T = PETSc.Mat().create()
-            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' : 
+            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' :
               self.MappingMatrixA.setType('aij')
               self.MappingMatrixB.setType('aij')
               self.MappingMatrixA_T.setType('aij')
@@ -637,16 +636,16 @@ class Interface:
               self.MappingMatrixB.setType('aij')
               self.MappingMatrixA_T.setType('aij')
               self.MappingMatrixB_T.setType('aij')
-	  self.MappingMatrixA.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nSolidInterfacePhysicalNodes+self.d_RBF))
+          self.MappingMatrixA.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nSolidInterfacePhysicalNodes+self.d_RBF))
           self.MappingMatrixA.setUp()
           self.MappingMatrixA.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
-	  self.MappingMatrixB.setSizes((self.nFluidInterfacePhysicalNodes, self.nSolidInterfacePhysicalNodes+self.d_RBF))
+          self.MappingMatrixB.setSizes((self.nFluidInterfacePhysicalNodes, self.nSolidInterfacePhysicalNodes+self.d_RBF))
           self.MappingMatrixB.setUp()
           self.MappingMatrixB.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
-	  self.MappingMatrixA_T.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nSolidInterfacePhysicalNodes+self.d_RBF))
+          self.MappingMatrixA_T.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nSolidInterfacePhysicalNodes+self.d_RBF))
           self.MappingMatrixA_T.setUp()
           self.MappingMatrixA_T.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
-	  self.MappingMatrixB_T.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nFluidInterfacePhysicalNodes))
+          self.MappingMatrixB_T.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nFluidInterfacePhysicalNodes))
           self.MappingMatrixB_T.setUp()
           self.MappingMatrixB_T.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
         else:
@@ -660,32 +659,42 @@ class Interface:
             self.MappingMatrix_T = PETSc.Mat().create()
             self.MappingMatrix.setType('aij')
             self.MappingMatrix_T.setType('aij')
-	  self.MappingMatrix.setSizes((self.nFluidInterfacePhysicalNodes, self.nSolidInterfacePhysicalNodes))
+          self.MappingMatrix.setSizes((self.nFluidInterfacePhysicalNodes, self.nSolidInterfacePhysicalNodes))
           self.MappingMatrix.setUp()
           self.MappingMatrix.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
-	  self.MappingMatrix_T.setSizes((self.nSolidInterfacePhysicalNodes, self.nFluidInterfacePhysicalNodes))
+          self.MappingMatrix_T.setSizes((self.nSolidInterfacePhysicalNodes, self.nFluidInterfacePhysicalNodes))
           self.MappingMatrix_T.setUp()
           self.MappingMatrix_T.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
-                  
-	
+
+
         # --- Fill the interpolation matrix in parallel (working in serial too) ---
         if FSI_config['MATCHING_MESH'] == 'NO' and (FSI_config['MESH_INTERP_METHOD'] == 'RBF' or FSI_config['MESH_INTERP_METHOD'] == 'TPS'):
           self.MPIPrint('Building interpolation matrices...')
           if self.have_MPI == True:
             for iProc in self.solidInterfaceProcessors:
               if myid == iProc:
-                for jProc in self.solidInterfaceProcessors:  
-                  self.comm.Send(self.localSolidInterface_array_X, dest=jProc, tag=1)
-                  self.comm.Send(self.localSolidInterface_array_Y, dest=jProc, tag=2)
-                  self.comm.Send(self.localSolidInterface_array_Z, dest=jProc, tag=3)
+                for jProc in self.solidInterfaceProcessors:
+                  if jProc != iProc:
+                    self.comm.ssend(self.localSolidInterface_array_X, dest=jProc, tag=1)
+                    self.comm.ssend(self.localSolidInterface_array_Y, dest=jProc, tag=2)
+                    self.comm.ssend(self.localSolidInterface_array_Z, dest=jProc, tag=3)
+                  else:
+                    sizeOfBuff = self.solidPhysicalInterfaceNodesDistribution[iProc]
+                    solidInterfaceBuffRcv_X = np.zeros(sizeOfBuff)
+                    solidInterfaceBuffRcv_Y = np.zeros(sizeOfBuff)
+                    solidInterfaceBuffRcv_Z = np.zeros(sizeOfBuff)
+                    solidInterfaceBuffRcv_X = self.localSolidInterface_array_X
+                    solidInterfaceBuffRcv_Y = self.localSolidInterface_array_Y
+                    solidInterfaceBuffRcv_Z = self.localSolidInterface_array_Z
               if myid in self.solidInterfaceProcessors:
-                sizeOfBuff = self.solidPhysicalInterfaceNodesDistribution[iProc]
-                solidInterfaceBuffRcv_X = np.zeros(sizeOfBuff)
-                solidInterfaceBuffRcv_Y = np.zeros(sizeOfBuff)
-                solidInterfaceBuffRcv_Z = np.zeros(sizeOfBuff)
-                self.comm.Recv(solidInterfaceBuffRcv_X, iProc, tag=1)
-                self.comm.Recv(solidInterfaceBuffRcv_Y, iProc, tag=2)
-                self.comm.Recv(solidInterfaceBuffRcv_Z, iProc, tag=3)
+                if myid != iProc:
+                  sizeOfBuff = self.solidPhysicalInterfaceNodesDistribution[iProc]
+                  solidInterfaceBuffRcv_X = np.zeros(sizeOfBuff)
+                  solidInterfaceBuffRcv_Y = np.zeros(sizeOfBuff)
+                  solidInterfaceBuffRcv_Z = np.zeros(sizeOfBuff)
+                  solidInterfaceBuffRcv_X = self.comm.recv(source=iProc, tag=1)
+                  solidInterfaceBuffRcv_Y = self.comm.recv(source=iProc, tag=2)
+                  solidInterfaceBuffRcv_Z = self.comm.recv(source=iProc, tag=3)
                 if FSI_config['MESH_INTERP_METHOD'] == 'RBF':
                   self.RBFMeshMapping_A(solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc, self.RBF_rad)
                 else:
@@ -703,22 +712,31 @@ class Interface:
         else:
           self.MPIPrint("Building interpolation matrix...")
         self.MPIBarrier()
-
         if self.have_MPI == True:
           for iProc in self.solidInterfaceProcessors:
             if myid == iProc:
               for jProc in self.fluidInterfaceProcessors:
-                self.comm.Send(self.localSolidInterface_array_X, dest=jProc, tag=1)
-                self.comm.Send(self.localSolidInterface_array_Y, dest=jProc, tag=2)
-                self.comm.Send(self.localSolidInterface_array_Z, dest=jProc, tag=3)
+                if jProc != iProc:
+                  self.comm.ssend(self.localSolidInterface_array_X, dest=jProc, tag=1)
+                  self.comm.ssend(self.localSolidInterface_array_Y, dest=jProc, tag=2)
+                  self.comm.ssend(self.localSolidInterface_array_Z, dest=jProc, tag=3)
+                else:
+                  sizeOfBuff = self.solidPhysicalInterfaceNodesDistribution[iProc]
+                  solidInterfaceBuffRcv_X = np.zeros(sizeOfBuff)
+                  solidInterfaceBuffRcv_Y = np.zeros(sizeOfBuff)
+                  solidInterfaceBuffRcv_Z = np.zeros(sizeOfBuff)
+                  solidInterfaceBuffRcv_X = self.localSolidInterface_array_X
+                  solidInterfaceBuffRcv_Y = self.localSolidInterface_array_Y
+                  solidInterfaceBuffRcv_Z = self.localSolidInterface_array_Z
             if myid in self.fluidInterfaceProcessors:
-              sizeOfBuff = self.solidPhysicalInterfaceNodesDistribution[iProc]
-              solidInterfaceBuffRcv_X = np.zeros(sizeOfBuff)
-              solidInterfaceBuffRcv_Y = np.zeros(sizeOfBuff)
-              solidInterfaceBuffRcv_Z = np.zeros(sizeOfBuff)
-              self.comm.Recv(solidInterfaceBuffRcv_X, iProc, tag=1)
-              self.comm.Recv(solidInterfaceBuffRcv_Y, iProc, tag=2)
-              self.comm.Recv(solidInterfaceBuffRcv_Z, iProc, tag=3)
+              if myid != iProc:
+                sizeOfBuff = self.solidPhysicalInterfaceNodesDistribution[iProc]
+                solidInterfaceBuffRcv_X = np.zeros(sizeOfBuff)
+                solidInterfaceBuffRcv_Y = np.zeros(sizeOfBuff)
+                solidInterfaceBuffRcv_Z = np.zeros(sizeOfBuff)
+                solidInterfaceBuffRcv_X = self.comm.recv(source=iProc, tag=1)
+                solidInterfaceBuffRcv_Y = self.comm.recv(source=iProc, tag=2)
+                solidInterfaceBuffRcv_Z = self.comm.recv(source=iProc, tag=3)
               if FSI_config['MATCHING_MESH'] == 'NO':
                 if FSI_config['MESH_INTERP_METHOD'] == 'RBF':
                   self.RBFMeshMapping_B(solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc, self.RBF_rad)
@@ -726,7 +744,7 @@ class Interface:
                   self.TPSMeshMapping_B(solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc)
                 else:
                   self.NearestNeighboorMeshMapping(solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc)
-	      else:
+              else:
                 self.matchingMeshMapping(solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc)
         else:
           if FSI_config['MATCHING_MESH'] == 'NO':
@@ -735,10 +753,10 @@ class Interface:
             elif FSI_config['MESH_INTERP_METHOD'] == 'TPS' :
               self.TPSMeshMapping_B(self.localSolidInterface_array_X, self.localSolidInterface_array_Y, self.localSolidInterface_array_Z, 0)
             else:
-              self.NearestNeighboorMeshMapping(self.localSolidInterface_array_X, self.localSolidInterface_array_Y, self.localSolidInterface_array_Z, 0) 
-	  else:	    
+              self.NearestNeighboorMeshMapping(self.localSolidInterface_array_X, self.localSolidInterface_array_Y, self.localSolidInterface_array_Z, 0)
+          else:
             self.matchingMeshMapping(self.localSolidInterface_array_X, self.localSolidInterface_array_Y, self.localSolidInterface_array_Z, 0)
-        
+
         if FSI_config['MATCHING_MESH'] == 'NO' and (FSI_config['MESH_INTERP_METHOD'] == 'RBF' or FSI_config['MESH_INTERP_METHOD'] == 'TPS'):
           self.MappingMatrixB.assemblyBegin()
           self.MappingMatrixB.assemblyEnd()
@@ -751,9 +769,9 @@ class Interface:
           self.MappingMatrix_T.assemblyBegin()
           self.MappingMatrix_T.assemblyEnd()
           self.MPIPrint("Interpolation matrix is built.")
-  
+
         self.MPIBarrier()
-  
+
         del self.localSolidInterface_array_X
         del self.localSolidInterface_array_Y
         del self.localSolidInterface_array_Z
@@ -768,20 +786,20 @@ class Interface:
           myid = 0
 
         # --- Instantiate the spatial indexing ---
-	prop_index = index.Property()
-	prop_index.dimension = self.nDim
-	SolidSpatialTree = index.Index(properties=prop_index)
-        
+        prop_index = index.Property()
+        prop_index.dimension = self.nDim
+        SolidSpatialTree = index.Index(properties=prop_index)
+
         nSolidNodes = solidInterfaceBuffRcv_X.shape[0]
 
         for jVertex in range(nSolidNodes):
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-	  if self.nDim == 2 :
-	    SolidSpatialTree.add(jVertex, (posX, posY))
-   	  else :
-	    SolidSpatialTree.add(jVertex, (posX, posY, posZ))
+          if self.nDim == 2 :
+            SolidSpatialTree.add(jVertex, (posX, posY))
+          else :
+            SolidSpatialTree.add(jVertex, (posX, posY, posZ))
 
         if self.nFluidInterfacePhysicalNodes != self.nSolidInterfacePhysicalNodes:
           raise Exception("Fluid and solid interface must have the same number of nodes for matching meshes ! ")
@@ -822,20 +840,20 @@ class Interface:
           myid = 0
 
         # --- Instantiate the spatial indexing ---
-	prop_index = index.Property()
-	prop_index.dimension = self.nDim
-	SolidSpatialTree = index.Index(properties=prop_index)
-        
+        prop_index = index.Property()
+        prop_index.dimension = self.nDim
+        SolidSpatialTree = index.Index(properties=prop_index)
+
         nSolidNodes = solidInterfaceBuffRcv_X.shape[0]
 
         for jVertex in range(nSolidNodes):
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-	  if self.nDim == 2 :
-	    SolidSpatialTree.add(jVertex, (posX, posY))
-   	  else :
-	    SolidSpatialTree.add(jVertex, (posX, posY, posZ))
+          if self.nDim == 2 :
+            SolidSpatialTree.add(jVertex, (posX, posY))
+          else :
+            SolidSpatialTree.add(jVertex, (posX, posY, posZ))
 
         # --- For each fluid interface node, find the nearest solid interface node and fill the boolean mapping matrix ---
         for iVertexFluid in range(self.nLocalFluidInterfacePhysicalNodes):
@@ -863,20 +881,20 @@ class Interface:
           myid = 0
 
         # --- Instantiate the spatial indexing ---
-	prop_index = index.Property()
-	prop_index.dimension = self.nDim
-	SolidSpatialTree = index.Index(properties=prop_index)
-        
+        prop_index = index.Property()
+        prop_index.dimension = self.nDim
+        SolidSpatialTree = index.Index(properties=prop_index)
+
         nSolidNodes = solidInterfaceBuffRcv_X.shape[0]
 
         for jVertex in range(nSolidNodes):
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-	  if self.nDim == 2 :
-	    SolidSpatialTree.add(jVertex, (posX, posY))
-   	  else :
-	    SolidSpatialTree.add(jVertex, (posX, posY, posZ))
+          if self.nDim == 2 :
+            SolidSpatialTree.add(jVertex, (posX, posY))
+          else :
+            SolidSpatialTree.add(jVertex, (posX, posY, posZ))
 
         for iVertexSolid in range(self.nLocalSolidInterfaceNodes):
           posX = self.localSolidInterface_array_X[iVertexSolid]
@@ -898,11 +916,13 @@ class Interface:
           self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes, 1.0)
           self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+1, posX)
           self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+2, posY)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
           self.MappingMatrixA_T.setValue(nSolidNodes, iGlobalVertexSolid, 1.0)
           self.MappingMatrixA_T.setValue(nSolidNodes+1, iGlobalVertexSolid, posX)
           self.MappingMatrixA_T.setValue(nSolidNodes+2, iGlobalVertexSolid, posY)
-          self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
 
     def RBFMeshMapping_B(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc, rad):
         """
@@ -915,20 +935,20 @@ class Interface:
           myid = 0
 
         # --- Instantiate the spatial indexing ---
-	prop_index = index.Property()
-	prop_index.dimension = self.nDim
-	SolidSpatialTree = index.Index(properties=prop_index)
-        
+        prop_index = index.Property()
+        prop_index.dimension = self.nDim
+        SolidSpatialTree = index.Index(properties=prop_index)
+
         nSolidNodes = solidInterfaceBuffRcv_X.shape[0]
 
         for jVertex in range(nSolidNodes):
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-	  if self.nDim == 2 :
-	    SolidSpatialTree.add(jVertex, (posX, posY))
-   	  else :
-	    SolidSpatialTree.add(jVertex, (posX, posY, posZ))
+          if self.nDim == 2 :
+            SolidSpatialTree.add(jVertex, (posX, posY))
+          else :
+            SolidSpatialTree.add(jVertex, (posX, posY, posZ))
 
         for iVertexFluid in range(self.nLocalFluidInterfacePhysicalNodes):
           posX = self.localFluidInterface_array_X_init[iVertexFluid]
@@ -950,11 +970,13 @@ class Interface:
           self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes, 1.0)
           self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+1, posX)
           self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+2, posY)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
           self.MappingMatrixB_T.setValue(nSolidNodes, iGlobalVertexFluid, 1.0)
           self.MappingMatrixB_T.setValue(nSolidNodes+1, iGlobalVertexFluid, posX)
           self.MappingMatrixB_T.setValue(nSolidNodes+2, iGlobalVertexFluid, posY)
-          self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
 
     def TPSMeshMapping_A(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -965,7 +987,7 @@ class Interface:
           myid = self.comm.Get_rank()
         else:
           myid = 0
-        
+
         nSolidNodes = solidInterfaceBuffRcv_X.shape[0]
 
         for iVertexSolid in range(self.nLocalSolidInterfaceNodes):
@@ -984,11 +1006,13 @@ class Interface:
           self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes, 1.0)
           self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+1, posX)
           self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+2, posY)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
           self.MappingMatrixA_T.setValue(nSolidNodes, iGlobalVertexSolid, 1.0)
           self.MappingMatrixA_T.setValue(nSolidNodes+1, iGlobalVertexSolid, posX)
           self.MappingMatrixA_T.setValue(nSolidNodes+2, iGlobalVertexSolid, posY)
-          self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
 
     def TPSMeshMapping_B(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -999,7 +1023,7 @@ class Interface:
           myid = self.comm.Get_rank()
         else:
           myid = 0
-        
+
         nSolidNodes = solidInterfaceBuffRcv_X.shape[0]
 
         for iVertexFluid in range(self.nLocalFluidInterfacePhysicalNodes):
@@ -1018,11 +1042,13 @@ class Interface:
           self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes, 1.0)
           self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+1, posX)
           self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+2, posY)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
           self.MappingMatrixB_T.setValue(nSolidNodes, iGlobalVertexFluid, 1.0)
           self.MappingMatrixB_T.setValue(nSolidNodes+1, iGlobalVertexFluid, posX)
           self.MappingMatrixB_T.setValue(nSolidNodes+2, iGlobalVertexFluid, posY)
-          self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
+          if self.nDim == 3:
+            self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
 
 
     def __CPC2(self, distance, rad):
@@ -1031,7 +1057,7 @@ class Interface:
         """
         phi = 0.0
         eps = distance/rad
- 
+
         if eps < 1:
           phi = ((1.0-eps)**4)*(4.0*eps+1.0)
         else:
@@ -1044,20 +1070,20 @@ class Interface:
         Description
         """
         phi = 0.0
-     
+
         if distance > 0.0:
           phi = (distance**2)*np.log10(distance)
         else:
           phi = 0.0
 
-        return phi            
+        return phi
 
 
     def interpolateSolidPositionOnFluidMesh(self, FSI_config):
-	"""
-	Applies the one-to-one mapping or the interpolaiton rules from solid to fluid mesh.
-	"""
-	if self.have_MPI == True:
+        """
+        Applies the one-to-one mapping or the interpolaiton rules from solid to fluid mesh.
+        """
+        if self.have_MPI == True:
           myid = self.comm.Get_rank()
           MPIsize = self.comm.Get_size()
         else:
@@ -1110,12 +1136,12 @@ class Interface:
           del gamma_array_DispY
           del gamma_array_DispZ
           del KSP_solver
-        else:  
+        else:
           self.MappingMatrix.mult(self.solidInterface_array_DispX, self.fluidInterface_array_DispX)
           self.MappingMatrix.mult(self.solidInterface_array_DispY, self.fluidInterface_array_DispY)
           self.MappingMatrix.mult(self.solidInterface_array_DispZ, self.fluidInterface_array_DispZ)
 
-        # --- Checking conservation --- 
+        # --- Checking conservation ---
         WSX = self.solidLoads_array_X.dot(self.solidInterface_array_DispX)
         WSY = self.solidLoads_array_Y.dot(self.solidInterface_array_DispY)
         WSZ = self.solidLoads_array_Z.dot(self.solidInterface_array_DispZ)
@@ -1124,11 +1150,11 @@ class Interface:
         WFY = self.fluidLoads_array_Y.dot(self.fluidInterface_array_DispY)
         WFZ = self.fluidLoads_array_Z.dot(self.fluidInterface_array_DispZ)
 
-	self.MPIPrint("Checking f/s interface conservation...")
-	self.MPIPrint('Solid side (Wx, Wy, Wz) = ({}, {}, {})'.format(WSX, WSY, WSZ))        
-	self.MPIPrint('Fluid side (Wx, Wy, Wz) = ({}, {}, {})'.format(WFX, WFY, WFZ))
+        self.MPIPrint("Checking f/s interface conservation...")
+        self.MPIPrint('Solid side (Wx, Wy, Wz) = ({}, {}, {})'.format(WSX, WSY, WSZ))
+        self.MPIPrint('Fluid side (Wx, Wy, Wz) = ({}, {}, {})'.format(WFX, WFY, WFZ))
 
-   
+
         # --- Redistribute the interpolated fluid interface according to the partitions that own the fluid interface ---
         # Gather the fluid interface on the master process
         if self.have_MPI == True:
@@ -1156,7 +1182,7 @@ class Interface:
           displ = tuple(displ)
 
           del sendBuffNumber, rcvBuffNumber
-              
+
           #print("DEBUG MESSAGE From proc {}, counts = {}".format(myid, counts))
           #print("DEBUG MESSAGE From proc {}, displ = {}".format(myid, displ))
 
@@ -1176,16 +1202,22 @@ class Interface:
                 sendBuff_Y[iVertex] = self.fluidInterface_array_DispY_recon[globalIndex]
                 sendBuff_Z[iVertex] = self.fluidInterface_array_DispZ_recon[globalIndex]
                 globalIndex += 1
-              self.comm.Send(sendBuff_X, dest=iProc, tag = 1)
-              self.comm.Send(sendBuff_Y, dest=iProc, tag = 2)
-              self.comm.Send(sendBuff_Z, dest=iProc, tag = 3)
+              if iProc == self.rootProcess:
+                self.localFluidInterface_array_DispX = np.copy(sendBuff_X)
+                self.localFluidInterface_array_DispY = np.copy(sendBuff_Y)
+                self.localFluidInterface_array_DispZ = np.copy(sendBuff_Z)
+              if iProc != self.rootProcess:
+                self.comm.ssend(sendBuff_X, dest=iProc, tag = 1)
+                self.comm.ssend(sendBuff_Y, dest=iProc, tag = 2)
+                self.comm.ssend(sendBuff_Z, dest=iProc, tag = 3)
           if myid in self.fluidInterfaceProcessors:
-            self.localFluidInterface_array_DispX = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
-            self.localFluidInterface_array_DispY = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
-            self.localFluidInterface_array_DispZ = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
-            self.comm.Recv(self.localFluidInterface_array_DispX, source=self.rootProcess, tag = 1)
-            self.comm.Recv(self.localFluidInterface_array_DispY, source=self.rootProcess, tag = 2)
-            self.comm.Recv(self.localFluidInterface_array_DispZ, source=self.rootProcess, tag = 3)
+              if myid != self.rootProcess:
+                self.localFluidInterface_array_DispX = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
+                self.localFluidInterface_array_DispY = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
+                self.localFluidInterface_array_DispZ = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
+                self.localFluidInterface_array_DispX = self.comm.recv(source=self.rootProcess, tag = 1)
+                self.localFluidInterface_array_DispY = self.comm.recv(source=self.rootProcess, tag = 2)
+                self.localFluidInterface_array_DispZ = self.comm.recv(source=self.rootProcess, tag = 3)
           del sendBuff_X
           del sendBuff_Y
           del sendBuff_Z
@@ -1194,6 +1226,7 @@ class Interface:
           self.localFluidInterface_array_DispY = self.fluidInterface_array_DispY.getArray().copy()
           self.localFluidInterface_array_DispZ = self.fluidInterface_array_DispZ.getArray().copy()
 
+        self.comm.barrier()
         # Special treatment for the halo nodes on the fluid interface
         self.haloNodesDisplacements = {}
         sendBuff = {}
@@ -1207,24 +1240,29 @@ class Interface:
                 DispY = self.fluidInterface_array_DispY_recon[globalIndex]
                 DispZ = self.fluidInterface_array_DispZ_recon[globalIndex]
                 sendBuff[key] = (DispX, DispY, DispZ)
-              self.comm.send(sendBuff, dest = iProc, tag=4)
+              if iProc == self.rootProcess:
+                self.haloNodesDisplacements = sendBuff
+              else:
+                self.comm.ssend(sendBuff, dest = iProc, tag=4)
           if myid in self.fluidInterfaceProcessors:
-            self.haloNodesDisplacements = self.comm.recv(source = self.rootProcess, tag = 4)
-          del sendBuff
+            if myid != self.rootProcess:
+              self.haloNodesDisplacements = self.comm.recv(source = self.rootProcess, tag = 4)
+        del sendBuff
+        self.comm.barrier()
 
     def interpolateFluidLoadsOnSolidMesh(self, FSI_config):
-	"""
-	Applies the one-to-one mapping or the interpolaiton rules from fluid to solid mesh.
-	"""
-	if self.have_MPI == True:
+        """
+        Applies the one-to-one mapping or the interpolaiton rules from fluid to solid mesh.
+        """
+        if self.have_MPI == True:
           myid = self.comm.Get_rank()
           MPIsize = self.comm.Get_size()
         else:
           myid = 0
           MPIsize = 1
-	
+
         # --- Interpolate (or map) in parallel the fluid interface loads on the solid interface ---
-	#self.MappingMatrix.transpose()
+        #self.MappingMatrix.transpose()
         if FSI_config['MATCHING_MESH'] == 'NO' and (FSI_config['MESH_INTERP_METHOD'] == 'RBF' or FSI_config['MESH_INTERP_METHOD'] == 'TPS'):
           if self.have_MPI == True:
             gamma_array_LoadX = PETSc.Vec().create(self.comm)
@@ -1280,10 +1318,10 @@ class Interface:
           self.solidLoads_array_X_recon = None
           self.solidLoads_array_Y_recon = None
           self.solidLoads_array_Z_recon = None
-	  if myid == self.rootProcess:
-	    self.solidLoads_array_X_recon = np.zeros(self.nSolidInterfacePhysicalNodes+self.d_RBF)
-	    self.solidLoads_array_Y_recon = np.zeros(self.nSolidInterfacePhysicalNodes+self.d_RBF)
-	    self.solidLoads_array_Z_recon = np.zeros(self.nSolidInterfacePhysicalNodes+self.d_RBF)
+          if myid == self.rootProcess:
+            self.solidLoads_array_X_recon = np.zeros(self.nSolidInterfacePhysicalNodes+self.d_RBF)
+            self.solidLoads_array_Y_recon = np.zeros(self.nSolidInterfacePhysicalNodes+self.d_RBF)
+            self.solidLoads_array_Z_recon = np.zeros(self.nSolidInterfacePhysicalNodes+self.d_RBF)
           myNumberOfNodes =  self.solidLoads_array_X.getArray().shape[0]
           sendBuffNumber = np.array([myNumberOfNodes], dtype=int)
           rcvBuffNumber = np.zeros(MPIsize, dtype=int)
@@ -1293,9 +1331,9 @@ class Interface:
           displ = np.zeros(MPIsize, dtype=int)
           for ii in range(rcvBuffNumber.shape[0]):
             displ[ii] = rcvBuffNumber[0:ii].sum()
-          displ = tuple(displ)      
+          displ = tuple(displ)
 
-          del sendBuffNumber, rcvBuffNumber   
+          del sendBuffNumber, rcvBuffNumber
 
           self.comm.Gatherv(self.solidLoads_array_X.getArray(), [self.solidLoads_array_X_recon, counts, displ, self.MPI.DOUBLE], root=self.rootProcess)
           self.comm.Gatherv(self.solidLoads_array_Y.getArray(), [self.solidLoads_array_Y_recon, counts, displ, self.MPI.DOUBLE], root=self.rootProcess)
@@ -1313,16 +1351,25 @@ class Interface:
                 sendBuff_Y[iVertex] = self.solidLoads_array_Y_recon[globalIndex]
                 sendBuff_Z[iVertex] = self.solidLoads_array_Z_recon[globalIndex]
                 globalIndex += 1
-              self.comm.Send(sendBuff_X, dest=iProc, tag = 1)
-              self.comm.Send(sendBuff_Y, dest=iProc, tag = 2)
-              self.comm.Send(sendBuff_Z, dest=iProc, tag = 3)
+              if iProc != myid:
+                self.comm.ssend(sendBuff_X, dest=iProc, tag = 1)
+                self.comm.ssend(sendBuff_Y, dest=iProc, tag = 2)
+                self.comm.ssend(sendBuff_Z, dest=iProc, tag = 3)
+              else:
+                self.localSolidLoads_array_X = np.zeros(self.nLocalSolidInterfaceNodes)
+                self.localSolidLoads_array_Y = np.zeros(self.nLocalSolidInterfaceNodes)
+                self.localSolidLoads_array_Z = np.zeros(self.nLocalSolidInterfaceNodes)
+                self.localSolidLoads_array_X = sendBuff_X
+                self.localSolidLoads_array_Y = sendBuff_Y
+                self.localSolidLoads_array_Z = sendBuff_Z
           if myid in self.solidInterfaceProcessors:
-            self.localSolidLoads_array_X = np.zeros(self.nLocalSolidInterfaceNodes)
-            self.localSolidLoads_array_Y = np.zeros(self.nLocalSolidInterfaceNodes)
-            self.localSolidLoads_array_Z = np.zeros(self.nLocalSolidInterfaceNodes)
-            self.comm.Recv(self.localSolidLoads_array_X, source=self.rootProcess, tag = 1)
-            self.comm.Recv(self.localSolidLoads_array_Y, source=self.rootProcess, tag = 2)
-            self.comm.Recv(self.localSolidLoads_array_Z, source=self.rootProcess, tag = 3)
+            if myid != self.rootProcess:
+              self.localSolidLoads_array_X = np.zeros(self.nLocalSolidInterfaceNodes)
+              self.localSolidLoads_array_Y = np.zeros(self.nLocalSolidInterfaceNodes)
+              self.localSolidLoads_array_Z = np.zeros(self.nLocalSolidInterfaceNodes)
+              self.localSolidLoads_array_X = self.comm.recv(source=self.rootProcess, tag = 1)
+              self.localSolidLoads_array_Y = self.comm.recv(source=self.rootProcess, tag = 2)
+              self.localSolidLoads_array_Z = self.comm.recv(source=self.rootProcess, tag = 3)
           del sendBuff_X
           del sendBuff_Y
           del sendBuff_Z
@@ -1336,25 +1383,25 @@ class Interface:
 
 
     '''def getSolidInterfacePosition(self, SolidSolver):
-	"""
-	Gets the current solid interface position from the solid solver.
-	"""
+        """
+        Gets the current solid interface position from the solid solver.
+        """
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
-	
+
         # --- Get the solid interface position from the solid solver and directly fill the corresponding PETSc vector ---
         GlobalIndex = int()
         localIndex = 0
-	for iVertex in range(self.nLocalSolidInterfaceNodes):
+        for iVertex in range(self.nLocalSolidInterfaceNodes):
           GlobalIndex = SolidSolver.getInterfaceNodeGlobalIndex(self.solidInterfaceIdentifier, iVertex)
           if GlobalIndex in self.SolidHaloNodeList[myid].keys():
             pass
           else:
-	    newPosx = SolidSolver.getInterfaceNodePosX(self.solidInterfaceIdentifier, iVertex)
-	    newPosy = SolidSolver.getInterfaceNodePosY(self.solidInterfaceIdentifier, iVertex)
-	    newPosz = SolidSolver.getInterfaceNodePosZ(self.solidInterfaceIdentifier, iVertex)
+            newPosx = SolidSolver.getInterfaceNodePosX(self.solidInterfaceIdentifier, iVertex)
+            newPosy = SolidSolver.getInterfaceNodePosY(self.solidInterfaceIdentifier, iVertex)
+            newPosz = SolidSolver.getInterfaceNodePosZ(self.solidInterfaceIdentifier, iVertex)
             iGlobalVertex = self.__getGlobalIndex('solid', myid, localIndex)
             self.solidInterface_array_X.setValues([iGlobalVertex],newPosx)
             self.solidInterface_array_Y.setValues([iGlobalVertex],newPosy)
@@ -1375,25 +1422,25 @@ class Interface:
         #print("DEBUG MESSAGE From PROC {} : array_X = {}".format(myid, self.solidInterface_array_X.getArray()))'''
 
     def getSolidInterfaceDisplacement(self, SolidSolver):
-	"""
-	Gets the current solid interface position from the solid solver.
-	"""
+        """
+        Gets the current solid interface position from the solid solver.
+        """
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
-	
+
         # --- Get the solid interface position from the solid solver and directly fill the corresponding PETSc vector ---
         GlobalIndex = int()
         localIndex = 0
-	for iVertex in range(self.nLocalSolidInterfaceNodes):
+        for iVertex in range(self.nLocalSolidInterfaceNodes):
           GlobalIndex = SolidSolver.getInterfaceNodeGlobalIndex(self.solidInterfaceIdentifier, iVertex)
           if GlobalIndex in self.SolidHaloNodeList[myid].keys():
             pass
           else:
-	    newDispx = SolidSolver.getInterfaceNodeDispX(self.solidInterfaceIdentifier, iVertex)
-	    newDispy = SolidSolver.getInterfaceNodeDispY(self.solidInterfaceIdentifier, iVertex)
-	    newDispz = SolidSolver.getInterfaceNodeDispZ(self.solidInterfaceIdentifier, iVertex)
+            newDispx = SolidSolver.getInterfaceNodeDispX(self.solidInterfaceIdentifier, iVertex)
+            newDispy = SolidSolver.getInterfaceNodeDispY(self.solidInterfaceIdentifier, iVertex)
+            newDispz = SolidSolver.getInterfaceNodeDispZ(self.solidInterfaceIdentifier, iVertex)
             iGlobalVertex = self.__getGlobalIndex('solid', myid, localIndex)
             self.solidInterface_array_DispX.setValues([iGlobalVertex],newDispx)
             self.solidInterface_array_DispY.setValues([iGlobalVertex],newDispy)
@@ -1408,9 +1455,9 @@ class Interface:
         self.solidInterface_array_DispZ.assemblyEnd()
 
     def getFluidInterfaceNodalForce(self, FSI_config, FluidSolver):
-	"""
-	Gets the fluid interface loads from the fluid solver.
-	"""
+        """
+        Gets the fluid interface loads from the fluid solver.
+        """
         if self.have_MPI == True:
           myid = self.comm.Get_rank()
         else:
@@ -1422,17 +1469,12 @@ class Interface:
         FZ = 0.0
 
         # --- Get the fluid interface loads from the fluid solver and directly fill the corresponding PETSc vector ---
-	for iVertex in range(self.nLocalFluidInterfaceNodes):
-	    halo = FluidSolver.ComputeVertexForces(self.fluidInterfaceIdentifier, iVertex) # !!we have to ignore halo node coming from mesh partitioning because they introduice non-physical forces
-	    if halo==False:
-		if FSI_config['CSD_SOLVER'] == 'GETDP':
-		    newFx = FluidSolver.GetVertexForceDensityX(self.fluidInterfaceIdentifier, iVertex)
-	            newFy = FluidSolver.GetVertexForceDensityY(self.fluidInterfaceIdentifier, iVertex)
-	            newFz = FluidSolver.GetVertexForceDensityZ(self.fluidInterfaceIdentifier, iVertex)
-		else:
-	            newFx = FluidSolver.GetVertexForceX(self.fluidInterfaceIdentifier, iVertex)
-	            newFy = FluidSolver.GetVertexForceY(self.fluidInterfaceIdentifier, iVertex)
-	            newFz = FluidSolver.GetVertexForceZ(self.fluidInterfaceIdentifier, iVertex)
+        for iVertex in range(self.nLocalFluidInterfaceNodes):
+            halo = FluidSolver.ComputeVertexForces(self.fluidInterfaceIdentifier, iVertex) # !!we have to ignore halo node coming from mesh partitioning because they introduice non-physical forces
+            if halo==False:
+                newFx = FluidSolver.GetVertexForceX(self.fluidInterfaceIdentifier, iVertex)
+                newFy = FluidSolver.GetVertexForceY(self.fluidInterfaceIdentifier, iVertex)
+                newFz = FluidSolver.GetVertexForceZ(self.fluidInterfaceIdentifier, iVertex)
                 iGlobalVertex = self.__getGlobalIndex('fluid', myid, localIndex)
                 self.fluidLoads_array_X.setValues([iGlobalVertex], newFx)
                 self.fluidLoads_array_Y.setValues([iGlobalVertex], newFy)
@@ -1457,66 +1499,55 @@ class Interface:
         FX_b = self.fluidLoads_array_X.sum()
         FY_b = self.fluidLoads_array_Y.sum()
         FZ_b = self.fluidLoads_array_Z.sum()
-        
+
 
     def setFluidInterfaceVarCoord(self, FluidSolver):
-	"""
-	Communicate the change of coordinates of the fluid interface to the fluid solver.
-	Prepare the fluid solver for mesh deformation.
-	"""
+        """
+        Communicate the change of coordinates of the fluid interface to the fluid solver.
+        Prepare the fluid solver for mesh deformation.
+        """
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
-	
+
         # --- Send the new fluid interface position to the fluid solver (on each partition, halo nodes included) ---
         localIndex = 0
-	for iVertex in range(self.nLocalFluidInterfaceNodes):
-	    GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
+        for iVertex in range(self.nLocalFluidInterfaceNodes):
+            GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
             if GlobalIndex in self.FluidHaloNodeList[myid].keys():
-              posX0, posY0, posZ0 = self.haloNodesPositionsInit[GlobalIndex]
               DispX, DispY, DispZ = self.haloNodesDisplacements[GlobalIndex]
-              posX = posX0 + DispX
-              posY = posY0 + DispY
-              posZ = posZ0 + DispZ
-              FluidSolver.SetVertexCoordX(self.fluidInterfaceIdentifier, iVertex, posX)
-              FluidSolver.SetVertexCoordY(self.fluidInterfaceIdentifier, iVertex, posY)
-              FluidSolver.SetVertexCoordZ(self.fluidInterfaceIdentifier, iVertex, posZ)
+              FluidSolver.SetMeshDisplacement(self.fluidInterfaceIdentifier, int(iVertex), DispX, DispY, DispZ)
             else:
-              posX = self.localFluidInterface_array_DispX[localIndex] + self.localFluidInterface_array_X_init[localIndex]
-              posY = self.localFluidInterface_array_DispY[localIndex] + self.localFluidInterface_array_Y_init[localIndex]
-              posZ = self.localFluidInterface_array_DispZ[localIndex] + self.localFluidInterface_array_Z_init[localIndex]
-              FluidSolver.SetVertexCoordX(self.fluidInterfaceIdentifier, iVertex, posX)
-              FluidSolver.SetVertexCoordY(self.fluidInterfaceIdentifier, iVertex, posY)
-              FluidSolver.SetVertexCoordZ(self.fluidInterfaceIdentifier, iVertex, posZ)
+              DispX = self.localFluidInterface_array_DispX[localIndex]
+              DispY = self.localFluidInterface_array_DispY[localIndex]
+              DispZ = self.localFluidInterface_array_DispZ[localIndex]
+              FluidSolver.SetMeshDisplacement(self.fluidInterfaceIdentifier, int(iVertex), DispX, DispY, DispZ)
               localIndex += 1
-            # Prepares the mesh deformation in the fluid solver
-	    nodalVarCoordNorm = FluidSolver.SetVertexVarCoord(self.fluidInterfaceIdentifier, iVertex)
 
-	    
+
     def setSolidInterfaceLoads(self, SolidSolver, FSI_config, time):
-	"""
-	Communicates the new solid interface loads to the solid solver.
-	In case of rigid body motion, calculates the new resultant forces (lift, drag, ...).
-	"""
+        """
+        Communicates the new solid interface loads to the solid solver.
+        In case of rigid body motion, calculates the new resultant forces (lift, drag, ...).
+        """
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
 
-	FY = 0.0 # solid-side resultant forces
+        FY = 0.0 # solid-side resultant forces
         FX = 0.0
         FZ = 0.0
-	FFX = 0.0 # fluid-side resultant forces
-	FFY = 0.0
-	FFZ = 0.0
+        FFX = 0.0 # fluid-side resultant forces
+        FFY = 0.0
+        FFZ = 0.0
 
         # --- Check for total force conservation after interpolation
         FFX = self.fluidLoads_array_X.sum()
         FFY = self.fluidLoads_array_Y.sum()
         FFZ = self.fluidLoads_array_Z.sum()
 
- 	
         for iVertex in range(self.nLocalSolidInterfaceNodes):
           FX += self.localSolidLoads_array_X[iVertex]
           FY += self.localSolidLoads_array_Y[iVertex]
@@ -1527,9 +1558,9 @@ class Interface:
           FY = self.comm.allreduce(FY)
           FZ = self.comm.allreduce(FZ)
 
-	self.MPIPrint("Checking f/s interface total force...")
-	self.MPIPrint('Solid side (Fx, Fy, Fz) = ({}, {}, {})'.format(FX, FY, FZ))        
-	self.MPIPrint('Fluid side (Fx, Fy, Fz) = ({}, {}, {})'.format(FFX, FFY, FFZ))
+        self.MPIPrint("Checking f/s interface total force...")
+        self.MPIPrint('Solid side (Fx, Fy, Fz) = ({}, {}, {})'.format(FX, FY, FZ))
+        self.MPIPrint('Fluid side (Fx, Fy, Fz) = ({}, {}, {})'.format(FFX, FFY, FFZ))
 
         # --- Send the new solid interface loads to the solid solver (on each partition, halo nodes included) ---
         GlobalIndex = int()
@@ -1541,25 +1572,25 @@ class Interface:
               pass
             else:
               Fx = self.localSolidLoads_array_X[localIndex]
-	      Fy = self.localSolidLoads_array_Y[localIndex]
-	      Fz = self.localSolidLoads_array_Z[localIndex]
+              Fy = self.localSolidLoads_array_Y[localIndex]
+              Fz = self.localSolidLoads_array_Z[localIndex]
               SolidSolver.applyload(iVertex, Fx, Fy, Fz, time)
               localIndex += 1
-          if FSI_config['CSD_SOLVER'] == 'NATIVE':  
+          if FSI_config['CSD_SOLVER'] == 'NATIVE':
             SolidSolver.setGeneralisedForce()
-	    SolidSolver.setGeneralisedMoment()
+            SolidSolver.setGeneralisedMoment()
 
     def computeSolidInterfaceResidual(self, SolidSolver):
-	"""
-	Computes the solid interface FSI displacement residual.
-	"""
+        """
+        Computes the solid interface FSI displacement residual.
+        """
 
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
 
-	normInterfaceResidualSquare = 0.0
+        normInterfaceResidualSquare = 0.0
 
         # --- Create and fill the PETSc vector for the predicted solid interface position (predicted by the solid computation) ---
         if self.have_MPI == True:
@@ -1575,27 +1606,27 @@ class Interface:
           predDisp_array_Y = PETSc.Vec().create()
           predDisp_array_Y.setType('seq')
           predDisp_array_Z = PETSc.Vec().create()
-          predDisp_array_Z.setType('seq') 
+          predDisp_array_Z.setType('seq')
         predDisp_array_X.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
         predDisp_array_Y.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
         predDisp_array_Z.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
-	
-	if myid in self.solidSolverProcessors:
-	  for iVertex in range(self.nLocalSolidInterfaceNodes):
-	    predDispx = SolidSolver.getInterfaceNodeDispX(self.solidInterfaceIdentifier, iVertex)
-	    predDispy = SolidSolver.getInterfaceNodeDispY(self.solidInterfaceIdentifier, iVertex)
-	    predDispz = SolidSolver.getInterfaceNodeDispZ(self.solidInterfaceIdentifier, iVertex)
+
+        if myid in self.solidSolverProcessors:
+          for iVertex in range(self.nLocalSolidInterfaceNodes):
+            predDispx = SolidSolver.getInterfaceNodeDispX(self.solidInterfaceIdentifier, iVertex)
+            predDispy = SolidSolver.getInterfaceNodeDispY(self.solidInterfaceIdentifier, iVertex)
+            predDispz = SolidSolver.getInterfaceNodeDispZ(self.solidInterfaceIdentifier, iVertex)
             iGlobalVertex = self.__getGlobalIndex('solid', myid, iVertex)
             predDisp_array_X.setValues([iGlobalVertex], predDispx)
             predDisp_array_Y.setValues([iGlobalVertex], predDispy)
             predDisp_array_Z.setValues([iGlobalVertex], predDispz)
-	
-	predDisp_array_X.assemblyBegin()
-	predDisp_array_X.assemblyEnd()
-	predDisp_array_Y.assemblyBegin()
-	predDisp_array_Y.assemblyEnd()
-	predDisp_array_Z.assemblyBegin()
-	predDisp_array_Z.assemblyEnd()
+
+        predDisp_array_X.assemblyBegin()
+        predDisp_array_X.assemblyEnd()
+        predDisp_array_Y.assemblyBegin()
+        predDisp_array_Y.assemblyEnd()
+        predDisp_array_Z.assemblyBegin()
+        predDisp_array_Z.assemblyEnd()
 
         # --- Calculate the residual (vector and norm) ---
         self.solidInterfaceResidual_array_X = predDisp_array_X - self.solidInterface_array_DispX
@@ -1615,45 +1646,45 @@ class Interface:
         del predDisp_array_Y
         del predDisp_array_Z
 
-	return sqrt(normInterfaceResidualSquare)
+        return sqrt(normInterfaceResidualSquare)
 
     def relaxSolidPosition(self,FSI_config):
-	"""
-	Apply solid displacement under-relaxation.
-	"""
+        """
+        Apply solid displacement under-relaxation.
+        """
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
 
         # --- Set the Aitken coefficient for the relaxation ---
-	if FSI_config['AITKEN_RELAX'] == 'STATIC':
-	    self.aitkenParam = FSI_config['AITKEN_PARAM']
-	elif FSI_config['AITKEN_RELAX'] == 'DYNAMIC':	
-	    self.setAitkenCoefficient(FSI_config)
-	else:
-	    self.aitkenParam = 1.0
+        if FSI_config['AITKEN_RELAX'] == 'STATIC':
+            self.aitkenParam = FSI_config['AITKEN_PARAM']
+        elif FSI_config['AITKEN_RELAX'] == 'DYNAMIC':
+            self.setAitkenCoefficient(FSI_config)
+        else:
+            self.aitkenParam = 1.0
 
-	self.MPIPrint('Aitken under-relaxation step with parameter {}'.format(self.aitkenParam))
+        self.MPIPrint('Aitken under-relaxation step with parameter {}'.format(self.aitkenParam))
 
         # --- Relax the solid interface position ---
         self.solidInterface_array_DispX += self.aitkenParam*self.solidInterfaceResidual_array_X
         self.solidInterface_array_DispY += self.aitkenParam*self.solidInterfaceResidual_array_Y
         self.solidInterface_array_DispZ += self.aitkenParam*self.solidInterfaceResidual_array_Z
-	
+
 
     def setAitkenCoefficient(self, FSI_config):
-	"""
-	Computes the Aitken coefficients for solid displacement under-relaxation.
-	"""
+        """
+        Computes the Aitken coefficients for solid displacement under-relaxation.
+        """
 
-	deltaResNormSquare = 0.0
-	prodScalRes = 0.0
-	
+        deltaResNormSquare = 0.0
+        prodScalRes = 0.0
+
         # --- Create the PETSc vector for the difference between the residuals (current and previous FSI iter) ---
-	if self.FSIIter == 0:
-	    self.aitkenParam = max(FSI_config['AITKEN_PARAM'], self.aitkenParam)
-	else:
+        if self.FSIIter == 0:
+            self.aitkenParam = max(FSI_config['AITKEN_PARAM'], self.aitkenParam)
+        else:
             if self.have_MPI:
               deltaResx_array_X = PETSc.Vec().create(self.comm)
               deltaResx_array_X.setType('mpi')
@@ -1688,9 +1719,9 @@ class Interface:
             deltaResNormSquare_X = (deltaResx_array_X.norm())**2
             deltaResNormSquare_Y = (deltaResx_array_Y.norm())**2
             deltaResNormSquare_Z = (deltaResx_array_Z.norm())**2
-	    deltaResNormSquare = deltaResNormSquare_X + deltaResNormSquare_Y + deltaResNormSquare_Z
+            deltaResNormSquare = deltaResNormSquare_X + deltaResNormSquare_Y + deltaResNormSquare_Z
 
-	    self.aitkenParam *= -prodScalRes/deltaResNormSquare
+            self.aitkenParam *= -prodScalRes/deltaResNormSquare
 
             deltaResx_array_X.destroy()
             deltaResx_array_Y.destroy()
@@ -1700,7 +1731,7 @@ class Interface:
             del deltaResx_array_Z
 
         self.aitkenParam = min(self.aitkenParam, 1.0)
-        self.aitkenParam = max(self.aitkenParam, 0.0)
+        self.aitkenParam = max(self.aitkenParam, 0.1)
 
         # --- Update the value of the residual for the next FSI iteration ---
         self.solidInterfaceResidual_array_X.copy(self.solidInterfaceResidualnM1_array_X)
@@ -1708,27 +1739,27 @@ class Interface:
         self.solidInterfaceResidual_array_Z.copy(self.solidInterfaceResidualnM1_array_Z)
 
     def displacementPredictor(self, FSI_config , SolidSolver, deltaT):
-	"""
-	Calculates a prediciton for the solid interface position for the next time step.
-	"""
+        """
+        Calculates a prediciton for the solid interface position for the next time step.
+        """
 
         if self.have_MPI == True:
-	  myid = self.comm.Get_rank()
+          myid = self.comm.Get_rank()
         else:
           myid = 0
 
-	if FSI_config['DISP_PRED'] == 'FIRST_ORDER':
-	    self.MPIPrint("First order predictor")	
-	    alpha_0 = 1.0
-	    alpha_1 = 0.0
-	elif FSI_config['DISP_PRED'] == 'SECOND_ORDER':
-	    self.MPIPrint("Second order predictor")
-	    alpha_0 = 1.0
-	    alpha_1 = 0.5
-	else:
-	    self.MPIPrint("No predictor")
-	    alpha_0 = 0.0
-	    alpha_1 = 0.0
+        if FSI_config['DISP_PRED'] == 'FIRST_ORDER':
+            self.MPIPrint("First order predictor")
+            alpha_0 = 1.0
+            alpha_1 = 0.0
+        elif FSI_config['DISP_PRED'] == 'SECOND_ORDER':
+            self.MPIPrint("Second order predictor")
+            alpha_0 = 1.0
+            alpha_1 = 0.5
+        else:
+            self.MPIPrint("No predictor")
+            alpha_0 = 0.0
+            alpha_1 = 0.0
 
         # --- Create the PETSc vectors to store the solid interface velocity ---
         if self.have_MPI == True:
@@ -1774,18 +1805,18 @@ class Interface:
         # --- Fill the PETSc vectors ---
         GlobalIndex = int()
         localIndex = 0
-	for iVertex in range(self.nLocalSolidInterfaceNodes):
-	    GlobalIndex = SolidSolver.getInterfaceNodeGlobalIndex(self.solidInterfaceIdentifier, iVertex)
+        for iVertex in range(self.nLocalSolidInterfaceNodes):
+            GlobalIndex = SolidSolver.getInterfaceNodeGlobalIndex(self.solidInterfaceIdentifier, iVertex)
             if GlobalIndex in self.SolidHaloNodeList[myid].keys():
               pass
             else:
               iGlobalVertex = self.__getGlobalIndex('solid', myid, localIndex)
-	      velx = SolidSolver.getInterfaceNodeVelX(self.solidInterfaceIdentifier, iVertex)
-	      vely = SolidSolver.getInterfaceNodeVelY(self.solidInterfaceIdentifier, iVertex)
-	      velz = SolidSolver.getInterfaceNodeVelZ(self.solidInterfaceIdentifier, iVertex)
-	      velxNm1 = SolidSolver.getInterfaceNodeVelXNm1(self.solidInterfaceIdentifier, iVertex)
-	      velyNm1 = SolidSolver.getInterfaceNodeVelYNm1(self.solidInterfaceIdentifier, iVertex)
-	      velzNm1 = SolidSolver.getInterfaceNodeVelZNm1(self.solidInterfaceIdentifier, iVertex)
+              velx = SolidSolver.getInterfaceNodeVelX(self.solidInterfaceIdentifier, iVertex)
+              vely = SolidSolver.getInterfaceNodeVelY(self.solidInterfaceIdentifier, iVertex)
+              velz = SolidSolver.getInterfaceNodeVelZ(self.solidInterfaceIdentifier, iVertex)
+              velxNm1 = SolidSolver.getInterfaceNodeVelXNm1(self.solidInterfaceIdentifier, iVertex)
+              velyNm1 = SolidSolver.getInterfaceNodeVelYNm1(self.solidInterfaceIdentifier, iVertex)
+              velzNm1 = SolidSolver.getInterfaceNodeVelZNm1(self.solidInterfaceIdentifier, iVertex)
               Vel_array_X.setValues([iGlobalVertex],velx)
               Vel_array_Y.setValues([iGlobalVertex],vely)
               Vel_array_Z.setValues([iGlobalVertex],velz)
@@ -1822,27 +1853,27 @@ class Interface:
         del VelnM1_array_X, VelnM1_array_Y, VelnM1_array_Z
 
     def writeFSIHistory(self, TimeIter, time, varCoordNorm, FSIConv):
-	"""
-	Write the FSI history file of the computaion.
-	"""
+        """
+        Write the FSI history file of the computaion.
+        """
 
         if self.have_MPI == True:
           myid = self.comm.Get_rank()
         else:
           myid = 0
-        
+
         if myid == self.rootProcess:
-          if self.unsteady:	
-	    if TimeIter == 0:
-	      histFile = open('FSIhistory.dat', "w")
+          if self.unsteady:
+            if TimeIter == 0:
+              histFile = open('FSIhistory.dat', "w")
               histFile.write("TimeIter\tTime\tFSIRes\tFSINbIter\n")
-	    else:
-	      histFile = open('FSIhistory.dat', "a")
-	    if FSIConv:
-	      histFile.write(str(TimeIter) + '\t' + str(time) + '\t' + str(varCoordNorm) + '\t' + str(self.FSIIter+1) + '\n')
-	    else:
-	      histFile.write(str(TimeIter) + '\t' + str(time) + '\t' + str(varCoordNorm) + '\t' + str(self.FSIIter) + '\n')
-	    histFile.close()
+            else:
+              histFile = open('FSIhistory.dat', "a")
+            if FSIConv:
+              histFile.write(str(TimeIter) + '\t' + str(time) + '\t' + str(varCoordNorm) + '\t' + str(self.FSIIter+1) + '\n')
+            else:
+              histFile.write(str(TimeIter) + '\t' + str(time) + '\t' + str(varCoordNorm) + '\t' + str(self.FSIIter) + '\n')
+            histFile.close()
           else:
             if self.FSIIter == 0:
               histFile = open('FSIhistory.dat', "w")
@@ -1851,7 +1882,7 @@ class Interface:
               histFile = open('FSIhistory.dat', "a")
             histFile.write(str(self.FSIIter) + '\t' + str(varCoordNorm) + '\n')
             histFile.close()
-          
+
 
         self.MPIBarrier()
 
@@ -1868,254 +1899,255 @@ class Interface:
         globalIndex = globalStartIndex + iLocalVertex
 
         return globalIndex
-	    
+
 
     def UnsteadyFSI(self,FSI_config, FluidSolver, SolidSolver):
-	  """ 
-	  Run the unsteady FSI computation by synchronizing the fluid and solid solvers.
-	  F/s interface data are exchanged through interface mapping and interpolation (if non mathcing meshes).
-	  """
+          """
+          Run the unsteady FSI computation by synchronizing the fluid and solid solvers.
+          F/s interface data are exchanged through interface mapping and interpolation (if non mathcing meshes).
+          """
 
           if self.have_MPI == True:
-	    myid = self.comm.Get_rank()
-	    numberPart = self.comm.Get_size()
+            myid = self.comm.Get_rank()
+            numberPart = self.comm.Get_size()
           else:
             myid = 0
             numberPart = 1
 
-	  # --- Set some general variables for the unsteady computation --- #
-  	  deltaT = FSI_config['UNST_TIMESTEP']		# physical time step
-	  totTime = FSI_config['UNST_TIME']		# physical simulation time
-	  NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
-	  FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
-	  TimeIterTreshold = 0				# time iteration from which we allow the solid to deform
+          # --- Set some general variables for the unsteady computation --- #
+          deltaT = FSI_config['UNST_TIMESTEP']                # physical time step
+          totTime = FSI_config['UNST_TIME']                # physical simulation time
+          NbFSIIterMax = FSI_config['NB_FSI_ITER']        # maximum number of FSI iteration (for each time step)
+          FSITolerance = FSI_config['FSI_TOLERANCE']        # f/s interface tolerance
+          TimeIterTreshold = FSI_config['TIME_TRESHOLD']				# time iteration from which we allow the solid to deform
+          self.MPIPrint('The FSI coupling will start after {} iterations'.format(TimeIterTreshold))
 
-	  if FSI_config['RESTART_SOL'] == 'YES':
-	    startTime = FSI_config['START_TIME']
-	    NbTimeIter = ((totTime)/deltaT)-1		
-	    time = startTime
-	    TimeIter = FSI_config['RESTART_ITER']
-	  else:
-	    NbTimeIter = (totTime/deltaT)-1		# number of time iterations
-	    time = 0.0					# initial time
-	    TimeIter = 0				# initial time iteration
+          if FSI_config['RESTART_SOL'] == 'YES':
+            startTime = FSI_config['START_TIME']
+            NbTimeIter = ((totTime)/deltaT)-1
+            time = startTime
+            TimeIter = FSI_config['RESTART_ITER']
+          else:
+            NbTimeIter = (totTime/deltaT)-1		# number of time iterations
+            time = 0.0					# initial time
+            TimeIter = 0				# initial time iteration
 
-	  NbTimeIter = int(NbTimeIter)			# be sure that NbTimeIter is an integer
+          NbTimeIter = int(NbTimeIter)			# be sure that NbTimeIter is an integer
 
-	  varCoordNorm = 0.0				# FSI residual
-	  FSIConv = False				# FSI convergence flag
+          varCoordNorm = 0.0				# FSI residual
+          FSIConv = False				# FSI convergence flag
 
-	  self.MPIPrint('\n**********************************')
-	  self.MPIPrint('* Begin unsteady FSI computation *')
-	  self.MPIPrint('**********************************\n')
-	  
-	  # --- Initialize the coupled solution --- #
-	  #If restart (DOES NOT WORK YET)
-	  if FSI_config['RESTART_SOL'] == 'YES':
-	    TimeIterTreshold = -1
-	    FluidSolver.setTemporalIteration(TimeIter)
-	    if myid == self.rootProcess:
-	      SolidSolver.outputDisplacements(FluidSolver.getInterRigidDispArray(), True)
+          self.MPIPrint('\n**********************************')
+          self.MPIPrint('* Begin unsteady FSI computation *')
+          self.MPIPrint('**********************************\n')
+
+          # --- Initialize the coupled solution --- #
+          #If restart (DOES NOT WORK YET)
+          if FSI_config['RESTART_SOL'] == 'YES':
+            TimeIterTreshold = -1
+            FluidSolver.setTemporalIteration(TimeIter)
+            if myid == self.rootProcess:
+              SolidSolver.outputDisplacements(FluidSolver.getInterRigidDispArray(), True)
             if self.have_MPI == True:
-	      self.comm.barrier()
-	    FluidSolver.setInitialMesh(True)
-	    if myid == self.rootProcess:
-	      SolidSolver.displacementPredictor(FluidSolver.getInterRigidDispArray())
-	    if self.have_MPI == True:
-              self.comm.barrier()								
-	    if myid == self.rootProcess:
-	      SolidSolver.updateSolution()
-	  #If no restart
-	  else:
-	    self.MPIPrint('Setting FSI initial conditions')
+              self.comm.barrier()
+            FluidSolver.setInitialMesh(True)
+            if myid == self.rootProcess:
+              SolidSolver.displacementPredictor(FluidSolver.getInterRigidDispArray())
+            if self.have_MPI == True:
+              self.comm.barrier()
+            if myid == self.rootProcess:
+              SolidSolver.updateSolution()
+          #If no restart
+          else:
+            self.MPIPrint('Setting FSI initial conditions')
             if myid in self.solidSolverProcessors:
-	      SolidSolver.setInitialDisplacements()
+              SolidSolver.setInitialDisplacements()
             self.getSolidInterfaceDisplacement(SolidSolver)
-	    self.interpolateSolidPositionOnFluidMesh(FSI_config)
-	    self.setFluidInterfaceVarCoord(FluidSolver)
-	    FluidSolver.SetInitialMesh()	# if there is an initial deformation in the solid, it has to be communicated to the fluid solver
-	    self.MPIPrint('\nFSI initial conditions are set')
-	    self.MPIPrint('Beginning time integration\n')
+            self.interpolateSolidPositionOnFluidMesh(FSI_config)
+            self.setFluidInterfaceVarCoord(FluidSolver)
+            FluidSolver.SetInitialMesh()	# if there is an initial deformation in the solid, it has to be communicated to the fluid solver
+            self.MPIPrint('\nFSI initial conditions are set')
+            self.MPIPrint('Beginning time integration\n')
 
-	  # --- External temporal loop --- #
-	  while TimeIter <= NbTimeIter:
+          # --- External temporal loop --- #
+          while TimeIter <= NbTimeIter:
 
-		if TimeIter > TimeIterTreshold:
-		  NbFSIIter = NbFSIIterMax
-		  self.MPIPrint('\n*************** Enter Block Gauss Seidel (BGS) method for strong coupling FSI on time iteration {} ***************'.format(TimeIter))  
-		else:
-		  NbFSIIter = 1
+                if TimeIter > TimeIterTreshold:
+                  NbFSIIter = NbFSIIterMax
+                  self.MPIPrint('\n*************** Enter Block Gauss Seidel (BGS) method for strong coupling FSI on time iteration {} ***************'.format(TimeIter))
+                else:
+                  NbFSIIter = 1
 
-		self.FSIIter = 0
-		FSIConv = False
-		FluidSolver.PreprocessExtIter(TimeIter)	# set some parameters before temporal fluid iteration
-	
-		# --- Internal FSI loop --- #
-		while self.FSIIter <= (NbFSIIter-1):
+                self.FSIIter = 0
+                FSIConv = False
 
-			self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter,self.FSIIter))
+                # --- Internal FSI loop --- #
+                while self.FSIIter <= (NbFSIIter-1):
 
-			# --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
-			self.interpolateSolidPositionOnFluidMesh(FSI_config)
+                        self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter,self.FSIIter))
+
+                        # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
+                        self.interpolateSolidPositionOnFluidMesh(FSI_config)
                         self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
                         self.setFluidInterfaceVarCoord(FluidSolver)
-                        FluidSolver.DynamicMeshUpdate(TimeIter)
-			
-			# --- Fluid solver call for FSI subiteration --- #
-		        self.MPIPrint('\nLaunching fluid solver for one single dual-time iteration...')
+                        if self.FSIIter == 0:
+                           FluidSolver.Preprocess(TimeIter)	# set some parameters before temporal fluid iteration and dynamic mesh update
+                        else:
+                           FluidSolver.DynamicMeshUpdate(TimeIter)
+
+                        # --- Fluid solver call for FSI subiteration --- #
+                        self.MPIPrint('\nLaunching fluid solver for one single dual-time iteration...')
                         self.MPIBarrier()
-			FluidSolver.ResetConvergence()
-			FluidSolver.Run()
+                        FluidSolver.ResetConvergence()
+                        FluidSolver.Run()
                         self.MPIBarrier()
 
-			# --- Surface fluid loads interpolation and communication --- #
-		        self.MPIPrint('\nProcessing interface fluid loads...\n')
+                        # --- Surface fluid loads interpolation and communication --- #
+                        self.MPIPrint('\nProcessing interface fluid loads...\n')
                         self.MPIBarrier()
-		        self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+                        self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
                         self.MPIBarrier()
-			if TimeIter > TimeIterTreshold:
-			  self.interpolateFluidLoadsOnSolidMesh(FSI_config)
-			  self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
+                        if TimeIter > TimeIterTreshold:
+                          self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+                          self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
 
-			  # --- Solid solver call for FSI subiteration --- #
-			  self.MPIPrint('\nLaunching solid solver for a single time iteration...\n')
+                          # --- Solid solver call for FSI subiteration --- #
+                          self.MPIPrint('\nLaunching solid solver for a single time iteration...\n')
                           if myid in self.solidSolverProcessors:
-			    if FSI_config['CSD_SOLVER'] == 'NATIVE':
-			        SolidSolver.timeIteration(time)
-			    elif FSI_config['CSD_SOLVER'] == 'METAFOR' or FSI_config['CSD_SOLVER'] == 'GETDP' or FSI_config['CSD_SOLVER'] == 'TESTER':
-				SolidSolver.run(time-deltaT, time)
+                              SolidSolver.run(time-deltaT, time)
 
-			  # --- Compute and monitor the FSI residual --- #
-			  varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
-			  self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
-			  if varCoordNorm < FSITolerance:		
-			    FSIConv = True
-			    break
+                          # --- Compute and monitor the FSI residual --- #
+                          varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
+                          self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
+                          if varCoordNorm < FSITolerance:
+                            FSIConv = True
+                            break
 
-			  # --- Relaxe the solid position --- #
+                          # --- Relaxe the solid position --- #
                           self.MPIPrint('\nProcessing interface displacements...\n')
-			  self.relaxSolidPosition(FSI_config)
-			
-			self.FSIIter += 1
-		# --- End OF FSI loop --- #
+                          self.relaxSolidPosition(FSI_config)
+
+                        self.FSIIter += 1
+                # --- End OF FSI loop --- #
 
                 self.MPIBarrier()
 
-		# --- Update the FSI history file --- # 
-		if TimeIter > TimeIterTreshold:
-		  self.MPIPrint('\nBGS is converged (strong coupling)')
-		self.writeFSIHistory(TimeIter, time, varCoordNorm, FSIConv)
-		
-		# --- Update, monitor and output the fluid solution before the next time step  ---#
-		FluidSolver.Update()
-		FluidSolver.Monitor(TimeIter)
-		FluidSolver.Output(TimeIter)
+                # --- Update the FSI history file --- #
+                if TimeIter > TimeIterTreshold:
+                  self.MPIPrint('\nBGS is converged (strong coupling)')
+                self.writeFSIHistory(TimeIter, time, varCoordNorm, FSIConv)
 
-	   	if TimeIter >= TimeIterTreshold:
-		  if myid in self.solidSolverProcessors:
-		    # --- Output the solid solution before thr next time step --- #
-		    SolidSolver.writeSolution(time, self.FSIIter, TimeIter, NbTimeIter)
-		
-		  # --- Displacement predictor for the next time step and update of the solid solution --- #
-		  self.MPIPrint('\nSolid displacement prediction for next time step')
-		  self.displacementPredictor(FSI_config, SolidSolver, deltaT)
+                # --- Update, monitor and output the fluid solution before the next time step  ---#
+                FluidSolver.Update()
+                FluidSolver.Monitor(TimeIter)
+                FluidSolver.Output(TimeIter)
+
+                if TimeIter >= TimeIterTreshold:
                   if myid in self.solidSolverProcessors:
-		    SolidSolver.updateSolution()
-		
-		TimeIter += 1
-		time += deltaT
-	  #--- End of the temporal loop --- #
+                    # --- Output the solid solution before thr next time step --- #
+                    SolidSolver.writeSolution(time, self.FSIIter, TimeIter, NbTimeIter)
+
+                if TimeIter > TimeIterTreshold:
+                  # --- Displacement predictor for the next time step and update of the solid solution --- #
+                  self.MPIPrint('\nSolid displacement prediction for next time step')
+                  self.displacementPredictor(FSI_config, SolidSolver, deltaT)
+                  if myid in self.solidSolverProcessors:
+                    SolidSolver.updateSolution()
+
+                TimeIter += 1
+                time += deltaT
+          #--- End of the temporal loop --- #
 
           self.MPIBarrier()
 
-	  self.MPIPrint('\n*************************')
-	  self.MPIPrint('*  End FSI computation  *')
-	  self.MPIPrint('*************************\n')
+          self.MPIPrint('\n*************************')
+          self.MPIPrint('*  End FSI computation  *')
+          self.MPIPrint('*************************\n')
 
     def SteadyFSI(self, FSI_config,FluidSolver, SolidSolver):
-	  """
-	  Runs the steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
-	  """
+          """
+          Runs the steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
+          """
 
           if self.have_MPI == True:
-	    myid = self.comm.Get_rank()
-	    numberPart = self.comm.Get_size()
+            myid = self.comm.Get_rank()
+            numberPart = self.comm.Get_size()
           else:
             myid = 0
             numberPart = 1
 
-	  # --- Set some general variables for the steady computation --- #
-	  NbIter = FSI_config['NB_EXT_ITER']		# number of fluid iteration at each FSI step
-	  NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
-	  FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
-	  varCoordNorm = 0.0
+          # --- Set some general variables for the steady computation --- #
+          NbIter = FSI_config['NB_EXT_ITER']		# number of fluid iteration at each FSI step
+          NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
+          FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
+          varCoordNorm = 0.0
 
-	  self.MPIPrint('\n********************************')
-	  self.MPIPrint('* Begin steady FSI computation *')
-	  self.MPIPrint('********************************\n')
-	  self.MPIPrint('\n*************** Enter Block Gauss Seidel (BGS) method for strong coupling FSI ***************')
+          self.MPIPrint('\n********************************')
+          self.MPIPrint('* Begin steady FSI computation *')
+          self.MPIPrint('********************************\n')
+          self.MPIPrint('\n*************** Enter Block Gauss Seidel (BGS) method for strong coupling FSI ***************')
 
           self.getSolidInterfaceDisplacement(SolidSolver)
 
-	  # --- External FSI loop --- #
-	  self.FSIIter = 0
-	  while self.FSIIter < NbFSIIterMax:
-	    self.MPIPrint("\n>>>> FSI iteration {} <<<<".format(self.FSIIter))
-	    self.MPIPrint('\nLaunching fluid solver for a steady computation...')
-	    # --- Fluid solver call for FSI subiteration ---#
-	    Iter = 0
-	    FluidSolver.ResetConvergence()          
-	    while Iter < NbIter:
-	      FluidSolver.PreprocessExtIter(Iter)
-	      FluidSolver.Run()				
-	      StopIntegration = FluidSolver.Monitor(Iter)
-	      FluidSolver.Output(Iter)
-	      if StopIntegration:
-		break;
-	      Iter += 1
-	    
-	    # --- Surface fluid loads interpolation and communication ---#
-	    self.MPIPrint('\nProcessing interface fluid loads...\n')
+          # --- External FSI loop --- #
+          self.FSIIter = 0
+          while self.FSIIter < NbFSIIterMax:
+            self.MPIPrint("\n>>>> FSI iteration {} <<<<".format(self.FSIIter))
+            self.MPIPrint('\nLaunching fluid solver for a steady computation...')
+            # --- Fluid solver call for FSI subiteration ---#
+            Iter = 0
+            FluidSolver.ResetConvergence()
+            while Iter < NbIter:
+              FluidSolver.PreprocessExtIter(Iter)
+              FluidSolver.Run()
+              StopIntegration = FluidSolver.Monitor(Iter)
+              FluidSolver.Output(Iter)
+              if StopIntegration:
+                break;
+              Iter += 1
+
+            # --- Surface fluid loads interpolation and communication ---#
+            self.MPIPrint('\nProcessing interface fluid loads...\n')
             self.MPIBarrier()
-	    self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+            self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
             self.MPIBarrier()
-	    self.interpolateFluidLoadsOnSolidMesh(FSI_config)
-	    self.setSolidInterfaceLoads(SolidSolver, FSI_config, 0.05)
-	     
-	    # --- Solid solver call for FSI subiteration --- #
-	    self.MPIPrint('\nLaunching solid solver for a static computation...\n')
+            self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+            self.setSolidInterfaceLoads(SolidSolver, FSI_config, 0.05)
+
+            # --- Solid solver call for FSI subiteration --- #
+            self.MPIPrint('\nLaunching solid solver for a static computation...\n')
             if myid in self.solidSolverProcessors:
-	      if FSI_config['CSD_SOLVER'] == 'NATIVE':
-	          SolidSolver.staticComputation()
+              if FSI_config['CSD_SOLVER'] == 'NATIVE':
+                  SolidSolver.staticComputation()
               else:
                   SolidSolver.run(0.0, 0.05)
-	      SolidSolver.writeSolution(0.0, self.FSIIter, Iter, NbIter)		
+              SolidSolver.writeSolution(0.0, self.FSIIter, Iter, NbIter)
 
-	    # --- Compute and monitor the FSI residual --- #
-	    varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
-	    self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
+            # --- Compute and monitor the FSI residual --- #
+            varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
+            self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
             self.writeFSIHistory(0, 0.0, varCoordNorm, False)
-	    if varCoordNorm < FSITolerance:			
-	      break
+            if varCoordNorm < FSITolerance:
+              break
 
             # --- Relaxe the solid displacement and update the solid solution --- #
             self.MPIPrint('\nProcessing interface displacements...\n')
-	    self.relaxSolidPosition(FSI_config)
+            self.relaxSolidPosition(FSI_config)
             if myid in self.solidSolverProcessors:
               SolidSolver.updateSolution()
-	
-	    # --- Mesh morphing step (displacement interpolation, displacements communication, and mesh morpher call) --- #
-	    self.interpolateSolidPositionOnFluidMesh(FSI_config)						
-	    self.MPIPrint('\nPerforming static mesh deformation...\n')
-	    self.setFluidInterfaceVarCoord(FluidSolver)									
-	    FluidSolver.StaticMeshUpdate()
-	    self.FSIIter += 1
+
+            # --- Mesh morphing step (displacement interpolation, displacements communication, and mesh morpher call) --- #
+            self.interpolateSolidPositionOnFluidMesh(FSI_config)
+            self.MPIPrint('\nPerforming static mesh deformation...\n')
+            self.setFluidInterfaceVarCoord(FluidSolver)
+            FluidSolver.StaticMeshUpdate()
+            self.FSIIter += 1
 
           self.MPIBarrier()
 
-	  self.MPIPrint('\nBGS is converged (strong coupling)')
-	  self.MPIPrint(' ')
-	  self.MPIPrint('*************************')
-	  self.MPIPrint('*  End FSI computation  *')
-	  self.MPIPrint('*************************')
-	  self.MPIPrint(' ')
+          self.MPIPrint('\nBGS is converged (strong coupling)')
+          self.MPIPrint(' ')
+          self.MPIPrint('*************************')
+          self.MPIPrint('*  End FSI computation  *')
+          self.MPIPrint('*************************')
+          self.MPIPrint(' ')
