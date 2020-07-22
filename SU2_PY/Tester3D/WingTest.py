@@ -76,7 +76,6 @@ class Point:
     self.Coord_n = np.zeros((3,1))
     self.Vel = np.zeros((3,1))
     self.Vel_n = np.zeros((3,1))
-    self.Acc = np.zeros((3,1))
     self.Force = np.zeros((3,1))
     self.ID = 0
     self.CP = 0
@@ -96,9 +95,6 @@ class Point:
 
   def GetVel_n(self):
     return self.Vel_n
-
-  def GetAcc(self):
-    return self.Acc
 
   def GetForce(self):
     return self.Force
@@ -141,12 +137,6 @@ class Point:
     self.Vel_n[0] = vx
     self.Vel_n[1] = vy
     self.Vel_n[2] = vz
-
-  def SetAcc(self, val_Acc):
-    ax, ay, az = val_Acc
-    self.Acc[0] = ax
-    self.Acc[1] = ay
-    self.Acc[2] = az
 
   def SetForce(self, val_Force):
     fx, fy, fz = val_Force
@@ -515,16 +505,6 @@ class Solver:
     for ii in range(vector.shape[0]):
       vector[ii] = 0.0
 
-  def __computeAcc(self):
-    """ Description. """
-
-    # Multiply the modal matrices with modal amplitudes
-    X_acc = self.Ux.dot(self.qddot)
-    Y_acc = self.Uy.dot(self.qddot)
-    Z_acc = self.Uz.dot(self.qddot)
-    for iPoint in range(len(self.node)):
-      self.node[iPoint].SetAcc((X_acc[iPoint],Y_acc[iPoint],Z_acc[iPoint]))
-
   def __computeInterfacePosVel(self, initialize):
     """ Description. """
 
@@ -655,7 +635,6 @@ class Solver:
     line =  line + '\n'
     print(line)
     self.__computeInterfacePosVel(False)
-    self.__computeAcc()
 
   def setInitialDisplacements(self):
     """ Description. """
@@ -680,23 +659,6 @@ class Solver:
       line = line + str(float(self.q[imode])) + '\t' + str(float(self.qdot[imode])) + '\t' + str(float(self.qddot[imode])) + '\t'
     line =  line + '\n'
     histFile.write(line)
-    histFile.close()
-
-    # Nodal History
-    if time == 0:
-      histFile = open('StructHistoryNodal.dat', "w")
-      header = 'Time\t' + 'ID\t' + 'ux\t' + 'uy\t' + 'uz\t' + 'vx\t' + 'vy\t' + 'vz\t' + 'ax\t' + 'ay\t' + 'az\n'
-      histFile.write(header)
-    else:
-      histFile = open('StructHistoryNodal.dat', "a")
-    for iPoint in range(self.nPoint):
-      CD = self.node[iPoint].GetCD()
-      ID = self.node[iPoint].GetID()
-      (ux,uy,uz) = self.node[iPoint].GetCoord() - self.node[iPoint].GetCoord0()
-      (vx,vy,vz) = self.node[iPoint].GetVel()
-      (ax,ay,az) = self.node[iPoint].GetAcc()
-      line = str(time) + '\t' + str(ID) + '\t' + str(float(ux)) + '\t' + str(float(uy)) + '\t' + str(float(uz)) + '\t' + str(float(vx)) + '\t' + str(float(vy)) + '\t' + str(float(vz)) + '\t' + str(float(ax)) + '\t' + str(float(ay)) + '\t' + str(float(az)) + '\n'
-      histFile.write(line)
     histFile.close()
 
   def updateSolution(self):
