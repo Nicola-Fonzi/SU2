@@ -1221,12 +1221,12 @@ class Interface:
           del sendBuff_X
           del sendBuff_Y
           del sendBuff_Z
+          self.comm.barrier()
         else:
           self.localFluidInterface_array_DispX = self.fluidInterface_array_DispX.getArray().copy()
           self.localFluidInterface_array_DispY = self.fluidInterface_array_DispY.getArray().copy()
           self.localFluidInterface_array_DispZ = self.fluidInterface_array_DispZ.getArray().copy()
 
-        self.comm.barrier()
         # Special treatment for the halo nodes on the fluid interface
         self.haloNodesDisplacements = {}
         sendBuff = {}
@@ -1247,8 +1247,8 @@ class Interface:
           if myid in self.fluidInterfaceProcessors:
             if myid != self.rootProcess:
               self.haloNodesDisplacements = self.comm.recv(source = self.rootProcess, tag = 4)
+          self.comm.barrier()
         del sendBuff
-        self.comm.barrier()
 
     def interpolateFluidLoadsOnSolidMesh(self, FSI_config):
         """
