@@ -734,11 +734,11 @@ void CMeshSolver::SetBoundaryDisplacements(CGeometry *geometry, CNumerics *numer
     if (config->GetMarker_All_Match_Deform_Mesh(iMarker) == YES) {
       const su2double* nodeCoord[MAXNNODE_2D] = {nullptr};
 
-      const bool quad = (geometry->bound[val_marker][0]->GetVTK_Type() == QUADRILATERAL);
+      const bool quad = (geometry->bound[iMarker][0]->GetVTK_Type() == QUADRILATERAL);
       const unsigned short nNodes = quad? 4 : nDim;
 
       for (auto iNode = 0u; iNode < nNodes; iNode++) {
-        auto iPoint = geometry->bound[val_marker][0]->GetNode(iNode);
+        auto iPoint = geometry->bound[iMarker][0]->GetNode(iNode);
         nodeCoord[iNode] = geometry->nodes->GetCoord(iPoint);
       }
 
