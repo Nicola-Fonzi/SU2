@@ -423,7 +423,7 @@ class Solver:
         if not line:
           break
 
-        pos = line.find('MODE')
+        pos = line.find('MODE ')
         if pos != -1:
           line = line.strip('\r\n').split()
           n = int(line[5])
