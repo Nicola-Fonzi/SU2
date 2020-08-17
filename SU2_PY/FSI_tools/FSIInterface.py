@@ -554,6 +554,9 @@ class Interface:
         self.localFluidInterface_array_Y_init = np.zeros((self.nLocalFluidInterfacePhysicalNodes))
         self.localFluidInterface_array_Z_init = np.zeros((self.nLocalFluidInterfacePhysicalNodes))
         for iVertex in range(self.nLocalFluidInterfaceNodes):
+            # Note that the fluid solver is separated in more processors outside the python script
+            # thus when, from a core, we request for the vertices on the interface, we only obtain
+            # those in that node
             GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
             posx = FluidSolver.GetVertexCoordX(self.fluidInterfaceIdentifier, iVertex)
             posy = FluidSolver.GetVertexCoordY(self.fluidInterfaceIdentifier, iVertex)
@@ -570,6 +573,7 @@ class Interface:
           fluidIndexing_temp = self.comm.allgather(fluidIndexing_temp)
           for ii in range(len(fluidIndexing_temp)):
             for key, value in fluidIndexing_temp[ii].items():
+              # This contains the link between the global index in python an that in SU2
               self.fluidIndexing[key] = value
         else:
           self.fluidIndexing = fluidIndexing_temp.copy()
@@ -775,6 +779,12 @@ class Interface:
         del self.localSolidInterface_array_X
         del self.localSolidInterface_array_Y
         del self.localSolidInterface_array_Z
+        del self.localFluidInterface_array_X_init
+        del self.localFluidInterface_array_Y_init
+        del self.localFluidInterface_array_Z_init
+        del solidInterfaceBuffRcv_X
+        del solidInterfaceBuffRcv_Y
+        del solidInterfaceBuffRcv_Z
 
     def matchingMeshMapping(self,solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -824,10 +834,6 @@ class Interface:
             print("WARNING : Tolerance for matching meshes is not matched between node F{} and S{} : ({}, {}, {})<-->({}, {}, {}) , DISTANCE : {} !".format(iGlobalVertexFluid,jGlobalVertexSolid,posX, posY, posZ,solidInterfaceBuffRcv_X[jVertexSolid], solidInterfaceBuffRcv_Y[jVertexSolid], solidInterfaceBuffRcv_Z[jVertexSolid], distance))
           self.MappingMatrix.setValue(iGlobalVertexFluid,jGlobalVertexSolid,1.0)
           self.MappingMatrix_T.setValue(jGlobalVertexSolid, iGlobalVertexFluid,1.0)
-
-        del solidInterfaceBuffRcv_X
-        del solidInterfaceBuffRcv_Y
-        del solidInterfaceBuffRcv_Z
 
     def NearestNeighboorMeshMapping(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -1157,6 +1163,8 @@ class Interface:
 
         # --- Redistribute the interpolated fluid interface according to the partitions that own the fluid interface ---
         # Gather the fluid interface on the master process
+        # This is required because PETSc redistributes evenly in the cores, and does not use the same division
+        # of SU2, thus we need to redistribute
         if self.have_MPI == True:
           sendBuff_X = None
           sendBuff_Y = None
@@ -1248,6 +1256,9 @@ class Interface:
             if myid != self.rootProcess:
               self.haloNodesDisplacements = self.comm.recv(source = self.rootProcess, tag = 4)
           self.comm.barrier()
+          del self.fluidInterface_array_DispX_recon
+          del self.fluidInterface_array_DispY_recon
+          del self.fluidInterface_array_DispZ_recon
         del sendBuff
 
     def interpolateFluidLoadsOnSolidMesh(self, FSI_config):
@@ -1373,6 +1384,9 @@ class Interface:
           del sendBuff_X
           del sendBuff_Y
           del sendBuff_Z
+          del self.solidLoads_array_X_recon
+          del self.solidLoads_array_Y_recon
+          del self.solidLoads_array_Z_recon
         else:
           self.localSolidLoads_array_X = self.solidLoads_array_X.getArray().copy()
           self.localSolidLoads_array_Y = self.solidLoads_array_Y.getArray().copy()
@@ -1380,46 +1394,6 @@ class Interface:
 
         # Special treatment for the halo nodes on the fluid interface
         # TODO when we will use parallel solid solver !!
-
-
-    '''def getSolidInterfacePosition(self, SolidSolver):
-        """
-        Gets the current solid interface position from the solid solver.
-        """
-        if self.have_MPI == True:
-          myid = self.comm.Get_rank()
-        else:
-          myid = 0
-
-        # --- Get the solid interface position from the solid solver and directly fill the corresponding PETSc vector ---
-        GlobalIndex = int()
-        localIndex = 0
-        for iVertex in range(self.nLocalSolidInterfaceNodes):
-          GlobalIndex = SolidSolver.getInterfaceNodeGlobalIndex(self.solidInterfaceIdentifier, iVertex)
-          if GlobalIndex in self.SolidHaloNodeList[myid].keys():
-            pass
-          else:
-            newPosx = SolidSolver.getInterfaceNodePosX(self.solidInterfaceIdentifier, iVertex)
-            newPosy = SolidSolver.getInterfaceNodePosY(self.solidInterfaceIdentifier, iVertex)
-            newPosz = SolidSolver.getInterfaceNodePosZ(self.solidInterfaceIdentifier, iVertex)
-            iGlobalVertex = self.__getGlobalIndex('solid', myid, localIndex)
-            self.solidInterface_array_X.setValues([iGlobalVertex],newPosx)
-            self.solidInterface_array_Y.setValues([iGlobalVertex],newPosy)
-            self.solidInterface_array_Z.setValues([iGlobalVertex],newPosz)
-            localIndex += 1
-          #print("DEBUG MESSAGE From proc {} : In loop !".format(myid))
-
-        #print("DEBUG MESSAGE From proc {} : Prepare for assembly !".format(myid))
-
-        self.solidInterface_array_X.assemblyBegin()
-        self.solidInterface_array_X.assemblyEnd()
-        self.solidInterface_array_Y.assemblyBegin()
-        self.solidInterface_array_Y.assemblyEnd()
-        self.solidInterface_array_Z.assemblyBegin()
-        self.solidInterface_array_Z.assemblyEnd()
-
-        #print("DEBUG MESSAGE From PROC {} : Assembly is done !".format(myid))
-        #print("DEBUG MESSAGE From PROC {} : array_X = {}".format(myid, self.solidInterface_array_X.getArray()))'''
 
     def getSolidInterfaceDisplacement(self, SolidSolver):
         """
@@ -1500,6 +1474,10 @@ class Interface:
         FY_b = self.fluidLoads_array_Y.sum()
         FZ_b = self.fluidLoads_array_Z.sum()
 
+        self.MPIPrint("The total force in X direction, computed from the values of SU2, is {}. The one from PETSc is {}".format(FX,FX_b))
+        self.MPIPrint("The total force in Y direction, computed from the values of SU2, is {}. The one from PETSc is {}".format(FY,FY_b))
+        self.MPIPrint("The total force in Z direction, computed from the values of SU2, is {}. The one from PETSc is {}".format(FZ,FZ_b))
+
 
     def setFluidInterfaceVarCoord(self, FluidSolver):
         """
@@ -1576,9 +1554,6 @@ class Interface:
               Fz = self.localSolidLoads_array_Z[localIndex]
               SolidSolver.applyload(iVertex, Fx, Fy, Fz, time)
               localIndex += 1
-          if FSI_config['CSD_SOLVER'] == 'NATIVE':
-            SolidSolver.setGeneralisedForce()
-            SolidSolver.setGeneralisedMoment()
 
     def computeSolidInterfaceResidual(self, SolidSolver):
         """
@@ -1889,6 +1864,9 @@ class Interface:
     def __getGlobalIndex(self, physics, iProc, iLocalVertex):
         """
         Calculate the global indexing of interface nodes accross all the partitions. This does not include halo nodes.
+        This is needed because the global index of the fluid solver takes into account all the nodes, thus also those
+        in the volume mesh, not only on the interface. Here, we compute the global index of all the nodes on the
+        interface.
         """
 
         if physics == 'fluid':
