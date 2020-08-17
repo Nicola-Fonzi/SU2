@@ -1943,6 +1943,7 @@ class Interface:
             self.getSolidInterfaceDisplacement(SolidSolver)
             self.interpolateSolidPositionOnFluidMesh(FSI_config)
             self.setFluidInterfaceVarCoord(FluidSolver)
+            self.MPIPrint('\nPerforming static mesh deformation (ALE) of initial mesh...\n')
             FluidSolver.SetInitialMesh()	# if there is an initial deformation in the solid, it has to be communicated to the fluid solver
             self.MPIPrint('\nFSI initial conditions are set')
             self.MPIPrint('Beginning time integration\n')
