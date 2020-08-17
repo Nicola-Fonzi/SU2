@@ -782,9 +782,6 @@ class Interface:
         del self.localFluidInterface_array_X_init
         del self.localFluidInterface_array_Y_init
         del self.localFluidInterface_array_Z_init
-        del solidInterfaceBuffRcv_X
-        del solidInterfaceBuffRcv_Y
-        del solidInterfaceBuffRcv_Z
 
     def matchingMeshMapping(self,solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
