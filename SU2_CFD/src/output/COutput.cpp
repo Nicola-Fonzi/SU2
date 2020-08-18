@@ -1989,9 +1989,11 @@ bool COutput::WriteHistoryFile_Output(CConfig *config) {
 }
 
 bool COutput::WriteVolume_Output(CConfig *config, unsigned long Iter, bool force_writing){
-  cout<<"the division result is"<<(Iter % config->GetVolume_Wrt_Freq() == 0)<<endl;
-  cout<<"iter is"<<Iter<<endl;
-  if (config->GetTime_Domain()) return ((Iter % config->GetVolume_Wrt_Freq() == 0)) || force_writing;
+  if (config->GetTime_Domain()){
+    cout<<"the division result is"<<(Iter % config->GetVolume_Wrt_Freq() == 0)<<endl;
+    cout<<"iter is"<<Iter<<endl;
+    return ((Iter % config->GetVolume_Wrt_Freq() == 0)) || force_writing;
+  }
   else {
     return ((Iter > 0) && (Iter % config->GetVolume_Wrt_Freq() == 0)) || force_writing;
   }
