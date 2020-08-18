@@ -743,6 +743,8 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
                               unsigned long iter, bool force_writing){
 
   bool writeFiles = WriteVolume_Output(config, iter, force_writing);
+  cout<<"The flag for writing is now"<<writeFiles<<endl;
+  cout<<"Force writing is now"<<force_writing<<endl;
 
   /*--- Check if the data sorters are allocated, if not, allocate them. --- */
 
@@ -1987,6 +1989,8 @@ bool COutput::WriteHistoryFile_Output(CConfig *config) {
 }
 
 bool COutput::WriteVolume_Output(CConfig *config, unsigned long Iter, bool force_writing){
+  cout<<"the division result is"<<(Iter % config->GetVolume_Wrt_Freq() == 0)<<endl;
+  cout<<"iter is"<<Iter<<endl;
   if (config->GetTime_Domain()) return ((Iter % config->GetVolume_Wrt_Freq() == 0)) || force_writing;
   else {
     return ((Iter > 0) && (Iter % config->GetVolume_Wrt_Freq() == 0)) || force_writing;
