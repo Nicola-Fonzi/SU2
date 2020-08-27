@@ -1983,7 +1983,7 @@ class Interface:
                         self.MPIBarrier()
                        ##### self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
                         self.MPIBarrier()
-                       ##### if TimeIter > TimeIterTreshold:
+                        if TimeIter > TimeIterTreshold:
                           #####self.interpolateFluidLoadsOnSolidMesh(FSI_config)
                           #####self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
 
