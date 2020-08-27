@@ -567,6 +567,10 @@ class Solver:
 
     self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
 
+    ##### Sovrascrivo con legge assegnata!
+    self.q=((3.0*np.pi()/180.0)+(1.0*np.pi()/180.0)*np.sin(2*np.pi()*10.0*t1))/4.796908e-01
+    self.qdot = 2*np.pi()*10.0*((1.0*np.pi()/180.0)*np.cos(2*np.pi()*10.0*t1))/4.796908e-01
+
 
   def __SetLoads(self):
     """ Description """

@@ -1981,11 +1981,11 @@ class Interface:
                         # --- Surface fluid loads interpolation and communication --- #
                         self.MPIPrint('\nProcessing interface fluid loads...\n')
                         self.MPIBarrier()
-                        self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+                       ##### self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
                         self.MPIBarrier()
-                        if TimeIter > TimeIterTreshold:
-                          self.interpolateFluidLoadsOnSolidMesh(FSI_config)
-                          self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
+                       ##### if TimeIter > TimeIterTreshold:
+                          #####self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+                          #####self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
 
                           # --- Solid solver call for FSI subiteration --- #
                           self.MPIPrint('\nLaunching solid solver for a single time iteration...\n')
