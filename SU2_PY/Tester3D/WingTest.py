@@ -569,7 +569,8 @@ class Solver:
 
     ##### Sovrascrivo con legge assegnata!
     self.q=((3.0*pi/180.0)+(1.0*pi/180.0)*sin(2*pi*10.0*t1))/4.796908e-01
-    self.qdot = 2*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*t1))/4.796908e-01
+    self.qdot = 2.0*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*t1))/4.796908e-01
+    self.qddot = -4.0*pi*pi*100.0((1.0*pi/180.0)*sin(2*pi*10.0*t1))/4.796908e-01
 
 
   def __SetLoads(self):
