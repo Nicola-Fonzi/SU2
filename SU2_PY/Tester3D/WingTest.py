@@ -504,9 +504,11 @@ class Solver:
 
   def __reset(self, vector):
     """ Description. """
-
-    for ii in range(vector.shape[0]):
-      vector[ii] = 0.0
+    if self.nDof>1:
+      for ii in range(vector.shape[0]):
+        vector[ii] = 0.0
+    else:
+      vector = 0.0
 
   def __computeInterfacePosVel(self, initialize):
     """ Description. """
