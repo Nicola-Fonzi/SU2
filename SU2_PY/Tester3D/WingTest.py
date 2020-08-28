@@ -534,7 +534,7 @@ class Solver:
   def __temporalIteration(self,t1):
     """ Description. """
 
-    eps = 1e-6
+    """eps = 1e-6
 
     self.__SetLoads()
     if self.IdentificationTime >= 0:
@@ -567,12 +567,13 @@ class Solver:
       self.qddot += self.betaPrime*Deltaq
       res = self.__ComputeResidual()
 
-    self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
+    self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot"""
 
     ##### Sovrascrivo con legge assegnata!
     self.q=((3.0*pi/180.0)+(1.0*pi/180.0)*sin(2*pi*10.0*t1))/4.796908e-01
     self.qdot = 2.0*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*t1))/4.796908e-01
     self.qddot = -4.0*pi*pi*100.0*((1.0*pi/180.0)*sin(2*pi*10.0*t1))/4.796908e-01
+    self.a = self.qddot
 
 
   def __SetLoads(self):
