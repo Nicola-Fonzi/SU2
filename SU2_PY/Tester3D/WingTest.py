@@ -667,7 +667,10 @@ class Solver:
       histFile = open('StructHistoryModal.dat', "a")
     line = str(time) + '\t'
     for imode in range(self.nDof):
-      line = line + str(float(self.q[imode])) + '\t' + str(float(self.qdot[imode])) + '\t' + str(float(self.qddot[imode])) + '\t'
+      if self.nDof>1:
+        line = line + str(float(self.q[imode])) + '\t' + str(float(self.qdot[imode])) + '\t' + str(float(self.qddot[imode])) + '\t'
+      else:
+        line = line + str(float(self.q)) + '\t' + str(float(self.qdot)) + '\t' + str(float(self.qddot)) + '\t'
     line =  line + '\n'
     histFile.write(line)
     histFile.close()
