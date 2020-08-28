@@ -639,7 +639,10 @@ class Solver:
     print(header)
     line = '{:6.4f}'.format(t1) + '\t'
     for imode in range(min([self.nDof,5])):
-      line = line + '{:6.4f}'.format(float(self.q[imode])) + '\t' + '{:6.4f}'.format(float(self.qdot[imode])) + '\t' + '{:6.4f}'.format(float(self.qddot[imode])) + '\t'
+      if self.nDof>1:
+        line = line + '{:6.4f}'.format(float(self.q[imode])) + '\t' + '{:6.4f}'.format(float(self.qdot[imode])) + '\t' + '{:6.4f}'.format(float(self.qddot[imode])) + '\t'
+      else:
+        line = line + '{:6.4f}'.format(float(self.q)) + '\t' + '{:6.4f}'.format(float(self.qdot)) + '\t' + '{:6.4f}'.format(float(self.qddot)) + '\t'
     line =  line + '\n'
     print(line)
     self.__computeInterfacePosVel(False)
