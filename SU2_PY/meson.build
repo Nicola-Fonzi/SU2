@@ -84,6 +84,10 @@ install_data(['Tester3D/__init__.py',
               'Tester3D/WingTest.py',],
         install_dir: join_paths(get_option('bindir'), 'Tester3D'))
 
+install_data(['Imposed/__init__.py',
+              'Imposed/ImposedStruct.py',],
+        install_dir: join_paths(get_option('bindir'), 'Imposed'))
+
 install_data(['Tester3D/io/readHistoryModal.m',
               'Tester3D/io/readHistoryNodal.m',
               'Tester3D/io/writef06.m'],
