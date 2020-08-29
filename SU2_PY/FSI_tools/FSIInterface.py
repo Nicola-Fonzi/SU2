@@ -143,6 +143,10 @@ class Interface:
         self.aitkenParam = FSI_config['AITKEN_PARAM']			#relaxation parameter for the BGS method
         self.FSIIter = 0				#current FSI iteration
         self.unsteady = False				#flag for steady or unsteady simulation (default is steady)
+        if FSI_config['CSD_SOLVER']=='IMPOSED':
+          self.ImposedMotion = True
+        else:
+          self.ImposedMotion = False
 
         # ---Some screen output ---
         self.MPIPrint('Fluid solver : SU2_CFD')
@@ -1981,11 +1985,13 @@ class Interface:
                         # --- Surface fluid loads interpolation and communication --- #
                         self.MPIPrint('\nProcessing interface fluid loads...\n')
                         self.MPIBarrier()
-                       ##### self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+                        if not self.ImposedMotion:
+                          self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
                         self.MPIBarrier()
                         if TimeIter > TimeIterTreshold:
-                          #####self.interpolateFluidLoadsOnSolidMesh(FSI_config)
-                          #####self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
+                          if not self.ImposedMotion:
+                            self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+                            self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
 
                           # --- Solid solver call for FSI subiteration --- #
                           self.MPIPrint('\nLaunching solid solver for a single time iteration...\n')

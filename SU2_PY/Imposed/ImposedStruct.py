@@ -532,56 +532,10 @@ class Solver:
   def __temporalIteration(self,t1):
     """ Description. """
 
-    eps = 1e-6
-
-    self.__SetLoads()
-    if self.IdentificationTime >= 0:
-      self.__Identify(t1)
-
-    # Prediction step
-    self.__reset(self.qddot)
-    self.__reset(self.a)
-
-    self.a += (self.alpha_f)/(1-self.alpha_m)*self.qddot_n
-    self.a -= (self.alpha_m)/(1-self.alpha_m)*self.a_n
-
-    self.q = np.copy(self.q_n)
-    self.q += self.deltaT*self.qdot_n
-    self.q += (0.5-self.beta)*self.deltaT*self.deltaT*self.a_n
-    self.q += self.deltaT*self.deltaT*self.beta*self.a
-
-    self.qdot = np.copy(self.qdot_n)
-    self.qdot += (1-self.gamma)*self.deltaT*self.a_n
-    self.qdot += self.deltaT*self.gamma*self.a
-
-    # Correction step
-    res = self.__ComputeResidual()
-
-    while linalg.norm(res) >= eps:
-      St = self.__TangentOperator()
-      Deltaq = -1*(linalg.solve(St,res))
-      self.q += Deltaq
-      self.qdot += self.gammaPrime*Deltaq
-      self.qddot += self.betaPrime*Deltaq
-      res = self.__ComputeResidual()
-
-    self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
-
-
-  def __SetLoads(self):
-    """ Description """
-    makerID = list(self.markers.keys())
-    makerID = makerID[0]
-    nodeList = self.markers[makerID]
-    FX = np.zeros((self.nPoint, 1))
-    FY = np.zeros((self.nPoint, 1))
-    FZ = np.zeros((self.nPoint, 1))
-    for iPoint in nodeList:
-      Force = self.node[iPoint].GetForce()
-      FX[iPoint] = float(Force[0])
-      FY[iPoint] = float(Force[1])
-      FZ[iPoint] = float(Force[2])
-    self.F = self.UxT.dot(FX) + self.UyT.dot(FY) + self.UzT.dot(FZ)
+    self.q[0]=((3.0*pi/180.0)+(1.0*pi/180.0)*sin(2*pi*10.0*t1))/4.796908e-01
+    self.qdot[0] = 2.0*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*t1))/4.796908e-01
+    self.qddot[0] = -4.0*pi*pi*100.0*((1.0*pi/180.0)*sin(2*pi*10.0*t1))/4.796908e-01
+    self.a = np.copy(self.qddot)
 
   def __ComputeResidual(self):
     """ Description. """
@@ -682,15 +636,6 @@ class Solver:
 
     for iPoint in nodeList:
       self.node[iPoint].updateCoordVel()
-
-
-  def applyload(self, iVertex, fx, fy, fz, time):
-    """ Description """
-
-    makerID = list(self.markers.keys())
-    makerID = makerID[0]
-    iPoint = self.getInterfaceNodeGlobalIndex(makerID, iVertex)
-    self.node[iPoint].SetForce((fx,fy,fz))
 
   def getFSIMarkerID(self):
     """ Description. """

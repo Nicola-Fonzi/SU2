@@ -117,6 +117,9 @@ def main():
     elif CSD_Solver == 'TESTER3D':
       from Tester3D import WingTest
       SolidSolver = WingTest.Solver(CSD_ConFile)
+    elif CSD_Solver == 'IMPOSED':
+      from Imposed import ImposedStruct
+      SolidSolver = ImposedStruct.Solver(CSD_ConFile)
     else:
       print("\n I have no idea about the solid solver you want to use")
   else:
