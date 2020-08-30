@@ -209,14 +209,14 @@ void CIteration::SetMesh_StaticDeformation(CGeometry** geometry, CSolver** solve
   if (!config->GetDeform_Mesh()) return;
 
   /*--- Perform the elasticity mesh movement ---*/
-
-  bool wasActive = false;
-  if ((kind_recording != MESH_DEFORM) && !config->GetMultizone_Problem()) {
-    /*--- In a primal run, AD::TapeActive returns a false ---*/
-    /*--- In any other recordings, the tape is passive during the deformation. ---*/
-    wasActive = AD::BeginPassive();
-  }
-
+////
+////  bool wasActive = false;
+////  if ((kind_recording != MESH_DEFORM) && !config->GetMultizone_Problem()) {
+////    /*--- In a primal run, AD::TapeActive returns a false ---*/
+////    /*--- In any other recordings, the tape is passive during the deformation. ---*/
+////    wasActive = AD::BeginPassive();
+////  }
+///
   /*--- Set the stiffness of each element mesh into the mesh numerics ---*/
 
   solver[MESH_SOL]->SetMesh_Stiffness(geometry, numerics[MESH_SOL], config);
@@ -226,7 +226,7 @@ void CIteration::SetMesh_StaticDeformation(CGeometry** geometry, CSolver** solve
   solver[MESH_SOL]->StaticDeformMesh(geometry, numerics[MESH_SOL], config);
 
   /*--- Continue recording. ---*/
-  AD::EndPassive(wasActive);
+////  AD::EndPassive(wasActive);
 }
 
 void CIteration::Output(COutput* output, CGeometry**** geometry, CSolver***** solver, CConfig** config,
