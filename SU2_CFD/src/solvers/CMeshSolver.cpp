@@ -530,51 +530,51 @@ void CMeshSolver::DeformMesh(CGeometry **geometry, CNumerics **numerics, CConfig
 void CMeshSolver::StaticDeformMesh(CGeometry **geometry, CNumerics **numerics, CConfig *config){
 
   if (multizone) nodes->Set_BGSSolution_k();
-cout<<"prima comunicazione"<<endl;
+
   /*--- Capture a few MPI dependencies for AD. ---*/
   geometry[MESH_0]->InitiateComms(geometry[MESH_0], config, COORDINATES);
   geometry[MESH_0]->CompleteComms(geometry[MESH_0], config, COORDINATES);
-cout<<"seconda comunicazione"<<endl;
+
   InitiateComms(geometry[MESH_0], config, SOLUTION);
   CompleteComms(geometry[MESH_0], config, SOLUTION);
-cout << "terza comunicazione" << endl;
+
   InitiateComms(geometry[MESH_0], config, MESH_DISPLACEMENTS);
   CompleteComms(geometry[MESH_0], config, MESH_DISPLACEMENTS);
 
   /*--- Compute the stiffness matrix, no point recording because we clear the residual. ---*/
 
   const bool wasActive = AD::BeginPassive();
-cout<<"calcolo della matrice di rigidezza"<<endl;
+
   Compute_StiffMatrix(geometry[MESH_0], numerics, config);
 
   AD::EndPassive(wasActive);
-cout<<"clear residual"<<endl;
+
   /*--- Clear residual (loses AD info), we do not want an incremental solution. ---*/
   SU2_OMP_PARALLEL {
     LinSysRes.SetValZero();
   }
-cout<<"imponi no spostamenti"<<endl;
+
   /*--- Impose boundary conditions (all of them are ESSENTIAL BC's - displacements). ---*/
   SetBoundaryDisplacements(geometry[MESH_0], numerics[FEA_TERM], config);
-cout<<"risolvi il sistema"<<endl;
+
   /*--- Solve the linear system. ---*/
   Solve_System(geometry[MESH_0], config);
 
   SU2_OMP_PARALLEL {
-cout<<"primo update"<<endl;
+
   /*--- Update the grid coordinates and cell volumes using the solution
      of the linear system (usol contains the x, y, z displacements). ---*/
   UpdateGridCoord(geometry[MESH_0], config);
-cout<<"secondo update"<<endl;
+
   /*--- Update the dual grid. ---*/
   UpdateDualGrid(geometry[MESH_0], config);
-cout<<"terzo update"<<endl;
+
   /*--- Update the multigrid structure. ---*/
   UpdateMultiGrid(geometry, config);
-cout<<"quarto update"<<endl;
+
   /*--- Check for failed deformation (negative volumes). ---*/
   SetMinMaxVolume(geometry[MESH_0], config, true);
-cout<<"quinto update"<<endl;
+
   /*--- Push back the solution so that there is no fictious velocity at the next step. ---*/
   nodes->Set_Solution_time_n();
   nodes->Set_Solution_time_n1();
