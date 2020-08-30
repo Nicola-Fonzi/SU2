@@ -337,7 +337,7 @@ unsigned long CSysSolve<ScalarType>::FGMRES_LinSolver(const CSysVector<ScalarTyp
                                                       ScalarType tol, unsigned long m, ScalarType & residual, bool monitoring, const CConfig *config) const {
 
   const bool master = (SU2_MPI::GetRank() == MASTER_NODE) && (omp_get_thread_num() == 0);
-
+cout<<"we are solving the system"<<endl;
   /*---  Check the subspace size ---*/
 
   if (m < 1) {
