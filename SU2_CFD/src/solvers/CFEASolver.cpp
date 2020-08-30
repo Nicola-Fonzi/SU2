@@ -2773,7 +2773,7 @@ void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
   /*--- Enforce solution at some halo points possibly not covered by essential BC markers. ---*/
   Jacobian.InitiateComms(LinSysSol, geometry, config, SOLUTION_MATRIX);
   Jacobian.CompleteComms(LinSysSol, geometry, config, SOLUTION_MATRIX);
-  cout<<"Dobbiamo eliminare "<<ExtraVerticesToEliminate<<" nodi"<<endl;
+  cout<<"Dobbiamo eliminare "<<" nodi"<<endl;
   for (auto iPoint : ExtraVerticesToEliminate) {
     Jacobian.EnforceSolutionAtNode(iPoint, LinSysSol.GetBlock(iPoint), LinSysRes);
   }
