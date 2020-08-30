@@ -2785,7 +2785,7 @@ void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
   for (auto i = nPointDomain*nVar; i < nPoint*nVar; ++i) LinSysRes[i] = 0.0;
 
   /*--- Solve or smooth the linear system. ---*/
-cout<<"soluzione"<<endl:
+cout<<"soluzione"<<endl;
   auto iter = System.Solve(Jacobian, LinSysRes, LinSysSol, geometry, config);
 cout<<"risolto"<<endl;
   SU2_OMP_MASTER
