@@ -481,6 +481,7 @@ cout<<m<<endl;
   }
 
   residual = beta/norm0;
+  cout<<i<<endl;
   return i;
 
 }
