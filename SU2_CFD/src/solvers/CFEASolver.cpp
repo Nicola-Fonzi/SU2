@@ -2771,10 +2771,8 @@ void CFEASolver::GeneralizedAlpha_UpdateLoads(CGeometry *geometry, const CConfig
 void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
 
   /*--- Enforce solution at some halo points possibly not covered by essential BC markers. ---*/
-cout<<"Comunicazione"<<endl;
   Jacobian.InitiateComms(LinSysSol, geometry, config, SOLUTION_MATRIX);
   Jacobian.CompleteComms(LinSysSol, geometry, config, SOLUTION_MATRIX);
-cout<<"condizioni al contoro"<<endl;
   for (auto iPoint : ExtraVerticesToEliminate) {
     Jacobian.EnforceSolutionAtNode(iPoint, LinSysSol.GetBlock(iPoint), LinSysRes);
   }
@@ -2790,9 +2788,7 @@ cout<<"condizioni al contoro"<<endl;
   auto iter = System.Solve(Jacobian, LinSysRes, LinSysSol, geometry, config);
   SU2_OMP_MASTER
   {
-    cout<<"prima cosa"<<endl;
     SetIterLinSolver(iter);
-    cout<<"seconda cosa"<<endl;
     SetResLinSolver(System.GetResidual());
   }
   //SU2_OMP_BARRIER

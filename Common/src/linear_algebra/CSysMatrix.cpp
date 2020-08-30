@@ -1283,7 +1283,7 @@ void CSysMatrix<ScalarType>::EnforceSolutionAtNode(const unsigned long node_i, c
    *    To preserve eventual symmetry, also attempt to eliminate the column, if the sparse pattern is not
    *    symmetric the entire column may not be eliminated, the result (matrix and vector) is still correct.
    *    The vector is updated with the product of column i by the known (enforced) solution at node i. ---*/
-
+cout<<"primo"<<endl;
   for (auto index = row_ptr[node_i]; index < row_ptr[node_i+1]; ++index) {
 
     auto node_j = col_ind[index];
@@ -1311,10 +1311,10 @@ void CSysMatrix<ScalarType>::EnforceSolutionAtNode(const unsigned long node_i, c
     }
 
   }
-
+cout<<"secondo"<<endl;
   /*--- Set the diagonal block to the identity. ---*/
   SetVal2Diag(node_i, 1.0);
-
+cout<<"terzo"<<endl;
   /*--- Set known solution in rhs vector. ---*/
   b.SetBlock(node_i, x_i);
 
