@@ -2787,6 +2787,11 @@ void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
   /*--- Solve or smooth the linear system. ---*/
 
   auto iter = System.Solve(Jacobian, LinSysRes, LinSysSol, geometry, config);
+  if (rank == MASTER_NODE){
+    if (iter >= config->GetDeform_Linear_Solver_Iter()){
+      cout<<"Reached maximum number of iteration in structural deformation solver"<<endl;
+    }
+  }
 
   SU2_OMP_MASTER
   {

@@ -337,14 +337,14 @@ unsigned long CSysSolve<ScalarType>::FGMRES_LinSolver(const CSysVector<ScalarTyp
                                                       ScalarType tol, unsigned long m, ScalarType & residual, bool monitoring, const CConfig *config) const {
 
   const bool master = (SU2_MPI::GetRank() == MASTER_NODE) && (omp_get_thread_num() == 0);
-cout<<"we are solving the system"<<endl;
+
   /*---  Check the subspace size ---*/
 
   if (m < 1) {
     SU2_OMP_MASTER
     SU2_MPI::Error("Number of linear solver iterations must be greater than 0.", CURRENT_FUNCTION);
   }
-cout<<m<<endl;
+
   if (m > 5000) {
     SU2_OMP_MASTER
     SU2_MPI::Error("FGMRES subspace is too large.", CURRENT_FUNCTION);
@@ -481,7 +481,6 @@ cout<<m<<endl;
   }
 
   residual = beta/norm0;
-  cout<<i<<endl;
   return i;
 
 }
