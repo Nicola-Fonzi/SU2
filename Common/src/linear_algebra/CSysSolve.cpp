@@ -917,7 +917,7 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
 
   unsigned long IterLinSol = 0;
   ScalarType residual = 0.0, norm0 = 0.0;
-
+cout<<"prima"<<endl;
   switch (KindSolver) {
     case BCGSTAB:
       IterLinSol = BCGSTAB_LinSolver(*LinSysRes_ptr, *LinSysSol_ptr, mat_vec, *precond, SolverTol, MaxIter, residual, ScreenOutput, config);
@@ -949,7 +949,7 @@ unsigned long CSysSolve<ScalarType>::Solve(CSysMatrix<ScalarType> & Jacobian, co
     default:
       SU2_MPI::Error("Unknown type of linear solver.",CURRENT_FUNCTION);
   }
-
+cout<<"dopo"<<endl;
   SU2_OMP_MASTER
   {
     Residual = residual;
