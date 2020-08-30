@@ -218,9 +218,9 @@ void CIteration::SetMesh_StaticDeformation(CGeometry** geometry, CSolver** solve
 ////  }
 ///
   /*--- Set the stiffness of each element mesh into the mesh numerics ---*/
-
+cout << "prima di settare la rigidezza" << endl;
   solver[MESH_SOL]->SetMesh_Stiffness(geometry, numerics[MESH_SOL], config);
-
+cout << "dopo settare la rigidezza" << endl;
   /*--- Deform the volume grid around the new boundary locations ---*/
 
   solver[MESH_SOL]->StaticDeformMesh(geometry, numerics[MESH_SOL], config);
