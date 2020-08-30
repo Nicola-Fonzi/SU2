@@ -2773,17 +2773,17 @@ void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
   /*--- Enforce solution at some halo points possibly not covered by essential BC markers. ---*/
   Jacobian.InitiateComms(LinSysSol, geometry, config, SOLUTION_MATRIX);
   Jacobian.CompleteComms(LinSysSol, geometry, config, SOLUTION_MATRIX);
-  cout<<"Dobbiamo eliminare "<<" nodi"<<endl;
+
   for (auto iPoint : ExtraVerticesToEliminate) {
     Jacobian.EnforceSolutionAtNode(iPoint, LinSysSol.GetBlock(iPoint), LinSysRes);
   }
-  cout<<"fatto"<<endl;
+cout<<"fatto"<<endl;
   SU2_OMP_PARALLEL
   {
   /*--- This is required for the discrete adjoint. ---*/
   SU2_OMP_FOR_STAT(OMP_MIN_SIZE)
   for (auto i = nPointDomain*nVar; i < nPoint*nVar; ++i) LinSysRes[i] = 0.0;
-
+cout<<"prima di risolvere"<<endl;
   /*--- Solve or smooth the linear system. ---*/
 
   auto iter = System.Solve(Jacobian, LinSysRes, LinSysSol, geometry, config);
