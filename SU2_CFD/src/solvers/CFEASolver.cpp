@@ -2777,16 +2777,17 @@ void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
   for (auto iPoint : ExtraVerticesToEliminate) {
     Jacobian.EnforceSolutionAtNode(iPoint, LinSysSol.GetBlock(iPoint), LinSysRes);
   }
-cout<<"fatto"<<endl;
+
   SU2_OMP_PARALLEL
   {
   /*--- This is required for the discrete adjoint. ---*/
   SU2_OMP_FOR_STAT(OMP_MIN_SIZE)
   for (auto i = nPointDomain*nVar; i < nPoint*nVar; ++i) LinSysRes[i] = 0.0;
-cout<<"prima di risolvere"<<endl;
-  /*--- Solve or smooth the linear system. ---*/
 
+  /*--- Solve or smooth the linear system. ---*/
+cout<<"soluzione"<<endl:
   auto iter = System.Solve(Jacobian, LinSysRes, LinSysSol, geometry, config);
+cout<<"risolto"<<endl;
   SU2_OMP_MASTER
   {
     SetIterLinSolver(iter);
