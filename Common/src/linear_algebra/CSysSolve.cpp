@@ -344,7 +344,7 @@ unsigned long CSysSolve<ScalarType>::FGMRES_LinSolver(const CSysVector<ScalarTyp
     SU2_OMP_MASTER
     SU2_MPI::Error("Number of linear solver iterations must be greater than 0.", CURRENT_FUNCTION);
   }
-
+cout<<m<<endl;
   if (m > 5000) {
     SU2_OMP_MASTER
     SU2_MPI::Error("FGMRES subspace is too large.", CURRENT_FUNCTION);
@@ -353,7 +353,7 @@ unsigned long CSysSolve<ScalarType>::FGMRES_LinSolver(const CSysVector<ScalarTyp
   /*--- Allocate if not allocated yet
    Note: elements in w and z are initialized to x to avoid creating
    a temporary CSysVector object for the copy constructor ---*/
-cout<<"allocate"<<endl;
+
   if (!gmres_ready) {
     SU2_OMP_BARRIER
     SU2_OMP_MASTER
@@ -374,7 +374,7 @@ cout<<"allocate"<<endl;
   vector<ScalarType> cs(m+1, 0.0);
   vector<ScalarType> y(m, 0.0);
   vector<vector<ScalarType> > H(m+1, vector<ScalarType>(m, 0.0));
-cout<<"done"<<endl;
+
   /*--- Calculate the norm of the rhs vector. ---*/
 
   ScalarType norm0 = b.norm();
