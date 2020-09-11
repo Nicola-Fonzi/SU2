@@ -1972,6 +1972,8 @@ class Interface:
                         self.setFluidInterfaceVarCoord(FluidSolver)
                         if self.FSIIter == 0:
                            FluidSolver.Preprocess(TimeIter)	# set some parameters before temporal fluid iteration and dynamic mesh update
+                           FluidSolver.SetInitialMesh()
+                           self.MPIPrint('I have set the initial mesh\n')
                         else:
                            FluidSolver.DynamicMeshUpdate(TimeIter)
 
