@@ -168,11 +168,8 @@ class Solver:
     self.Unsteady = (self.Config['TIME_MARCHING']=="YES")
     if self.Unsteady:
       print('Dynamic computation.')
-    if self.Config['STRUCT_TYPE'] == "AIRFOIL":
-      self.nDof = 2
-      print("Structural model : pitching-plunging airfoil.")
-    else:
-      self.nDof = 0
+   self.nDof = self.Config['NMODES']
+   print("Reading number of modes from file")
 
 
     # Structural properties
