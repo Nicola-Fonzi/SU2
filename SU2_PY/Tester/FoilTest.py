@@ -168,8 +168,8 @@ class Solver:
     self.Unsteady = (self.Config['TIME_MARCHING']=="YES")
     if self.Unsteady:
       print('Dynamic computation.')
-   self.nDof = self.Config['NMODES']
-   print("Reading number of modes from file")
+    self.nDof = self.Config['NMODES']
+    print("Reading number of modes from file")
 
 
     # Structural properties
