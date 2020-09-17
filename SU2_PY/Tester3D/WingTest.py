@@ -591,7 +591,7 @@ class Solver:
 
     self.__computeInterfacePosVel(True)
 
-  def writeSolution(self, time, FSIIter, TimeIter):
+  def writeSolution(self, time, FSIIter):
     """ Description. """
 
     # Modal History
