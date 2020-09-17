@@ -1505,7 +1505,7 @@ class Interface:
               localIndex += 1
 
 
-    def setSolidInterfaceLoads(self, SolidSolver, FSI_config, time):
+    def setSolidInterfaceLoads(self, SolidSolver, FSI_config):
         """
         Communicates the new solid interface loads to the solid solver.
         In case of rigid body motion, calculates the new resultant forces (lift, drag, ...).
@@ -1553,7 +1553,7 @@ class Interface:
               Fx = self.localSolidLoads_array_X[localIndex]
               Fy = self.localSolidLoads_array_Y[localIndex]
               Fz = self.localSolidLoads_array_Z[localIndex]
-              SolidSolver.applyload(iVertex, Fx, Fy, Fz, time)
+              SolidSolver.applyload(iVertex, Fx, Fy, Fz)
               localIndex += 1
 
     def computeSolidInterfaceResidual(self, SolidSolver):
@@ -1991,7 +1991,7 @@ class Interface:
                         if TimeIter > TimeIterTreshold:
                           if not self.ImposedMotion:
                             self.interpolateFluidLoadsOnSolidMesh(FSI_config)
-                            self.setSolidInterfaceLoads(SolidSolver, FSI_config, time)
+                            self.setSolidInterfaceLoads(SolidSolver, FSI_config)
 
                           # --- Solid solver call for FSI subiteration --- #
                           self.MPIPrint('\nLaunching solid solver for a single time iteration...\n')
@@ -2059,7 +2059,7 @@ class Interface:
             numberPart = 1
 
           # --- Set some general variables for the steady computation --- #
-          NbIter = FSI_config['NB_EXT_ITER']		# number of fluid iteration at each FSI step
+          NbIter = FSI_config['NB_FLUID_ITER']		# number of fluid iteration at each FSI step
           NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
           FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
           varCoordNorm = 0.0
@@ -2069,7 +2069,13 @@ class Interface:
           self.MPIPrint('********************************\n')
           self.MPIPrint('\n*************** Enter Block Gauss Seidel (BGS) method for strong coupling FSI ***************')
 
+          self.MPIPrint('Setting initial deformed mesh')
+          if myid in self.solidSolverProcessors:
+              SolidSolver.setInitialDisplacements()
           self.getSolidInterfaceDisplacement(SolidSolver)
+          self.interpolateSolidPositionOnFluidMesh(FSI_config)
+          self.setFluidInterfaceVarCoord(FluidSolver)
+          self.MPIPrint('\nFSI initial conditions are set')
 
           # --- External FSI loop --- #
           self.FSIIter = 0
@@ -2078,39 +2084,38 @@ class Interface:
             self.MPIPrint('\nLaunching fluid solver for a steady computation...')
             # --- Fluid solver call for FSI subiteration ---#
             Iter = 0
-            FluidSolver.ResetConvergence()
+            FluidSolver.ResetConvergence() #Probabilmente questo serve a 'n cazzo, vedi blocco appunti
             while Iter < NbIter:
-              FluidSolver.PreprocessExtIter(Iter)
+              FluidSolver.Preprocess(0)
               FluidSolver.Run()
-              StopIntegration = FluidSolver.Monitor(Iter)
-              FluidSolver.Output(Iter)
-              if StopIntegration:
-                break;
+              stopcalc = FluidSolver.Monitor(0)
+              if stopcalc:
+                  break
               Iter += 1
+            FluidSolver.Output(0)
 
             # --- Surface fluid loads interpolation and communication ---#
             self.MPIPrint('\nProcessing interface fluid loads...\n')
             self.MPIBarrier()
-            self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
-            self.MPIBarrier()
-            self.interpolateFluidLoadsOnSolidMesh(FSI_config)
-            self.setSolidInterfaceLoads(SolidSolver, FSI_config, 0.05)
+            if not self.ImposedMotion:
+              self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+              self.MPIBarrier()
+              self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+              self.setSolidInterfaceLoads(SolidSolver, FSI_config)
 
             # --- Solid solver call for FSI subiteration --- #
             self.MPIPrint('\nLaunching solid solver for a static computation...\n')
             if myid in self.solidSolverProcessors:
-              if FSI_config['CSD_SOLVER'] == 'NATIVE':
-                  SolidSolver.staticComputation()
-              else:
-                  SolidSolver.run(0.0, 0.05)
+              SolidSolver.run(0.0, 0.05)
               SolidSolver.writeSolution(0.0, self.FSIIter, Iter, NbIter)
 
             # --- Compute and monitor the FSI residual --- #
             varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
             self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
             self.writeFSIHistory(0, 0.0, varCoordNorm, False)
-            if varCoordNorm < FSITolerance:
-              break
+            if not self.ImposedMotion:
+              if varCoordNorm < FSITolerance:
+                break
 
             # --- Relaxe the solid displacement and update the solid solution --- #
             self.MPIPrint('\nProcessing interface displacements...\n')
@@ -2122,7 +2127,7 @@ class Interface:
             self.interpolateSolidPositionOnFluidMesh(FSI_config)
             self.MPIPrint('\nPerforming static mesh deformation...\n')
             self.setFluidInterfaceVarCoord(FluidSolver)
-            FluidSolver.StaticMeshUpdate()
+            FluidSolver.SetInitialMesh()
             self.FSIIter += 1
 
           self.MPIBarrier()

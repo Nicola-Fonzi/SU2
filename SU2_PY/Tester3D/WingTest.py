@@ -684,7 +684,7 @@ class Solver:
       self.node[iPoint].updateCoordVel()
 
 
-  def applyload(self, iVertex, fx, fy, fz, time):
+  def applyload(self, iVertex, fx, fy, fz):
     """ Description """
 
     makerID = list(self.markers.keys())

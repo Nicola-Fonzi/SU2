@@ -165,7 +165,6 @@ def main():
         print('A KeyboardInterrupt occured in FSIInterface.UnsteadyFSI : ',exception)
   else:
     try:
-      NbExtIter = FSI_config['NB_EXT_ITER']
       FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver)
     except NameError as exception:
       if myid == rootProcess:
