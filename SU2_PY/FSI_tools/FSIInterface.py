@@ -476,6 +476,9 @@ class Interface:
         self.fluidLoads_array_X.setSizes(self.nFluidInterfacePhysicalNodes)
         self.fluidLoads_array_Y.setSizes(self.nFluidInterfacePhysicalNodes)
         self.fluidLoads_array_Z.setSizes(self.nFluidInterfacePhysicalNodes)
+        self.fluidLoads_array_X.set(0.0)
+        self.fluidLoads_array_Y.set(0.0)
+        self.fluidLoads_array_Z.set(0.0)
 
         if self.have_MPI == True:
           self.solidLoads_array_X = PETSc.Vec().create(self.comm)
@@ -516,6 +519,9 @@ class Interface:
         self.solidInterfaceResidual_array_X.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
         self.solidInterfaceResidual_array_Y.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
         self.solidInterfaceResidual_array_Z.setSizes(self.nSolidInterfacePhysicalNodes+self.d_RBF)
+        self.solidInterfaceResidual_array_X.set(0.0)
+        self.solidInterfaceResidual_array_Y.set(0.0)
+        self.solidInterfaceResidual_array_Z.set(0.0)
 
         if self.have_MPI == True:
           self.solidInterfaceResidualnM1_array_X = PETSc.Vec().create(self.comm)
@@ -577,7 +583,7 @@ class Interface:
           fluidIndexing_temp = self.comm.allgather(fluidIndexing_temp)
           for ii in range(len(fluidIndexing_temp)):
             for key, value in fluidIndexing_temp[ii].items():
-              # This contains the link between the global index in python an that in SU2
+              # This contains the link between the global index in python and that in SU2
               self.fluidIndexing[key] = value
         else:
           self.fluidIndexing = fluidIndexing_temp.copy()
