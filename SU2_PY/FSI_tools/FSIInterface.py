@@ -2095,9 +2095,7 @@ class Interface:
               FluidSolver.ResetConvergence() #Probabilmente questo serve a 'n cazzo, vedi blocco appunti
               FluidSolver.Preprocess(0)
               FluidSolver.Run()
-              stopcalc = FluidSolver.Monitor(0)
-              if stopcalc:
-                  break
+              FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
               Iter += 1
             FluidSolver.Output(0)
 
