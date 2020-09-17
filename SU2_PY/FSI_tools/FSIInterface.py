@@ -1131,10 +1131,12 @@ class Interface:
           #print(KSP_solver.getInitialGuessNonzero())
           KSP_solver.solve(self.solidInterface_array_DispX, gamma_array_DispX)
           KSP_solver.solve(self.solidInterface_array_DispY, gamma_array_DispY)
-          KSP_solver.solve(self.solidInterface_array_DispZ, gamma_array_DispZ)
+          if self.nDim==3:
+            KSP_solver.solve(self.solidInterface_array_DispZ, gamma_array_DispZ)
           self.MappingMatrixB.mult(gamma_array_DispX, self.fluidInterface_array_DispX)
           self.MappingMatrixB.mult(gamma_array_DispY, self.fluidInterface_array_DispY)
-          self.MappingMatrixB.mult(gamma_array_DispZ, self.fluidInterface_array_DispZ)
+          if self.nDim==3:
+            self.MappingMatrixB.mult(gamma_array_DispZ, self.fluidInterface_array_DispZ)
           gamma_array_DispX.destroy()
           gamma_array_DispY.destroy()
           gamma_array_DispZ.destroy()
@@ -1146,7 +1148,8 @@ class Interface:
         else:
           self.MappingMatrix.mult(self.solidInterface_array_DispX, self.fluidInterface_array_DispX)
           self.MappingMatrix.mult(self.solidInterface_array_DispY, self.fluidInterface_array_DispY)
-          self.MappingMatrix.mult(self.solidInterface_array_DispZ, self.fluidInterface_array_DispZ)
+          if self.nDim==3:
+            self.MappingMatrix.mult(self.solidInterface_array_DispZ, self.fluidInterface_array_DispZ)
 
         # --- Checking conservation ---
         WSX = self.solidLoads_array_X.dot(self.solidInterface_array_DispX)
@@ -1304,10 +1307,12 @@ class Interface:
           KSP_solver.setFromOptions()
           self.MappingMatrixB_T.mult(self.fluidLoads_array_X, gamma_array_LoadX)
           self.MappingMatrixB_T.mult(self.fluidLoads_array_Y, gamma_array_LoadY)
-          self.MappingMatrixB_T.mult(self.fluidLoads_array_Z, gamma_array_LoadZ)
+          if self.nDim==3:
+            self.MappingMatrixB_T.mult(self.fluidLoads_array_Z, gamma_array_LoadZ)
           KSP_solver.solve(gamma_array_LoadX, self.solidLoads_array_X)
           KSP_solver.solve(gamma_array_LoadY, self.solidLoads_array_Y)
-          KSP_solver.solve(gamma_array_LoadZ, self.solidLoads_array_Z)
+          if self.nDim==3:
+            KSP_solver.solve(gamma_array_LoadZ, self.solidLoads_array_Z)
           gamma_array_LoadX.destroy()
           gamma_array_LoadY.destroy()
           gamma_array_LoadZ.destroy()
@@ -1319,7 +1324,8 @@ class Interface:
         else:
           self.MappingMatrix_T.mult(self.fluidLoads_array_X, self.solidLoads_array_X)
           self.MappingMatrix_T.mult(self.fluidLoads_array_Y, self.solidLoads_array_Y)
-          self.MappingMatrix_T.mult(self.fluidLoads_array_Z, self.solidLoads_array_Z)
+          if self.nDim==3:
+            self.MappingMatrix_T.mult(self.fluidLoads_array_Z, self.solidLoads_array_Z)
 
         # --- Redistribute the interpolated solid loads according to the partitions that own the solid interface ---
         # Gather the solid loads on the master process
