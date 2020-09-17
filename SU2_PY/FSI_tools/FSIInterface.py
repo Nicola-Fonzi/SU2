@@ -2080,7 +2080,6 @@ class Interface:
           self.getSolidInterfaceDisplacement(SolidSolver)
           self.interpolateSolidPositionOnFluidMesh(FSI_config)
           self.setFluidInterfaceVarCoord(FluidSolver)
-          #FluidSolver.SetInitialMesh()
           self.MPIPrint('\nFSI initial conditions are set')
 
           # --- External FSI loop --- #
@@ -2091,7 +2090,9 @@ class Interface:
             # --- Fluid solver call for FSI subiteration ---#
 
             FluidSolver.ResetConvergence() #This is setting to zero the convergence in the integrator, important to reset it
-            FluidSolver.Preprocess(0)
+            # The mesh will be deformed in the context of the preprocessor, there is no need to set the initial
+            # mesh pushing back the solution to avoid spurious velocities, as the velocity is not computed at all
+            FluidSolver.Preprocess(0)# This will attempt to always set the initial condition, but there is a flag on the unsteady computation that will avoid it
             FluidSolver.Run()
             FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
             FluidSolver.Output(0)
