@@ -2065,7 +2065,6 @@ class Interface:
             numberPart = 1
 
           # --- Set some general variables for the steady computation --- #
-          NbIter = FSI_config['NB_FLUID_ITER']		# number of fluid iteration at each FSI step
           NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
           FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
           varCoordNorm = 0.0
@@ -2090,13 +2089,11 @@ class Interface:
             self.MPIPrint("\n>>>> FSI iteration {} <<<<".format(self.FSIIter))
             self.MPIPrint('\nLaunching fluid solver for a steady computation...')
             # --- Fluid solver call for FSI subiteration ---#
-            Iter = 0
-            while Iter < NbIter:
-              FluidSolver.ResetConvergence() #Probabilmente questo serve a 'n cazzo, vedi blocco appunti
-              FluidSolver.Preprocess(0)
-              FluidSolver.Run()
-              FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
-              Iter += 1
+
+            FluidSolver.ResetConvergence() #This is setting to zero the convergence in the integrator, important to reset it
+            FluidSolver.Preprocess(0)
+            FluidSolver.Run()
+            FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
             FluidSolver.Output(0)
 
             # --- Surface fluid loads interpolation and communication ---#

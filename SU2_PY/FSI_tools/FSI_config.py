@@ -88,10 +88,7 @@ class FSIConfig:
             for case in switch(this_param):
 	        #integer values
                 if case("NDIM")			      : pass
-                #if case("MESH_DEF_LIN_ITER")	      : pass
-                #if case("MESH_DEF_NONLIN_ITER")       : pass
                 if case("RESTART_ITER")		      : pass
-                if case("NB_FLUID_ITER")		      : pass
                 if case("TIME_TRESHOLD")          : pass
                 if case("NB_FSI_ITER")		      :
                     self._ConfigContent[this_param] = int(this_value)
@@ -118,15 +115,9 @@ class FSIConfig:
                 if case("AITKEN_RELAX")               : pass
                 if case("TIME_MARCHING")	      : pass
                 if case("INTERNAL_FLOW")	      :
-                #if case("MESH_DEF_METHOD")	      : pass
                     self._ConfigContent[this_param] = this_value
                     break
 
                 if case():
                     print(this_param + " is an invalid option !")
                     break
-            #end for
-
-
-
-    #def dump()
