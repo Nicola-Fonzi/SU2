@@ -76,19 +76,15 @@ install_data(['FSI_tools/__init__.py',
               'FSI_tools/switch.py'],
 	      install_dir: join_paths(get_option('bindir'), 'FSI_tools'))
 
-install_data(['Tester/__init__.py',
-              'Tester/FoilTest.py',],
-        install_dir: join_paths(get_option('bindir'), 'Tester'))
-
-install_data(['Tester3D/__init__.py',
-              'Tester3D/WingTest.py',],
-        install_dir: join_paths(get_option('bindir'), 'Tester3D'))
+install_data(['SU2_Nastran/__init__.py',
+              'SU2_Nastran/pysu2_nastran.py',],
+        install_dir: join_paths(get_option('bindir'), 'SU2_Nastran'))
 
 install_data(['Imposed/__init__.py',
               'Imposed/ImposedStruct.py',],
         install_dir: join_paths(get_option('bindir'), 'Imposed'))
 
-install_data(['Tester3D/io/readHistoryModal.m',
-              'Tester3D/io/readHistoryNodal.m',
-              'Tester3D/io/writef06.m'],
-        install_dir: join_paths(get_option('bindir'), 'Tester3D/io'))
+install_data(['SU2_Nastran/io/readHistoryModal.m',
+              'SU2_Nastran/io/readHistoryNodal.m',
+              'SU2_Nastran/io/writef06.m'],
+        install_dir: join_paths(get_option('bindir'), 'SU2_Nastran/io'))
