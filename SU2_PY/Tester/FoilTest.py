@@ -286,7 +286,7 @@ class Solver:
             break
 
   def __readNastranMesh(self):
-    """  This function reads the nastran 3D mesh  """
+      """  This function reads the nastran 3D mesh  """
 
       def nastran_float(s):
         if s.find('E') == -1:
