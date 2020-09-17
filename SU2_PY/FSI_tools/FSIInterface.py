@@ -2002,7 +2002,7 @@ class Interface:
                           # --- Solid solver call for FSI subiteration --- #
                           self.MPIPrint('\nLaunching solid solver for a single time iteration...\n')
                           if myid in self.solidSolverProcessors:
-                              SolidSolver.run(time-deltaT, time)
+                              SolidSolver.run(time)
 
                           # --- Compute and monitor the FSI residual --- #
                           varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
@@ -2081,6 +2081,7 @@ class Interface:
           self.getSolidInterfaceDisplacement(SolidSolver)
           self.interpolateSolidPositionOnFluidMesh(FSI_config)
           self.setFluidInterfaceVarCoord(FluidSolver)
+          #FluidSolver.SetInitialMesh()
           self.MPIPrint('\nFSI initial conditions are set')
 
           # --- External FSI loop --- #
@@ -2090,8 +2091,8 @@ class Interface:
             self.MPIPrint('\nLaunching fluid solver for a steady computation...')
             # --- Fluid solver call for FSI subiteration ---#
             Iter = 0
-            FluidSolver.ResetConvergence() #Probabilmente questo serve a 'n cazzo, vedi blocco appunti
             while Iter < NbIter:
+              FluidSolver.ResetConvergence() #Probabilmente questo serve a 'n cazzo, vedi blocco appunti
               FluidSolver.Preprocess(0)
               FluidSolver.Run()
               stopcalc = FluidSolver.Monitor(0)
@@ -2112,8 +2113,8 @@ class Interface:
             # --- Solid solver call for FSI subiteration --- #
             self.MPIPrint('\nLaunching solid solver for a static computation...\n')
             if myid in self.solidSolverProcessors:
-              SolidSolver.run(0.0, 0.05)
-              SolidSolver.writeSolution(0.0, self.FSIIter, Iter, NbIter)
+              SolidSolver.run(0.0)
+              SolidSolver.writeSolution(0.0, self.FSIIter, Iter)
 
             # --- Compute and monitor the FSI residual --- #
             varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)

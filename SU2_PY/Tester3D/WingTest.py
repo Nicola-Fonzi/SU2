@@ -571,7 +571,7 @@ class Solver:
 
     print("\n**************** Exiting the structural tester solver ****************")
 
-  def run(self,t0,t1):
+  def run(self,t1):
     """ Description. """
     self.__temporalIteration()
     header = 'Time\t'
@@ -591,7 +591,7 @@ class Solver:
 
     self.__computeInterfacePosVel(True)
 
-  def writeSolution(self, time, FSIIter, TimeIter, NbTimeIter):
+  def writeSolution(self, time, FSIIter, TimeIter):
     """ Description. """
 
     # Modal History
