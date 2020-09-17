@@ -111,12 +111,9 @@ def main():
   # --- Initialize the solid solver --- # (!! for now we are using only serial solid solvers)
   if myid == rootProcess:
     print('\n***************************** Initializing solid solver *****************************')
-    if CSD_Solver == 'TESTER':
-      from Tester import FoilTest
-      SolidSolver = FoilTest.Solver(CSD_ConFile)
-    elif CSD_Solver == 'TESTER3D':
-      from Tester3D import WingTest
-      SolidSolver = WingTest.Solver(CSD_ConFile)
+    if CSD_Solver == 'AEROELASTIC':
+      from SU2_Nastran import pysu2_nastran
+      SolidSolver = pysu2_nastran.Solver(CSD_ConFile)
     elif CSD_Solver == 'IMPOSED':
       from Imposed import ImposedStruct
       SolidSolver = ImposedStruct.Solver(CSD_ConFile)
