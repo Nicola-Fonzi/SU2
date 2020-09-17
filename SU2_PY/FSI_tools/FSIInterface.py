@@ -2135,10 +2135,7 @@ class Interface:
             # --- Mesh morphing step (displacement interpolation, displacements communication, and mesh morpher call) --- #
             self.interpolateSolidPositionOnFluidMesh(FSI_config)
             self.MPIPrint('\nPerforming static mesh deformation...\n')
-            self.MPIPrint("lala")
             self.setFluidInterfaceVarCoord(FluidSolver)
-            self.MPIPrint("po")
-            FluidSolver.SetInitialMesh()
             self.FSIIter += 1
 
           self.MPIBarrier()
