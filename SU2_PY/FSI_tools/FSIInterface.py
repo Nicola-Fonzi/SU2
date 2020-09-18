@@ -1995,11 +1995,11 @@ class Interface:
                         self.MPIBarrier()
 
                         # --- Surface fluid loads interpolation and communication --- #
-                        self.MPIPrint('\nProcessing interface fluid loads...\n')
-                        self.MPIBarrier()
                         if not self.ImposedMotion:
+                          self.MPIPrint('\nProcessing interface fluid loads...\n')
+                          self.MPIBarrier()
                           self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
-                        self.MPIBarrier()
+                          self.MPIBarrier()
                         if TimeIter > TimeIterTreshold:
                           if not self.ImposedMotion:
                             self.interpolateFluidLoadsOnSolidMesh(FSI_config)
