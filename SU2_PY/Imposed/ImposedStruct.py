@@ -192,20 +192,6 @@ class Solver:
     self.deltaT = self.Config['DELTA_T']
     self.rhoAlphaGen = self.Config['RHO']
 
-    try :
-      self.IdentificationNode = self.Config['IDENTIFICATION_NODE']
-      self.IdentificationAmp = self.Config['IDENTIFICATION_AMPLITUDE']
-      self.IdentificationTime = self.Config['IDENTIFICATION_TIME']
-      self.IdentificationType = self.Config['IDENTIFICATION_TYPE']
-    except KeyError :
-      self.IdentificationTime = -1.0
-
-    if self.IdentificationTime>=0:
-      if self.IdentificationType=='SWEEP':
-        self.IdentificationMaxF = self.Config['IDENTIFICATION_FMAX']
-        self.IdentificationMinF = self.Config['IDENTIFICATION_FMIN']
-
-    self.nDim= int()
     self.nElem = int()
     self.nPoint = int()
     self.nMarker = int()
@@ -266,23 +252,9 @@ class Solver:
             self.Config[this_param] = this_value
             break
 
+          #lists values
           if case("INITIAL_MODES"):
             self.Config[this_param] = eval(this_value)
-            break
-
-          if case("IDENTIFICATION_NODE"):
-            self.Config[this_param] = int(this_value)
-            break
-
-          if case ("IDENTIFICATION_TYPE"):
-            self.Config[this_param] = this_value
-            break
-
-          if case("IDENTIFICATION_FMIN"): pass
-          if case("IDENTIFICATION_FMAX"): pass
-          if case("IDENTIFICATION_TIME"): pass
-          if case("IDENTIFICATION_AMPLITUDE"):
-            self.Config[this_param] = float(this_value)
             break
 
           if case():
@@ -302,7 +274,6 @@ class Solver:
             s = s[1:]
         return float(s)
 
-      self.nDim = 3
       self.nMarker = 1
       self.nPoint = 0
       self.nRefSys = 0
@@ -383,7 +354,6 @@ class Solver:
               continue
 
       self.markers[self.FSI_marker].sort()
-      print("Number of dimensions: {}".format(self.nDim))
       print("Number of elements: {}".format(self.nElem))
       print("Number of point: {}".format(self.nPoint))
       print("Number of markers: {}".format(self.nMarker))
@@ -552,33 +522,12 @@ class Solver:
 
     return St
 
-  def __Identify(self,time):
-    if time >= self.IdentificationTime:
-      for iPoint in range(self.nPoint):
-        if self.node[iPoint].GetID() == self.IdentificationNode:
-          break
-      if self.IdentificationType=='SWEEP':
-        fmax = self.IdentificationMaxF
-        fmin = self.IdentificationMinF
-        df = 4.*(1./(self.stopTime-self.IdentificationTime))
-        F = self.IdentificationAmp
-        f = fmin
-        fz = 0
-        while f < fmax:
-          fz += F * sin(2*pi*f*time)
-          f += df
-      if self.IdentificationType=='STEP':
-        fz = self.IdentificationAmp
-      FZ = np.zeros((self.nPoint, 1))
-      FZ[iPoint] = float(fz)
-      self.F = self.F + self.UzT.dot(FZ)
-
   def exit(self):
     """ Description. """
 
     print("\n**************** Exiting the structural tester solver ****************")
 
-  def run(self,t0,t1):
+  def run(self,t1):
     """ Description. """
     self.__temporalIteration(t1)
     header = 'Time\t'
@@ -598,7 +547,7 @@ class Solver:
 
     self.__computeInterfacePosVel(True)
 
-  def writeSolution(self, time, FSIIter, TimeIter, NbTimeIter):
+  def writeSolution(self, time, FSIIter):
     """ Description. """
 
     # Modal History
