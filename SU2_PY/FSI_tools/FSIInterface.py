@@ -197,7 +197,6 @@ class Interface:
 
       if myid == self.rootProcess:
         print(message)
-        flush()
 
     def MPIBarrier(self):
       """
