@@ -210,6 +210,15 @@ class Solver:
     self.__setIntegrationParameters()
     self.__setInitialConditions()
 
+    # Prepare the output file
+    histFile = open('StructHistoryModal.dat', "w")
+    header = 'Time\t'
+    for imode in range(self.nDof):
+      header = header + 'q' + str(imode+1) + '\t' + 'qdot' + str(imode+1) + '\t' + 'qddot' + str(imode+1) + '\t'
+    header = header + '\n'
+    histFile.write(header)
+    histFile.close()
+
   def __readConfig(self):
     """ Description. """
 
@@ -595,15 +604,7 @@ class Solver:
     """ Description. """
 
     # Modal History
-    if time == 0:
-      histFile = open('StructHistoryModal.dat', "w")
-      header = 'Time\t'
-      for imode in range(self.nDof):
-        header = header + 'q' + str(imode+1) + '\t' + 'qdot' + str(imode+1) + '\t' + 'qddot' + str(imode+1) + '\t'
-      header = header + '\n'
-      histFile.write(header)
-    else:
-      histFile = open('StructHistoryModal.dat', "a")
+    histFile = open('StructHistoryModal.dat', "a")
     line = str(time) + '\t'
     for imode in range(self.nDof):
       line = line + str(float(self.q[imode])) + '\t' + str(float(self.qdot[imode])) + '\t' + str(float(self.qddot[imode])) + '\t'
