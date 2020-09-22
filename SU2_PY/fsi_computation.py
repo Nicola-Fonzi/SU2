@@ -113,10 +113,10 @@ def main():
     print('\n***************************** Initializing solid solver *****************************')
     if CSD_Solver == 'AEROELASTIC':
       from SU2_Nastran import pysu2_nastran
-      SolidSolver = pysu2_nastran.Solver(CSD_ConFile)
+      SolidSolver = pysu2_nastran.Solver(CSD_ConFile,False)
     elif CSD_Solver == 'IMPOSED':
-      from Imposed import ImposedStruct
-      SolidSolver = ImposedStruct.Solver(CSD_ConFile)
+      from SU2_Nastran import pysu2_nastran
+      SolidSolver = pysu2_nastran.Solver(CSD_ConFile,True)
     else:
       print("\n I have no idea about the solid solver you want to use")
   else:

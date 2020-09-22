@@ -160,7 +160,7 @@ class Point:
 class Solver:
   """Description"""
 
-  def __init__(self, config_fileName):
+  def __init__(self, config_fileName, ImposedMotion):
     """ Description. """
 
     self.Config_file = config_fileName
@@ -173,6 +173,7 @@ class Solver:
     self.Punch_file = self.Config['PUNCH_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
     self.Unsteady = (self.Config['TIME_MARCHING']=="YES")
+    self.ImposedMotion = ImposedMotion
     if self.Unsteady:
       print('Dynamic computation.')
     self.nDof = self.Config['NMODES']
@@ -508,41 +509,47 @@ class Solver:
         self.node[iPoint].SetCoord_n((X_disp[iPoint]+coord0[0],Y_disp[iPoint]+coord0[1],Z_disp[iPoint]+coord0[2]))
         self.node[iPoint].SetVel_n((X_vel[iPoint],Y_vel[iPoint],Z_vel[iPoint]))
 
-  def __temporalIteration(self):
+  def __temporalIteration(self,time):
     """ Description. """
 
-    eps = 1e-6
+    if not self.ImposedMotion:
+      eps = 1e-6
 
-    self.__SetLoads()
+      self.__SetLoads()
 
-    # Prediction step
-    self.__reset(self.qddot)
-    self.__reset(self.a)
+      # Prediction step
+      self.__reset(self.qddot)
+      self.__reset(self.a)
 
-    self.a += (self.alpha_f)/(1-self.alpha_m)*self.qddot_n
-    self.a -= (self.alpha_m)/(1-self.alpha_m)*self.a_n
+      self.a += (self.alpha_f)/(1-self.alpha_m)*self.qddot_n
+      self.a -= (self.alpha_m)/(1-self.alpha_m)*self.a_n
 
-    self.q = np.copy(self.q_n)
-    self.q += self.deltaT*self.qdot_n
-    self.q += (0.5-self.beta)*self.deltaT*self.deltaT*self.a_n
-    self.q += self.deltaT*self.deltaT*self.beta*self.a
+      self.q = np.copy(self.q_n)
+      self.q += self.deltaT*self.qdot_n
+      self.q += (0.5-self.beta)*self.deltaT*self.deltaT*self.a_n
+      self.q += self.deltaT*self.deltaT*self.beta*self.a
 
-    self.qdot = np.copy(self.qdot_n)
-    self.qdot += (1-self.gamma)*self.deltaT*self.a_n
-    self.qdot += self.deltaT*self.gamma*self.a
+      self.qdot = np.copy(self.qdot_n)
+      self.qdot += (1-self.gamma)*self.deltaT*self.a_n
+      self.qdot += self.deltaT*self.gamma*self.a
 
-    # Correction step
-    res = self.__ComputeResidual()
-
-    while linalg.norm(res) >= eps:
-      St = self.__TangentOperator()
-      Deltaq = -1*(linalg.solve(St,res))
-      self.q += Deltaq
-      self.qdot += self.gammaPrime*Deltaq
-      self.qddot += self.betaPrime*Deltaq
+      # Correction step
       res = self.__ComputeResidual()
 
-    self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
+      while linalg.norm(res) >= eps:
+        St = self.__TangentOperator()
+        Deltaq = -1*(linalg.solve(St,res))
+        self.q += Deltaq
+        self.qdot += self.gammaPrime*Deltaq
+        self.qddot += self.betaPrime*Deltaq
+        res = self.__ComputeResidual()
+
+      self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
+    else:
+      self.q[0]=((3.0*pi/180.0)+(1.0*pi/180.0)*sin(2*pi*10.0*time))/4.796908e-01
+      self.qdot[0] = 2.0*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*time))/4.796908e-01
+      self.qddot[0] = -4.0*pi*pi*100.0*((1.0*pi/180.0)*sin(2*pi*10.0*time))/4.796908e-01
+      self.a = np.copy(self.qddot)
 
 
   def __SetLoads(self):
@@ -580,15 +587,15 @@ class Solver:
 
     print("\n**************** Exiting the structural tester solver ****************")
 
-  def run(self,t1):
+  def run(self,time):
     """ Description. """
-    self.__temporalIteration()
+    self.__temporalIteration(time)
     header = 'Time\t'
     for imode in range(min([self.nDof,5])):
       header = header + 'q' + str(imode+1) + '\t' + 'qdot' + str(imode+1) + '\t' + 'qddot' + str(imode+1) + '\t'
     header = header + '\n'
     print(header)
-    line = '{:6.4f}'.format(t1) + '\t'
+    line = '{:6.4f}'.format(time) + '\t'
     for imode in range(min([self.nDof,5])):
       line = line + '{:6.4f}'.format(float(self.q[imode])) + '\t' + '{:6.4f}'.format(float(self.qdot[imode])) + '\t' + '{:6.4f}'.format(float(self.qddot[imode])) + '\t'
     line =  line + '\n'

@@ -80,10 +80,6 @@ install_data(['SU2_Nastran/__init__.py',
               'SU2_Nastran/pysu2_nastran.py',],
         install_dir: join_paths(get_option('bindir'), 'SU2_Nastran'))
 
-install_data(['Imposed/__init__.py',
-              'Imposed/ImposedStruct.py',],
-        install_dir: join_paths(get_option('bindir'), 'Imposed'))
-
 install_data(['SU2_Nastran/io/readHistoryModal.m',
               'SU2_Nastran/io/readHistoryNodal.m',
               'SU2_Nastran/io/writef06.m'],
