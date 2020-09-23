@@ -617,9 +617,11 @@ class Solver:
         line = file.readline()
         while 1:
           line = file.readline()
+          print(line)
+          print(self.Config["RESTART_ITER"])
           if not line:
             print("The restart iteration was not found in the structural history")
-            exit()
+            break
           line = line.strip('\r\n').split()
           if int(line[1])==(self.Config["RESTART_ITER"]-1):
             break
@@ -643,7 +645,7 @@ class Solver:
           line = file.readline()
           if not line:
             print("The restart iteration was not found in the structural history")
-            exit()
+            break
           line = line.strip('\r\n').split()
           if int(line[1])==(self.Config["RESTART_ITER"]):
             break
