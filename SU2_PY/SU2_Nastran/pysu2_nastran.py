@@ -212,13 +212,14 @@ class Solver:
     self.__setInitialConditions()
 
     # Prepare the output file
-    histFile = open('StructHistoryModal.dat', "w")
-    header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t'
-    for imode in range(self.nDof):
-      header = header + 'q' + str(imode+1) + '\t' + 'qdot' + str(imode+1) + '\t' + 'qddot' + str(imode+1) + '\t'
-    header = header + '\n'
-    histFile.write(header)
-    histFile.close()
+    if not self.Config["RESTART_SOL"]:
+      histFile = open('StructHistoryModal.dat', "w")
+      header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t'
+      for imode in range(self.nDof):
+        header = header + 'q' + str(imode+1) + '\t' + 'qdot' + str(imode+1) + '\t' + 'qddot' + str(imode+1) + '\t'
+      header = header + '\n'
+      histFile.write(header)
+      histFile.close()
 
   def __readConfig(self):
     """ Description. """
@@ -617,8 +618,6 @@ class Solver:
         line = file.readline()
         while 1:
           line = file.readline()
-          print(line)
-          print(self.Config["RESTART_ITER"])
           if not line:
             print("The restart iteration was not found in the structural history")
             break
