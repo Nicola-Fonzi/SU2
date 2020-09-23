@@ -915,6 +915,15 @@ void CSinglezoneDriver::SetInitialMesh() {
 
 }
 
+void CSinglezoneDriver::SetRestartMesh() {
+  // We deform the mesh without computing velocities (it will be done later)
+  StaticMeshUpdate();
+  // We push back the deformation
+  if (config_container[ZONE_0]->GetDeform_Mesh()) {
+    solver_container[ZONE_0][INST_0][MESH_0][MESH_SOL]->SetDualTime_Mesh();
+  }
+}
+
 void CFluidDriver::SetVertexTtotal(unsigned short iMarker, unsigned long iVertex, passivedouble val_Ttotal_passive){
 
   su2double val_Ttotal = val_Ttotal_passive;
@@ -1255,4 +1264,3 @@ void CDriver::SetInlet_Angle(unsigned short iMarker, passivedouble alpha){
   }
 
 }
-

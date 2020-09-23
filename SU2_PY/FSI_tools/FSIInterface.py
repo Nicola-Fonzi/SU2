@@ -1933,20 +1933,27 @@ class Interface:
           self.MPIPrint('**********************************\n')
 
           # --- Initialize the coupled solution --- #
-          #If restart (DOES NOT WORK YET)
+          #If restart
           if FSI_config['RESTART_SOL'] == 'YES':
             TimeIterTreshold = -1
-            FluidSolver.setTemporalIteration(TimeIter)
-            if myid == self.rootProcess:
-              SolidSolver.outputDisplacements(FluidSolver.getInterRigidDispArray(), True)
-            if self.have_MPI == True:
-              self.comm.barrier()
-            FluidSolver.setInitialMesh(True)
-            if myid == self.rootProcess:
-              SolidSolver.displacementPredictor(FluidSolver.getInterRigidDispArray())
-            if self.have_MPI == True:
-              self.comm.barrier()
-            if myid == self.rootProcess:
+            if myid in self.solidSolverProcessors:
+              SolidSolver.setRestart('nM1')
+            self.getSolidInterfaceDisplacement(SolidSolver)
+            self.interpolateSolidPositionOnFluidMesh(FSI_config)
+            self.setFluidInterfaceVarCoord(FluidSolver)
+            self.MPIBarrier()
+            FluidSolver.SetRestartMesh()
+            self.MPIBarrier()
+            if myid in self.solidSolverProcessors:
+              SolidSolver.setRestart('n')
+            self.getSolidInterfaceDisplacement(SolidSolver)
+            self.interpolateSolidPositionOnFluidMesh(FSI_config)
+            self.setFluidInterfaceVarCoord(FluidSolver)
+            self.MPIBarrier()
+            FluidSolver.SetRestartMesh()
+            self.MPIBarrier()
+            self.displacementPredictor(FSI_config, SolidSolver, deltaT)
+            if myid in self.solidSolverProcessors:
               SolidSolver.updateSolution()
           #If no restart
           else:
@@ -2039,7 +2046,7 @@ class Interface:
                 if TimeIter >= TimeIterTreshold:
                   if myid in self.solidSolverProcessors:
                     # --- Output the solid solution before thr next time step --- #
-                    SolidSolver.writeSolution(time, self.FSIIter)
+                    SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
 
                 if TimeIter > TimeIterTreshold:
                   # --- Displacement predictor for the next time step and update of the solid solution --- #
@@ -2117,7 +2124,7 @@ class Interface:
             self.MPIPrint('\nLaunching solid solver for a static computation...\n')
             if myid in self.solidSolverProcessors:
               SolidSolver.run(0.0)
-              SolidSolver.writeSolution(0.0, self.FSIIter)
+              SolidSolver.writeSolution(0.0, 0, self.FSIIter)
 
             # --- Compute and monitor the FSI residual --- #
             varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)

@@ -213,7 +213,7 @@ class Solver:
 
     # Prepare the output file
     histFile = open('StructHistoryModal.dat', "w")
-    header = 'Time\t'
+    header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t'
     for imode in range(self.nDof):
       header = header + 'q' + str(imode+1) + '\t' + 'qdot' + str(imode+1) + '\t' + 'qddot' + str(imode+1) + '\t'
     header = header + '\n'
@@ -241,7 +241,8 @@ class Solver:
 
         for case in switch(this_param):
           #integer values
-          if case("NMODES")		:
+          if case("NMODES")		: pass
+          if case("RESTART_ITER") :
             self.Config[this_param] = int(this_value)
             break
 
@@ -258,6 +259,7 @@ class Solver:
           if case("TIME_MARCHING")	: pass
           if case("MESH_FILE")			: pass
           if case("PUNCH_FILE")        : pass
+          if case("RESTART_SOL")       : pass
           if case("MOVING_MARKER")		:
             self.Config[this_param] = this_value
             break
@@ -607,12 +609,55 @@ class Solver:
 
     self.__computeInterfacePosVel(True)
 
-  def writeSolution(self, time, FSIIter):
+  def setRestart(self, timeIter):
+    if timeIter == 'nM1':
+      #read the Structhistory to obtain the mode amplitudes
+      with open('StructHistoryModal.dat','r') as punchfile:
+        print('Opened punch file ' + self.Punch_file + '.')
+        while 1:
+          line = punchfile.readline()
+          if not line:
+            print("The restart iteration was not found in the structural history")
+            exit()
+          line = line.strip('\r\n').split()
+          if int(line[1])==(self.Config["RESTART_ITER"]-1):
+            break
+      for index in range(self.nDof):
+        self.q[index] = float(line[index+3])
+        self.q_dot[index] = float(line[index+4])
+        self.q_ddot[index] = float(line[index+5])
+        index += 3
+      #push back the mode amplitudes velocities and accelerations
+      self.__computeInterfacePosVel(True)
+      self.q_n = np.copy(self.q)
+      self.qdot_n = np.copy(self.qdot)
+      self.qddot_n = np.copy(self.qddot)
+      self.a_n = np.copy(self.a)
+    if timeIter == 'n':
+      #read the Structhistory to obtain the modes
+      with open('StructHistoryModal.dat','r') as punchfile:
+        print('Opened punch file ' + self.Punch_file + '.')
+        while 1:
+          line = punchfile.readline()
+          if not line:
+            print("The restart iteration was not found in the structural history")
+            exit()
+          line = line.strip('\r\n').split()
+          if int(line[1])==(self.Config["RESTART_ITER"]):
+            break
+      for index in range(self.nDof):
+        self.q[index] = float(line[index+3])
+        self.q_dot[index] = float(line[index+4])
+        self.q_ddot[index] = float(line[index+5])
+        index += 3
+      self.__computeInterfacePosVel(False)
+
+  def writeSolution(self, time, timeIter, FSIIter):
     """ Description. """
 
     # Modal History
     histFile = open('StructHistoryModal.dat', "a")
-    line = str(time) + '\t'
+    line = str(time) + '\t' + str(timeIter) + '\t' + str(FSIIter) + '\t'
     for imode in range(self.nDof):
       line = line + str(float(self.q[imode])) + '\t' + str(float(self.qdot[imode])) + '\t' + str(float(self.qddot[imode])) + '\t'
     line =  line + '\n'

@@ -98,9 +98,14 @@ public:
   void StaticMeshUpdate() override;
 
   /*!
-   * \brief Perform a mesh deformation as initial condition (multiple zone).
+   * \brief Perform a mesh deformation as initial condition.
    */
   void SetInitialMesh() override;
+
+  /*!
+   * \brief Perform a mesh deformation for restarting an unsteady simulation.
+   */
+  void SetRestartMesh() override;
 
   /*!
    * \brief Monitor
