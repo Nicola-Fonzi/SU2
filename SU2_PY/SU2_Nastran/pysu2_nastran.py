@@ -626,8 +626,8 @@ class Solver:
             break
       for index in range(self.nDof):
         self.q[index] = float(line[index+3])
-        self.q_dot[index] = float(line[index+4])
-        self.q_ddot[index] = float(line[index+5])
+        self.qdot[index] = float(line[index+4])
+        self.qddot[index] = float(line[index+5])
         index += 3
       #push back the mode amplitudes velocities and accelerations
       self.__computeInterfacePosVel(True)
@@ -650,8 +650,8 @@ class Solver:
             break
       for index in range(self.nDof):
         self.q[index] = float(line[index+3])
-        self.q_dot[index] = float(line[index+4])
-        self.q_ddot[index] = float(line[index+5])
+        self.qdot[index] = float(line[index+4])
+        self.qddot[index] = float(line[index+5])
         index += 3
       self.__computeInterfacePosVel(False)
 
