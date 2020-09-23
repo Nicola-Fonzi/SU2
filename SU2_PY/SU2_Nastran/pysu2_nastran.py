@@ -612,10 +612,11 @@ class Solver:
   def setRestart(self, timeIter):
     if timeIter == 'nM1':
       #read the Structhistory to obtain the mode amplitudes
-      with open('StructHistoryModal.dat','r') as punchfile:
-        print('Opened punch file ' + self.Punch_file + '.')
+      with open('StructHistoryModal.dat','r') as file:
+        print('Opened history file ' + 'StructHistoryModal.dat' + '.')
+        line = file.readline()
         while 1:
-          line = punchfile.readline()
+          line = file.readline()
           if not line:
             print("The restart iteration was not found in the structural history")
             exit()
@@ -635,10 +636,11 @@ class Solver:
       self.a_n = np.copy(self.a)
     if timeIter == 'n':
       #read the Structhistory to obtain the modes
-      with open('StructHistoryModal.dat','r') as punchfile:
-        print('Opened punch file ' + self.Punch_file + '.')
+      with open('StructHistoryModal.dat','r') as file:
+        print('Opened history file ' + 'StructHistoryModal.dat' + '.')
+        line = file.readline()
         while 1:
-          line = punchfile.readline()
+          line = file.readline()
           if not line:
             print("The restart iteration was not found in the structural history")
             exit()
