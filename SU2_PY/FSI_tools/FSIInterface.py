@@ -1953,7 +1953,7 @@ class Interface:
             self.interpolateSolidPositionOnFluidMesh(FSI_config)
             self.setFluidInterfaceVarCoord(FluidSolver)
             self.MPIBarrier()
-            self.MPIPrint("Deforming the mesh according to structural deformation at time n-1")
+            self.MPIPrint("Deforming the mesh according to structural deformation at time n")
             FluidSolver.SetRestartMesh()
             self.MPIBarrier()
             self.displacementPredictor(FSI_config, SolidSolver, deltaT)
