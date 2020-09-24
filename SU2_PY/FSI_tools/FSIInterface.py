@@ -1941,10 +1941,6 @@ class Interface:
               SolidSolver.setRestart('nM1')
               SolidSolver.setRestart('n')
             self.getSolidInterfaceDisplacement(SolidSolver)
-            self.displacementPredictor(FSI_config, SolidSolver, deltaT)
-            if myid in self.solidSolverProcessors:
-              SolidSolver.updateSolution()
-            FluidSolver.Update()
           #If no restart
           else:
             self.MPIPrint('Setting FSI initial conditions')
@@ -1976,6 +1972,7 @@ class Interface:
                         self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter,self.FSIIter))
 
                         # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
+                        FluidSolver.Output(self.FSIIter)
                         self.interpolateSolidPositionOnFluidMesh(FSI_config)
                         self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
                         self.setFluidInterfaceVarCoord(FluidSolver)
