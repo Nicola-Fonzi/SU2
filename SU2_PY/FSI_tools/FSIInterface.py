@@ -1939,23 +1939,8 @@ class Interface:
             self.MPIPrint("Reading the modal amplitudes at time n-1")
             if myid in self.solidSolverProcessors:
               SolidSolver.setRestart('nM1')
-            self.getSolidInterfaceDisplacement(SolidSolver)
-            self.interpolateSolidPositionOnFluidMesh(FSI_config)
-            self.setFluidInterfaceVarCoord(FluidSolver)
-            self.MPIBarrier()
-            self.MPIPrint("Deforming the mesh according to structural deformation at time n-1")
-            FluidSolver.SetRestartMesh()
-            self.MPIBarrier()
-            self.MPIPrint("Reading the modal amplitudes at time n")
-            if myid in self.solidSolverProcessors:
               SolidSolver.setRestart('n')
             self.getSolidInterfaceDisplacement(SolidSolver)
-            self.interpolateSolidPositionOnFluidMesh(FSI_config)
-            self.setFluidInterfaceVarCoord(FluidSolver)
-            self.MPIBarrier()
-            self.MPIPrint("Deforming the mesh according to structural deformation at time n")
-            FluidSolver.SetRestartMesh()
-            self.MPIBarrier()
             self.displacementPredictor(FSI_config, SolidSolver, deltaT)
             if myid in self.solidSolverProcessors:
               SolidSolver.updateSolution()

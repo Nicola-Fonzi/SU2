@@ -622,7 +622,7 @@ class Solver:
             print("The restart iteration was not found in the structural history")
             break
           line = line.strip('\r\n').split()
-          if int(line[1])==(self.Config["RESTART_ITER"]-1):
+          if int(line[1])==(self.Config["RESTART_ITER"]-2):
             break
       for index in range(self.nDof):
         self.q[index] = float(line[index+3])
@@ -646,7 +646,7 @@ class Solver:
             print("The restart iteration was not found in the structural history")
             break
           line = line.strip('\r\n').split()
-          if int(line[1])==(self.Config["RESTART_ITER"]):
+          if int(line[1])==(self.Config["RESTART_ITER"]-1):
             break
       for index in range(self.nDof):
         self.q[index] = float(line[index+3])
