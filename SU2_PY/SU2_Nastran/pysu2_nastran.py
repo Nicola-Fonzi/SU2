@@ -624,11 +624,13 @@ class Solver:
           line = line.strip('\r\n').split()
           if int(line[1])==(self.Config["RESTART_ITER"]-2):
             break
-      for index in range(self.nDof):
-        self.q[index] = float(line[index+3])
-        self.qdot[index] = float(line[index+4])
-        self.qddot[index] = float(line[index+5])
+      index = 0
+      for index_mode in range(self.nDof):
+        self.q[index_mode] = float(line[index+3])
+        self.qdot[index_mode] = float(line[index+4])
+        self.qddot[index_mode] = float(line[index+5])
         index += 3
+      del index
       #push back the mode amplitudes velocities and accelerations
       self.__computeInterfacePosVel(True)
       self.q_n = np.copy(self.q)
@@ -648,11 +650,13 @@ class Solver:
           line = line.strip('\r\n').split()
           if int(line[1])==(self.Config["RESTART_ITER"]-1):
             break
-      for index in range(self.nDof):
-        self.q[index] = float(line[index+3])
-        self.qdot[index] = float(line[index+4])
-        self.qddot[index] = float(line[index+5])
+      index = 0
+      for index_mode in range(self.nDof):
+        self.q[index_mode] = float(line[index+3])
+        self.qdot[index_mode] = float(line[index+4])
+        self.qddot[index_mode] = float(line[index+5])
         index += 3
+      del index
       self.__computeInterfacePosVel(False)
 
   def writeSolution(self, time, timeIter, FSIIter):
