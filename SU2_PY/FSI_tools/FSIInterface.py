@@ -1979,9 +1979,6 @@ class Interface:
                            FluidSolver.Preprocess(TimeIter)	# set some parameters before temporal fluid iteration and dynamic mesh update
                         else:
                            FluidSolver.DynamicMeshUpdate(TimeIter)
-                        FluidSolver.Output(self.FSIIter)
-                        print(SolidSolver.q)
-                        print(SolidSolver.q_n)
                         # --- Fluid solver call for FSI subiteration --- #
                         self.MPIPrint('\nLaunching fluid solver for one single dual-time iteration...')
                         self.MPIBarrier()
