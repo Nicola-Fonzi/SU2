@@ -1944,6 +1944,9 @@ class Interface:
             self.displacementPredictor(FSI_config, SolidSolver, deltaT)
             if myid in self.solidSolverProcessors:
               SolidSolver.updateSolution()
+            FluidSolver.Update()
+            FluidSolver.Monitor(TimeIter)
+            FluidSolver.Output(TimeIter)
           #If no restart
           else:
             self.MPIPrint('Setting FSI initial conditions')
