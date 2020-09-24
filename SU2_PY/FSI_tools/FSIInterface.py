@@ -1972,7 +1972,6 @@ class Interface:
                         self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter,self.FSIIter))
 
                         # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
-                        FluidSolver.Output(self.FSIIter)
                         self.interpolateSolidPositionOnFluidMesh(FSI_config)
                         self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
                         self.setFluidInterfaceVarCoord(FluidSolver)
@@ -1980,7 +1979,7 @@ class Interface:
                            FluidSolver.Preprocess(TimeIter)	# set some parameters before temporal fluid iteration and dynamic mesh update
                         else:
                            FluidSolver.DynamicMeshUpdate(TimeIter)
-
+                        FluidSolver.Output(self.FSIIter)
                         # --- Fluid solver call for FSI subiteration --- #
                         self.MPIPrint('\nLaunching fluid solver for one single dual-time iteration...')
                         self.MPIBarrier()
