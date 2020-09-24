@@ -219,7 +219,7 @@ void CIntegration::SetDualTime_Solver(CGeometry *geometry, CSolver *solver, CCon
   geometry->nodes->SetVolume_nM1();
   geometry->nodes->SetVolume_n();
 
-  if (config->GetGrid_Movement()) {
+  if (config->GetDynamic_Grid()) {
     geometry->nodes->SetCoord_n1();
     geometry->nodes->SetCoord_n();
   }

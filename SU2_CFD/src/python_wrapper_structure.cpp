@@ -912,6 +912,14 @@ void CFluidDriver::SetInitialMesh() {
 void CSinglezoneDriver::SetInitialMesh() {
 
   StaticMeshUpdate();
+  for(iZone = 0; iZone < nZone; iZone++) {
+    for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++) {
+      geometry_container[iZone][INST_0][iMesh]->nodes->SetVolume_n();
+      geometry_container[iZone][INST_0][iMesh]->nodes->SetVolume_nM1();
+      geometry_container[iZone][INST_0][iMesh]->nodes->SetCoord_n();
+      geometry_container[iZone][INST_0][iMesh]->nodes->SetCoord_n1();
+    }
+  }
 
 }
 

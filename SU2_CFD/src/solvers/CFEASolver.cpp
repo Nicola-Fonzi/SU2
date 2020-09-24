@@ -2789,7 +2789,7 @@ void CFEASolver::Solve_System(CGeometry *geometry, CConfig *config) {
   auto iter = System.Solve(Jacobian, LinSysRes, LinSysSol, geometry, config);
   if (rank == MASTER_NODE){
     if (iter >= config->GetDeform_Linear_Solver_Iter()){
-      cout<<"Reached maximum number of iteration in structural deformation solver"<<endl;
+      cout<<"Reached maximum number of iterations in structural deformation solver"<<endl;
     }
   }
 
