@@ -916,20 +916,9 @@ void CSinglezoneDriver::SetInitialMesh() {
     for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++) {
       geometry_container[iZone][INST_0][iMesh]->nodes->SetVolume_n();
       geometry_container[iZone][INST_0][iMesh]->nodes->SetVolume_nM1();
-      geometry_container[iZone][INST_0][iMesh]->nodes->SetCoord_n();
-      geometry_container[iZone][INST_0][iMesh]->nodes->SetCoord_n1();
     }
   }
 
-}
-
-void CSinglezoneDriver::SetRestartMesh() {
-  // We deform the mesh without computing velocities (it will be done later)
-  StaticMeshUpdate();
-  // We push back the deformation
-  if (config_container[ZONE_0]->GetDeform_Mesh()) {
-    solver_container[ZONE_0][INST_0][MESH_0][MESH_SOL]->SetDualTime_Mesh();
-  }
 }
 
 void CFluidDriver::SetVertexTtotal(unsigned short iMarker, unsigned long iVertex, passivedouble val_Ttotal_passive){

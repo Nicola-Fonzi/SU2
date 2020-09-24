@@ -103,11 +103,6 @@ public:
   void SetInitialMesh() override;
 
   /*!
-   * \brief Perform a mesh deformation for restarting an unsteady simulation.
-   */
-  void SetRestartMesh() override;
-
-  /*!
    * \brief Monitor
    * \param ExtIter
    */

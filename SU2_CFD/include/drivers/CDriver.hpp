@@ -371,11 +371,6 @@ public:
   virtual void SetInitialMesh() { }
 
   /*!
-   * \brief Perform a mesh deformation ready to restart.
-   */
-  virtual void SetRestartMesh() { }
-
-  /*!
    * \brief Process the boundary conditions and update the multigrid structure.
    */
   virtual void BoundaryConditionsUpdate() { }
