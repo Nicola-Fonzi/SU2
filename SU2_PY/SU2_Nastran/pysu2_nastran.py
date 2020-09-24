@@ -188,8 +188,6 @@ class Solver:
     else:
         print("Assuming {}% of modal damping".format(self.ModalDamping*100))
 
-    self.startTime = self.Config['START_TIME']
-    self.stopTime = self.Config['STOP_TIME']
     self.deltaT = self.Config['DELTA_T']
     self.rhoAlphaGen = self.Config['RHO']
 
@@ -249,8 +247,6 @@ class Solver:
 
           #float values
           if case("DELTA_T")			: pass
-          if case("START_TIME")		      	: pass
-          if case("STOP_TIME")		      	: pass
           if case("MODAL_DAMPING")      : pass
           if case("RHO")	      		:
             self.Config[this_param] = float(this_value)

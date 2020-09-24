@@ -97,7 +97,6 @@ class FSIConfig:
             #float values
                 if case("RBF_RADIUS")                 : pass
                 if case("AITKEN_PARAM")		      : pass
-                if case("START_TIME")		      : pass
                 if case("UNST_TIMESTEP")	      : pass
                 if case("UNST_TIME")		      : pass
                 if case("FSI_TOLERANCE")	      :

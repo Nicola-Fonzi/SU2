@@ -1914,9 +1914,8 @@ class Interface:
           self.MPIPrint('The FSI coupling will start after {} iterations'.format(TimeIterTreshold))
 
           if FSI_config['RESTART_SOL'] == 'YES':
-            startTime = FSI_config['START_TIME']
             NbTimeIter = ((totTime)/deltaT)-1
-            time = startTime
+            time = FSI_config['RESTART_ITER']*deltaT
             TimeIter = FSI_config['RESTART_ITER']
           else:
             NbTimeIter = (totTime/deltaT)-1		# number of time iterations
@@ -1941,6 +1940,10 @@ class Interface:
               SolidSolver.setRestart('nM1')
               SolidSolver.setRestart('n')
             self.getSolidInterfaceDisplacement(SolidSolver)
+            self.displacementPredictor(FSI_config, SolidSolver, deltaT)
+            FluidSolver.Update()
+            if myid in self.solidSolverProcessors:
+              SolidSolver.updateSolution()
           #If no restart
           else:
             self.MPIPrint('Setting FSI initial conditions')
