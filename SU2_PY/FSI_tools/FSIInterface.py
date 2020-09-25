@@ -1941,6 +1941,9 @@ class Interface:
               SolidSolver.setRestart('n')
             self.getSolidInterfaceDisplacement(SolidSolver)
             self.displacementPredictor(FSI_config, SolidSolver, deltaT)
+            # We need now to update the solution because both restarter functions (solid and fluid)
+            # load the files in the solution containers, pushing back the previous solutions. We need
+            # then to push it back once more to compute the solution at the next time level
             FluidSolver.Update()
             if myid in self.solidSolverProcessors:
               SolidSolver.updateSolution()
