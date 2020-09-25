@@ -210,7 +210,7 @@ class Solver:
     self.__setInitialConditions()
 
     # Prepare the output file
-    if not self.Config["RESTART_SOL"]:
+    if self.Config["RESTART_SOL"]=="NO":
       histFile = open('StructHistoryModal.dat', "w")
       header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t'
       for imode in range(self.nDof):
