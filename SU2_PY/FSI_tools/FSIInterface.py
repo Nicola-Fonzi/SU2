@@ -1719,7 +1719,7 @@ class Interface:
             del deltaResx_array_Z
 
         self.aitkenParam = min(self.aitkenParam, 1.0)
-        self.aitkenParam = max(self.aitkenParam, 0.1)
+        self.aitkenParam = max(self.aitkenParam, 0.0)
 
         # --- Update the value of the residual for the next FSI iteration ---
         self.solidInterfaceResidual_array_X.copy(self.solidInterfaceResidualnM1_array_X)
