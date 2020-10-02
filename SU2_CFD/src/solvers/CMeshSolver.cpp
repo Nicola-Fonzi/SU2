@@ -772,17 +772,18 @@ void CMeshSolver::SetBoundaryDisplacements(CGeometry *geometry, CNumerics *numer
         const auto iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
         /*--- Set and enforce solution at current and previous time-step ---*/
         nodes->SetSolution(iPoint, axis, 0.0);
+        nodes->SetBound_Disp(iPoint, axis, 0.0);
 
-        if (config->GetTime_Domain()) {
+        /*if (config->GetTime_Domain()) {
           nodes->SetSolution_Vel(iPoint, axis, 0.0);
           nodes->SetSolution_Accel(iPoint, axis, 0.0);
           nodes->Set_Solution_time_n(iPoint, axis, 0.0);
           nodes->SetSolution_Vel_time_n(iPoint, axis, 0.0);
           nodes->SetSolution_Accel_time_n(iPoint, axis, 0.0);
-        }
+        }*/
 
         LinSysSol(iPoint, axis) = 0.0;
-        LinSysReact(iPoint, axis) = 0.0;
+        //LinSysReact(iPoint, axis) = 0.0;
         Jacobian.EnforceSolutionAtDOF(iPoint, axis, su2double(0.0), LinSysRes);
       }
     }
