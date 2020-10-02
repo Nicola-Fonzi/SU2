@@ -783,7 +783,6 @@ void CMeshSolver::SetBoundaryDisplacements(CGeometry *geometry, CNumerics *numer
         }
 
         LinSysSol(iPoint, axis) = 0.0;
-        //LinSysReact(iPoint, axis) = 0.0;
         Jacobian.EnforceSolutionAtDOF(iPoint, axis, su2double(0.0), LinSysRes);
       }
     }
