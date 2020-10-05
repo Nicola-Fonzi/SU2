@@ -1457,19 +1457,17 @@ class Interface:
 
         # --- Get the fluid interface loads from the fluid solver and directly fill the corresponding PETSc vector ---
         for iVertex in range(self.nLocalFluidInterfaceNodes):
-            halo = FluidSolver.ComputeVertexForces(self.fluidInterfaceIdentifier, iVertex) # !!we have to ignore halo node coming from mesh partitioning because they introduice non-physical forces
-            if halo==False:
-                newFx = FluidSolver.GetVertexForceX(self.fluidInterfaceIdentifier, iVertex)
-                newFy = FluidSolver.GetVertexForceY(self.fluidInterfaceIdentifier, iVertex)
-                newFz = FluidSolver.GetVertexForceZ(self.fluidInterfaceIdentifier, iVertex)
-                iGlobalVertex = self.__getGlobalIndex('fluid', myid, localIndex)
-                self.fluidLoads_array_X.setValues([iGlobalVertex], newFx)
-                self.fluidLoads_array_Y.setValues([iGlobalVertex], newFy)
-                self.fluidLoads_array_Z.setValues([iGlobalVertex], newFz)
-                FX += newFx
-                FY += newFy
-                FZ += newFz
-                localIndex += 1
+            GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
+            if GlobalIndex not in self.FluidHaloNodeList[myid].keys():
+              loadX, loadY, loadZ = FluidSolver.GetFlowLoad(self.fluidInterfaceIdentifier, iVertex)
+              iGlobalVertex = self.__getGlobalIndex('fluid', myid, localIndex)
+              self.fluidLoads_array_X.setValues([iGlobalVertex], loadX)
+              self.fluidLoads_array_Y.setValues([iGlobalVertex], loadY)
+              self.fluidLoads_array_Z.setValues([iGlobalVertex], loadZ)
+              FX += loadX
+              FY += loadY
+              FZ += loadZ
+              localIndex += 1
 
         if self.have_MPI == True:
           FX = self.comm.allreduce(FX)
