@@ -235,6 +235,7 @@ void CFluidIteration::Postprocess(COutput* output, CIntegration**** integration,
   /*--- Temporary: enable only for single-zone driver. This should be removed eventually when generalized. ---*/
 
   if (config[val_iZone]->GetSinglezone_Driver()) {
+    cout<<"In the correct if"<<endl;
     /*--- Compute the tractions at the vertices ---*/
     solver[val_iZone][val_iInst][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry[val_iZone][val_iInst][MESH_0],
                                                                            config[val_iZone]);
