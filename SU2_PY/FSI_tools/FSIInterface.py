@@ -1989,6 +1989,8 @@ class Interface:
                         FluidSolver.ResetConvergence()
                         FluidSolver.Run()
                         self.MPIBarrier()
+                        FluidSolver.Postprocess()
+                        self.MPIBarrier()
 
                         # --- Surface fluid loads interpolation and communication --- #
                         if not self.ImposedMotion:
