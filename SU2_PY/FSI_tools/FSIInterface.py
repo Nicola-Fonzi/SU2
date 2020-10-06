@@ -2097,6 +2097,7 @@ class Interface:
             self.MPIPrint('\nPerforming static mesh deformation...\n')
             FluidSolver.Preprocess(0)# This will attempt to always set the initial condition, but there is a flag on the unsteady computation that will avoid it
             FluidSolver.Run()
+            FluidSolver.Postprocess()
             FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
             FluidSolver.Output(0)
 
