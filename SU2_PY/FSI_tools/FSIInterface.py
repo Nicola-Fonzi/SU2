@@ -2111,20 +2111,18 @@ class Interface:
               self.MPIBarrier()
               self.interpolateFluidLoadsOnSolidMesh(FSI_config)
               self.setSolidInterfaceLoads(SolidSolver, FSI_config)
-
-            # --- Solid solver call for FSI subiteration --- #
-            self.MPIPrint('\nLaunching solid solver for a static computation...\n')
-            if myid in self.solidSolverProcessors:
-              SolidSolver.run(0.0)
-              SolidSolver.writeSolution(0.0, 0, self.FSIIter)
+              # --- Solid solver call for FSI subiteration --- #
+              self.MPIPrint('\nLaunching solid solver for a static computation...\n')
+              if myid in self.solidSolverProcessors:
+                SolidSolver.run(0.0)
+                SolidSolver.writeSolution(0.0, 0, self.FSIIter)
 
             # --- Compute and monitor the FSI residual --- #
             varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
             self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
             self.writeFSIHistory(0, 0.0, varCoordNorm, False)
-            if not self.ImposedMotion:
-              if varCoordNorm < FSITolerance:
-                break
+            if varCoordNorm < FSITolerance:
+              break
 
             # --- Relaxe the solid displacement and update the solid solution --- #
             self.MPIPrint('\nProcessing interface displacements...\n')
