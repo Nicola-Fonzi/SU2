@@ -552,9 +552,6 @@ class Solver:
       #self.q[0]=((3.0*pi/180.0)+(1.0*pi/180.0)*sin(2*pi*10.0*time))/4.796908e-01
       #self.qdot[0] = 2.0*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*time))/4.796908e-01
       #self.qddot[0] = -4.0*pi*pi*100.0*((1.0*pi/180.0)*sin(2*pi*10.0*time))/4.796908e-01
-      #self.q[1]= -pi/180.0*sin(2.0*pi*8.0*time)
-      #self.qdot[1] = -pi/180.0*cos(2.0*pi*8.0*time)*(2.0*pi*8.0)
-      #self.qddot[1] = pi/180.0*sin(2.0*pi*8.0*time)*(2.0*pi*8.0)*(2.0*pi*8.0)
       self.q[self.Config["IMPOSED_MODE"]] = eval(self.Config["IMPOSED_DISP"])
       self.qdot[self.Config["IMPOSED_MODE"]] = eval(self.Config["IMPOSED_VEL"])
       self.qddot[self.Config["IMPOSED_MODE"]] = eval(self.Config["IMPOSED_ACC"])
@@ -630,7 +627,7 @@ class Solver:
             print("The restart iteration was not found in the structural history")
             break
           line = line.strip('\r\n').split()
-          if int(line[1])==(self.Config["RESTART_ITER"]-2):
+          if int(line[1])==(self.Config["RESTART_ITER"]-1):
             break
       index = 0
       for index_mode in range(self.nDof):
@@ -656,7 +653,7 @@ class Solver:
             print("The restart iteration was not found in the structural history")
             break
           line = line.strip('\r\n').split()
-          if int(line[1])==(self.Config["RESTART_ITER"]-1):
+          if int(line[1])==(self.Config["RESTART_ITER"]):
             break
       index = 0
       for index_mode in range(self.nDof):
