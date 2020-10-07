@@ -653,7 +653,7 @@ class Solver:
             print("The restart iteration was not found in the structural history")
             break
           line = line.strip('\r\n').split()
-          if int(line[1])==(self.Config["RESTART_ITER"]):
+          if int(line[1])==self.Config["RESTART_ITER"]:
             break
       index = 0
       for index_mode in range(self.nDof):
