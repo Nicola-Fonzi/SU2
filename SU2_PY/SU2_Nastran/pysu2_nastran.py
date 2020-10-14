@@ -549,9 +549,6 @@ class Solver:
 
       self.a += (1-self.alpha_f)/(1-self.alpha_m)*self.qddot
     else:
-      #self.q[0]=((3.0*pi/180.0)+(1.0*pi/180.0)*sin(2*pi*10.0*time))/4.796908e-01
-      #self.qdot[0] = 2.0*pi*10.0*((1.0*pi/180.0)*cos(2*pi*10.0*time))/4.796908e-01
-      #self.qddot[0] = -4.0*pi*pi*100.0*((1.0*pi/180.0)*sin(2*pi*10.0*time))/4.796908e-01
       self.q[self.Config["IMPOSED_MODE"]] = eval(self.Config["IMPOSED_DISP"])
       self.qdot[self.Config["IMPOSED_MODE"]] = eval(self.Config["IMPOSED_VEL"])
       self.qddot[self.Config["IMPOSED_MODE"]] = eval(self.Config["IMPOSED_ACC"])
@@ -572,8 +569,6 @@ class Solver:
       FY[iPoint] = float(Force[1])
       FZ[iPoint] = float(Force[2])
     self.F = self.UxT.dot(FX) + self.UyT.dot(FY) + self.UzT.dot(FZ)
-    print("The modal forces are:")
-    print(self.F)
 
   def __ComputeResidual(self):
     """ Description. """

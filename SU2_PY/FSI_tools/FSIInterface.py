@@ -1485,10 +1485,6 @@ class Interface:
         FY_b = self.fluidLoads_array_Y.sum()
         FZ_b = self.fluidLoads_array_Z.sum()
 
-        self.MPIPrint("The total force in X direction, computed from the values of SU2, is {}. The one from PETSc is {}".format(FX,FX_b))
-        self.MPIPrint("The total force in Y direction, computed from the values of SU2, is {}. The one from PETSc is {}".format(FY,FY_b))
-        self.MPIPrint("The total force in Z direction, computed from the values of SU2, is {}. The one from PETSc is {}".format(FZ,FZ_b))
-
 
     def setFluidInterfaceVarCoord(self, FluidSolver):
         """
