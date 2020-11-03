@@ -45,12 +45,17 @@ class RefSystem:
   def __init__(self):
     self.CID = 0
     self.RID = 0
-    self.AX = 0.
-    self.AY = 0.
-    self.AZ = 0.
+    self.Origin = np.array([[0.],[0.],[0.]])
+    self.Rot = np.array([[0.,0.,0.],[0.,0.,0.],[0.,0.,0.]])
 
   def SetOrigin(self,A):
-    self.AX, self.AY, self.AZ =  A
+    AX , AY , AZ = A
+    self.Origin[0] =  AX
+    self.Origin[1] =  AY
+    self.Origin[2] =  AZ
+
+  def SetRotMatrix(self,x,y,z):
+    self.Rot = np.array([[x[0],y[0],z[0]],[x[1],y[1],z[1]],[x[2],y[2],z[2]]])
 
   def SetCID(self,CID):
     self.CID = CID
@@ -59,7 +64,10 @@ class RefSystem:
     self.RID = RID
 
   def GetOrigin(self):
-    return np.array([self.AX,self.AY,self.AZ])
+    return self.Origin
+
+  def GetRotMatrix(self):
+    return self.Rot
 
   def GetRID(self):
     return self.RID
@@ -184,7 +192,7 @@ class Solver:
     print("Reading the modal and stiffnes matrix from file")
     self.ModalDamping = self.Config['MODAL_DAMPING']
     if self.ModalDamping == 0:
-        print("The structural model in undamped")
+        print("The structural model is undamped")
     else:
         print("Assuming {}% of modal damping".format(self.ModalDamping*100))
 
@@ -299,7 +307,7 @@ class Solver:
             break
 
           pos = line.find('GRID')
-          if pos != -1 and pos  ==  30:
+          if pos  ==  30:
             line = line.strip('\r\n')
             self.node.append(Point())
             line = line[30:]
@@ -315,9 +323,10 @@ class Solver:
               if self.refsystems[iRefSys].GetCID()!=CP:
                 sys.exit('Definition reference {} system not found'.format(CP))
               DeltaPos = self.refsystems[iRefSys].GetOrigin()
-              x = x+DeltaPos[0]
-              y = y+DeltaPos[1]
-              z = z+DeltaPos[2]
+              RotatedPos = self.refsystems[iRefSys].GetRotMatrix().dot(np.array([[x],[y],[z]]))
+              x = RotatedPos[0]+DeltaPos[0]
+              y = RotatedPos[1]+DeltaPos[1]
+              z = RotatedPos[2]+DeltaPos[2]
             CD = int(line[48:56])
             self.node[self.nPoint].SetCoord((x,y,z))
             self.node[self.nPoint].SetID(ID)
@@ -329,24 +338,43 @@ class Solver:
             continue
 
           pos = line.find('CORD2R')
-          if pos != -1 and pos == 30:
+          if pos == 30:
             line = line.strip('\r\n')
             self.refsystems.append(RefSystem())
             line = line[30:]
             CID = int(line[8:16])
             self.refsystems[self.nRefSys].SetCID(CID)
             RID = int(line[16:24])
+            if RID!=0:
+              print('ERROR: Reference system {} must be defined with respect to global reference system'.format(CID))
+              sys.exit()
             self.refsystems[self.nRefSys].SetRID(RID)
             AX = nastran_float(line[24:32])
             AY = nastran_float(line[32:40])
             AZ = nastran_float(line[40:48])
+            BX = nastran_float(line[48:56])
+            BY = nastran_float(line[56:64])
+            BZ = nastran_float(line[64:72])
+            z_direction = np.array([BX-AX,BY-AY,BZ-AZ])
+            z_direction = z_direction/linalg.norm(z_direction)
+            line = meshfile.readline()
+            line = line.strip('\r\n')
+            line = line[30:]
+            CX = nastran_float(line[8:16])
+            CY = nastran_float(line[16:24])
+            CZ = nastran_float(line[24:32])
+            y_direction = np.cross(z_direction,[CX-AX,CY-AY,CZ-AZ])
+            y_direction = y_direction/linalg.norm(y_direction)
+            x_direction = np.cross(y_direction,z_direction)
+            x_direction = x_direction/linalg.norm(x_direction)
+            self.refsystems[self.nRefSys].SetRotMatrix(x_direction,y_direction,z_direction)
             self.refsystems[self.nRefSys].SetOrigin((AX,AY,AZ))
             self.nRefSys = self.nRefSys+1
             continue
 
           pos = line.find("SET1")
-          markerTag = self.Config['MOVING_MARKER']
-          if pos != -1 and pos == 30:
+          markerTag = self.FSI_marker
+          if pos == 30:
               self.markers[markerTag] = []
               line = line.strip('\r\n')
               line = line[46:]
@@ -424,6 +452,16 @@ class Solver:
               ux = float(line[2])
               uy = float(line[3])
               uz = float(line[4])
+              if self.node[iPoint].GetCD()!=0:
+                for iRefSys in range(self.nRefSys):
+                  if self.refsystems[iRefSys].GetCID()==self.node[iPoint].GetCD():
+                    break
+                if self.refsystems[iRefSys].GetCID()!=self.node[iPoint].GetCD():
+                  sys.exit('Output reference {} system not found'.format(self.node[iPoint].GetCD()))
+                RotatedOutput = self.refsystems[iRefSys].GetRotMatrix().dot(np.array([[ux],[uy],[uz]]))
+                ux = RotatedOutput[0]
+                uy = RotatedOutput[1]
+                uz = RotatedOutput[2]
               self.Ux[iPoint][imode] = ux
               self.Uy[iPoint][imode] = uy
               self.Uz[iPoint][imode] = uz
@@ -435,15 +473,87 @@ class Solver:
           if n == self.nDof:
             break
 
+    self.__setNonDiagonalStructuralMatrices()
+
     self.UxT = self.Ux.transpose()
     self.UyT = self.Uy.transpose()
     self.UzT = self.Uz.transpose()
 
     if n<self.nDof:
         print('ERROR: available {} degrees of freedom instead of {} as requested'.format(n,self.nDof))
-        exit()
+        sys.exit()
     else:
         print('Using {} degrees of freedom'.format(n))
+
+
+  def __setNonDiagonalStructuralMatrices(self):
+    """ Descriptions. """
+
+    K_updated = self.__readNonDiagonalMatrix('NDK')
+    M_updated = self.__readNonDiagonalMatrix('NDM')
+    C_updated = self.__readNonDiagonalMatrix('NDC')
+    if K_updated and M_updated and (not C_updated):
+      print('Setting modal damping')
+      self.__setNonDiagonalDamping()
+    elif (not K_updated) and (not M_updated):
+      print('Modal stiffness and mass matrices are diagonal')
+    elif (not K_updated) and M_updated:
+      sys.exit('Non-Diagonal stiffness matrix is missing')
+    elif (not M_updated) and K_updated:
+      sys.exit('Non-Diagonal mass matrix is missing')
+
+  def __readNonDiagonalMatrix(self,keyword):
+    """ Descriptions. """
+
+    matrixUpdated = False
+
+    with open(self.Punch_file,'r') as punchfile:
+
+      while 1:
+        line = punchfile.readline()
+        if not line:
+          break
+
+        pos = line.find(keyword)
+        if pos != -1:
+          while 1:
+            line = punchfile.readline()
+            line = line.strip('\r\n').split()
+            if line[0] != '-CONT-':
+              i = int(line[0])-1
+              j = 0
+              el = line[1:]
+              ne = len(el)
+            elif line[0] == '-CONT-':
+              el = line[1:]
+              ne = len(el)
+            if keyword == 'NDK':
+              self.K[i][j:j+ne] = np.array(el)
+            elif keyword == 'NDM':
+              self.M[i][j:j+ne] = np.array(el)
+            elif keyword == 'NDC':
+              self.C[i][j:j+ne] = np.array(el)
+            j = j+ne
+            if i+1 == self.nDof and j == self.nDof:
+              matrixUpdated = True
+              break
+
+    return matrixUpdated
+
+
+  def __setNonDiagonalDamping(self):
+
+    D , V = linalg.eig(self.K,self.M)
+    D = D.real
+    D = np.sqrt(D)
+    Mmodal = ((V.transpose()).dot(self.M)).dot(V)
+    Mmodal = np.diag(Mmodal)
+    C = 2 * self.ModalDamping * np.multiply(D,Mmodal)
+    C = np.diag(C)
+    Vinv = linalg.inv(V)
+    C = C.dot(Vinv)
+    VinvT = Vinv.transpose()
+    self.C = VinvT.dot(C)
 
   def __setIntegrationParameters(self):
     """ Description. """
