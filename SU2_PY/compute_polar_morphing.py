@@ -41,6 +41,11 @@ def main():
     HOME = os.getcwd()
     FluidCfg = HOME+"/fluid"
     SolidCfg = HOME+"/solid"
+    FsiCfg = HOME+"/fsi"
+    MeshFile = HOME+"/foil.su2"
+    PchFile = HOME+"modal.pch"
+    MeshFile = HOME+"modal.f06"
+
 
     # Initialisation
     alpha = np.linspace(0.0,10.0,Nalpha)
@@ -57,6 +62,10 @@ def main():
             os.mkdir(HOMEACT)
             shutil.copyfile(HOME+"/fluid_new.cfg",HOMEACT+"/fluid_new.cfg")
             shutil.copyfile(HOME+"/solid_new.cfg",HOMEACT+"/solid_new.cfg")
+            shutil.copyfile(HOME+"/foil.su2",HOMEACT+"/foil.su2")
+            shutil.copyfile(HOME+"/fsi.cfg",HOMEACT+"/fsi.cfg")
+            shutil.copyfile(HOME+"/modal.f06",HOMEACT+"/modal.f06")
+            shutil.copyfile(HOME+"/modal.pch",HOMEACT+"/modal.pch")
             os.chdir(HOMEACT)
             run.main()
     os.remove(HOME+"/fluid_new.cfg")
@@ -76,7 +85,7 @@ def writeFluidCfg(alpha,FluidCfg):
         line = configfile.readline()
         if not line:
           break
-        pos = line.find('AoA')
+        pos = line.find('AOA')
         if pos  >=  0:
           break
         line_num = line_num + 1
