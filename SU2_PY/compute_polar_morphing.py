@@ -43,8 +43,9 @@ def main():
     SolidCfg = HOME+"/solid"
     FsiCfg = HOME+"/fsi"
     MeshFile = HOME+"/foil.su2"
-    PchFile = HOME+"modal.pch"
-    MeshFile = HOME+"modal.f06"
+    PchFile = HOME+"/modal.pch"
+    MeshFile = HOME+"/modal.f06"
+    RestartFile = HOME+"/restart_flow.dat"
 
 
     # Initialisation
@@ -66,6 +67,7 @@ def main():
             shutil.copyfile(HOME+"/fsi.cfg",HOMEACT+"/fsi.cfg")
             shutil.copyfile(HOME+"/modal.f06",HOMEACT+"/modal.f06")
             shutil.copyfile(HOME+"/modal.pch",HOMEACT+"/modal.pch")
+            shutil.copyfile(HOME+"/restart_flow.dat",HOMEACT+"/restart_flow.dat")
             os.chdir(HOMEACT)
             run.main()
     os.remove(HOME+"/fluid_new.cfg")
