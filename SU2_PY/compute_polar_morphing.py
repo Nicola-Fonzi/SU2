@@ -25,11 +25,9 @@
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# Authors: Nicola Fonzi, Vittorio Cavalieri
+# Author: Nicola Fonzi, Vittorio Cavalieri
 
-import fsi_computation as run
 import numpy as np
-from math import *
 import os
 import shutil
 
@@ -49,7 +47,7 @@ def main():
 
 
     # Initialisation
-    alpha = np.linspace(0.0,10.0,Nalpha)
+    alpha = np.linspace(0.0,5.0,Nalpha)
 
     for AoA in alpha:
         os.chdir(HOME)
@@ -69,7 +67,7 @@ def main():
             shutil.copyfile(HOME+"/modal.pch",HOMEACT+"/modal.pch")
             shutil.copyfile(HOME+"/restart_flow.dat",HOMEACT+"/restart_flow.dat")
             os.chdir(HOMEACT)
-            run.main()
+            os.system("mpirun -np 38 python3 /scratch/aero/nfonzi/usr/SU2/bin/fsi_computation.py --parallel -f fsi.cfg > log.txt")
     os.remove(HOME+"/fluid_new.cfg")
     os.remove(HOME+"/solid_new.cfg")
 
@@ -104,7 +102,7 @@ def writeSolidCfg(actuation,SolidCfg):
         if pos  >=  0:
           break
         line_num = line_num + 1
-    replace_line(SolidCfg,line_num,"INITIAL_MODES = {"+str(actuation)+":1.0}")
+    replace_line(SolidCfg,line_num,"INITIAL_MODES = {"+str(actuation*0.3)+":1.0}")
 
 
 if __name__ == '__main__':
