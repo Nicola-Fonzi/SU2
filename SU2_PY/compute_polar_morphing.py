@@ -40,7 +40,7 @@ def main():
     FluidCfg = HOME+"/fluid"
     SolidCfg = HOME+"/solid"
     FsiCfg = HOME+"/fsi"
-    MeshFile = HOME+"/foil.su2"
+    MeshFile = HOME+"/airfoil.su2"
     PchFile = HOME+"/modal.pch"
     MeshFile = HOME+"/modal.f06"
     RestartFile = HOME+"/restart_flow.dat"
@@ -61,7 +61,7 @@ def main():
             os.mkdir(HOMEACT)
             shutil.copyfile(HOME+"/fluid_new.cfg",HOMEACT+"/fluid_new.cfg")
             shutil.copyfile(HOME+"/solid_new.cfg",HOMEACT+"/solid_new.cfg")
-            shutil.copyfile(HOME+"/foil.su2",HOMEACT+"/foil.su2")
+            shutil.copyfile(HOME+"/airfoil.su2",HOMEACT+"/airfoil.su2")
             shutil.copyfile(HOME+"/fsi.cfg",HOMEACT+"/fsi.cfg")
             shutil.copyfile(HOME+"/modal.f06",HOMEACT+"/modal.f06")
             shutil.copyfile(HOME+"/modal.pch",HOMEACT+"/modal.pch")
@@ -89,7 +89,7 @@ def writeFluidCfg(alpha,FluidCfg):
         if pos  >=  0:
           break
         line_num = line_num + 1
-    replace_line(FluidCfg,line_num,"A0A = "+str(alpha))
+    replace_line(FluidCfg,line_num,"AOA = "+str(alpha))
 
 def writeSolidCfg(actuation,SolidCfg):
     line_num = 0
@@ -102,7 +102,7 @@ def writeSolidCfg(actuation,SolidCfg):
         if pos  >=  0:
           break
         line_num = line_num + 1
-    replace_line(SolidCfg,line_num,"INITIAL_MODES = {"+str(actuation*0.3)+":1.0}")
+    replace_line(SolidCfg,line_num,"INITIAL_MODES = {"+str(int(actuation))+":1.0}")
 
 
 if __name__ == '__main__':
