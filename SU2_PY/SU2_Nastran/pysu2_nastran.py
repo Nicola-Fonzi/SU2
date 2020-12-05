@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-## \file SolidSolverTester.py
+## \file pysu2_nastran.py
 #  \brief Structural solver tester (one or two degree of freedom) used for testing the Py wrapper for external FSI coupling.
-#  \author David Thomas
+#  \authors Nicola Fonzi, Vittorio Cavalieri, based on the work of David Thomas
 #  \version 7.0.6 "Blackbird"
 #
 # SU2 Project Website: https://su2code.github.io
