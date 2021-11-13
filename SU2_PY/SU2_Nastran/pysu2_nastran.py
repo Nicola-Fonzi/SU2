@@ -63,6 +63,10 @@ class ImposedMotionClass:
       self.tmax = 2*pi/self.kmax*self.lref/self.vinf
       self.omega0 = 1/2*self.kmax
 
+    elif self.typeOfMotion == "COSINUSOIDAL":
+      self.bias = parameters["BIAS"]
+      self.frequency = parameters["FREQUENCY"]
+
     else:
       raise Exception('Imposed function {} not found, please implement it in pysu2_nastran.py'.format(self.tipo))
 
@@ -81,6 +85,11 @@ class ImposedMotionClass:
         return self.amplitude/2.0*(1.0-cos(self.omega0*time*self.vinf/self.lref))
       return self.amplitude
 
+    if self.typeOfMotion == 'COSINUSOIDAL':
+      if (time < 0.0) or (time > self.timeStop):
+        return 0.0
+      return self.bias+self.amplitude*(1-cos(2*pi*self.frequency*time))
+
 
   def GetVel(self,time):
     time = time - self.time0 - self.timeStart
@@ -97,6 +106,11 @@ class ImposedMotionClass:
         return self.amplitude/2.0*sin(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
       return 0.0
 
+    if self.typeOfMotion == "COSINUSOIDAL":
+      if (time < 0.0) or (time > self.timeStop):
+        return 0.0
+      return self.amplitude*sin(2*pi*self.frequency*time)*2*pi*self.frequency
+
   def GetAcc(self,time):
     time = time - self.time0 - self.timeStart
 
@@ -111,6 +125,11 @@ class ImposedMotionClass:
       if time < self.tmax:
         return self.amplitude/2.0*cos(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
       return 0.0
+
+    if self.typeOfMotion == "COSINUSOIDAL":
+      if (time < 0.0) or (time > self.timeStop):
+        return 0.0
+      return self.amplitude*cos(2*pi*self.frequency*time)*(2*pi*self.frequency)**2
 
 
 class RefSystem:
