@@ -2,7 +2,7 @@
  * \file CNEMOGas.cpp
  * \brief Source of the nonequilibrium gas model.
  * \author C. Garbacz, W. Maier, S. R. Copeland
- * \version 7.2.0 "Blackbird"
+ * \version 7.2.1 "Blackbird"
  *
  * SU2 Project Website: https://su2code.github.io
  *
@@ -131,14 +131,13 @@ su2double CNEMOGas::ComputeGamma(){
 
   /*--- Extract Values ---*/
   rhoCvtr = ComputerhoCvtr();
-  rhoCvve = ComputerhoCvve();
 
   /*--- Gamma Computation ---*/
   su2double rhoR = 0.0;
   for(iSpecies = 0; iSpecies < nSpecies; iSpecies++)
     rhoR += rhos[iSpecies]*Ru/MolarMass[iSpecies];
 
-  gamma = rhoR/(rhoCvtr+rhoCvve)+1;
+  gamma = rhoR/rhoCvtr+1;
 
   return gamma;
 

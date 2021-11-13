@@ -2,7 +2,7 @@
  * \file CTurbSASolver.cpp
  * \brief Main subrotuines of CTurbSASolver class
  * \author F. Palacios, A. Bueno
- * \version 7.2.0 "Blackbird"
+ * \version 7.2.1 "Blackbird"
  *
  * SU2 Project Website: https://su2code.github.io
  *
@@ -31,8 +31,6 @@
 #include "../../../Common/include/parallelization/omp_structure.hpp"
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
 
-
-CTurbSASolver::CTurbSASolver(void) : CTurbSolver(false) { }
 
 CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned short iMesh, CFluidModel* FluidModel)
              : CTurbSolver(geometry, config, false) {
@@ -600,9 +598,16 @@ void CTurbSASolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, CN
 
       conv_numerics->SetPrimitive(V_domain, V_inlet);
 
+      /*--- Non-dimensionalize Inlet_TurbVars if Inlet-Files are used. ---*/
+      su2double Inlet_Vars[MAXNVAR];
+      Inlet_Vars[0] = Inlet_TurbVars[val_marker][iVertex][0];
+      if (config->GetInlet_Profile_From_File()) {
+        Inlet_Vars[0] *= config->GetDensity_Ref() / config->GetViscosity_Ref();
+      }
+
       /*--- Load the inlet turbulence variable (uniform by default). ---*/
 
-      conv_numerics->SetScalarVar(nodes->GetSolution(iPoint), Inlet_TurbVars[val_marker][iVertex]);
+      conv_numerics->SetScalarVar(nodes->GetSolution(iPoint), Inlet_Vars);
 
       /*--- Set various other quantities in the conv_numerics class ---*/
 
@@ -1250,7 +1255,7 @@ void CTurbSASolver::BC_Inlet_Turbo(CGeometry *geometry, CSolver **solver_contain
       visc_numerics->SetScalarVar(nodes->GetSolution(iPoint), &nu_tilde);
 
       visc_numerics->SetScalarVarGradient(nodes->GetGradient(iPoint),
-                                        nodes->GetGradient(iPoint));
+                                          nodes->GetGradient(iPoint));
 
       /*--- Compute residual, and Jacobians ---*/
 
@@ -1366,7 +1371,7 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
     const auto coord_i       = geometry->nodes->GetCoord(iPoint);
     const auto nNeigh        = geometry->nodes->GetnPoint(iPoint);
     const auto wallDistance  = geometry->nodes->GetWall_Distance(iPoint);
-    const auto primVarGrad   = flowNodes->GetGradient_Primitive(iPoint);
+    const auto velocityGrad  = flowNodes->GetVelocityGradient(iPoint);
     const auto vorticity     = flowNodes->GetVorticity(iPoint);
     const auto density       = flowNodes->GetDensity(iPoint);
     const auto laminarViscosity = flowNodes->GetLaminarViscosity(iPoint);
@@ -1377,7 +1382,7 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
     su2double uijuij = 0.0;
     for(auto iDim = 0u; iDim < nDim; iDim++){
       for(auto jDim = 0u; jDim < nDim; jDim++){
-        uijuij += primVarGrad[1+iDim][jDim]*primVarGrad[1+iDim][jDim];
+        uijuij += pow(velocityGrad[iDim][jDim], 2);
       }
     }
     uijuij = sqrt(fabs(uijuij));
