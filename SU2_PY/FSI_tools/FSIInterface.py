@@ -2140,6 +2140,11 @@ class Interface:
         myid = 0
         numberPart = 1
 
+      self.MPIPrint('\n********************************')
+      self.MPIPrint('* Begin obtaining the normals *')
+      self.MPIPrint('********************************\n')
+      self.MPIPrint("\n")
+
       nodeNormals = {}
       for iVertex in range(self.nLocalFluidInterfaceNodes):
         nx, ny, nz = FluidSolver.GetVertexNormal(self.fluidInterfaceIdentifier, iVertex, False)
@@ -2173,10 +2178,13 @@ class Interface:
 
       self.comm.Bcast(modesNumber, root=self.rootProcess)
 
-      for mode in range(np.asscalar(modesNumber)):
+      for mode in range(np.asscalar(modesNumber)+1):
         self.MPIPrint("Setting mode {} active".format(mode))
         if myid in self.solidSolverProcessors:
-          SolidSolver.activateMode(mode)
+          if mode == np.asscalar(modesNumber):
+            SolidSolver.activateMode("Undeformed")
+          else:
+            SolidSolver.activateMode(mode)
         self.MPIBarrier()
         self.getSolidInterfaceDisplacement(SolidSolver)
         self.interpolateSolidPositionOnFluidMesh(FSI_config)
@@ -2193,7 +2201,10 @@ class Interface:
             if SurfaceFileName in FileName:
               file = FileName.split(".")[0]
               extension = FileName.split(".")[1]
-              os.rename(file+"."+extension,"Mode{}.".format(mode)+extension)
+              if mode == np.asscalar(modesNumber):
+                os.rename(file+"."+extension,"Undeformed."+extension)
+              else:
+                os.rename(file+"."+extension,"Mode{}.".format(mode)+extension)
 
       self.MPIPrint('\n*************************')
       self.MPIPrint('*  Mapping completed  *')

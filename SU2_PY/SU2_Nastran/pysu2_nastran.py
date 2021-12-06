@@ -957,7 +957,8 @@ class Solver:
     with non zero amplitude.
     """
     self.__reset(self.q)
-    self.q[iMode] = 1.0
+    if not isinstance(iMode, str):
+      self.q[iMode] = 1.0
     self.__computeInterfacePosVel(True)
 
   def setInitialDisplacements(self):
