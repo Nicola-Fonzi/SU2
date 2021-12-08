@@ -34,8 +34,8 @@ import sys
 import shutil
 import copy
 import time as timer
-from math import *	# use mathematical expressions
-from optparse import OptionParser	# use a parser for configuration
+import math
+from optparse import OptionParser  # use a parser for configuration
 
 # imports the CFD (SU2) module for FSI computation
 import pysu2

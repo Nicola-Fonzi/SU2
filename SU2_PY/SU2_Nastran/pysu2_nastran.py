@@ -31,7 +31,7 @@
 
 import numpy as np
 import scipy.linalg as linalg
-from math import *
+import math
 
 # ----------------------------------------------------------------------
 #  Config class
@@ -50,7 +50,7 @@ class ImposedMotionClass:
     if "TIME_STOP" in parameters.keys():
       self.timeStop  = parameters["TIME_STOP"]
     else:
-      self.timeStop = inf
+      self.timeStop = math.inf
 
     if self.typeOfMotion == "SINUSOIDAL":
       self.bias = parameters["BIAS"]
@@ -60,7 +60,7 @@ class ImposedMotionClass:
       self.kmax = parameters["K_MAX"]
       self.vinf = parameters["V_INF"]
       self.lref = parameters["L_REF"]
-      self.tmax = 2*pi/self.kmax*self.lref/self.vinf
+      self.tmax = 2*math.pi/self.kmax*self.lref/self.vinf
       self.omega0 = 1/2*self.kmax
 
     elif self.typeOfMotion == "COSINUSOIDAL":
@@ -68,7 +68,7 @@ class ImposedMotionClass:
       self.frequency = parameters["FREQUENCY"]
 
     else:
-      raise Exception('Imposed function {} not found, please implement it in pysu2_nastran.py'.format(self.tipo))
+      raise Exception('Imposed function {} not found, please implement it in pysu2_nastran.py'.format(self.typeOfMotion))
 
 
   def GetDispl(self,time):
@@ -76,19 +76,19 @@ class ImposedMotionClass:
     if self.typeOfMotion == "SINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
-      return self.bias+self.amplitude*sin(2*pi*self.frequency*time)
+      return self.bias+self.amplitude*math.sin(2*math.pi*self.frequency*time)
 
     if self.typeOfMotion == "BLENDED_STEP":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
       if time < self.tmax:
-        return self.amplitude/2.0*(1.0-cos(self.omega0*time*self.vinf/self.lref))
+        return self.amplitude/2.0*(1.0-math.cos(self.omega0*time*self.vinf/self.lref))
       return self.amplitude
 
     if self.typeOfMotion == 'COSINUSOIDAL':
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
-      return self.bias+self.amplitude*(1-cos(2*pi*self.frequency*time))
+      return self.bias+self.amplitude*(1-math.cos(2*math.pi*self.frequency*time))
 
 
   def GetVel(self,time):
@@ -97,19 +97,19 @@ class ImposedMotionClass:
     if self.typeOfMotion == "SINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
-      return self.amplitude*cos(2*pi*self.frequency*time)*2*pi*self.frequency
+      return self.amplitude*math.cos(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
 
     if self.typeOfMotion == "BLENDED_STEP":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
       if time < self.tmax:
-        return self.amplitude/2.0*sin(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
+        return self.amplitude/2.0*math.sin(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
       return 0.0
 
     if self.typeOfMotion == "COSINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
-      return self.amplitude*sin(2*pi*self.frequency*time)*2*pi*self.frequency
+      return self.amplitude*math.sin(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
 
   def GetAcc(self,time):
     time = time - self.time0 - self.timeStart
@@ -117,19 +117,19 @@ class ImposedMotionClass:
     if self.typeOfMotion == "SINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
-      return -self.amplitude*sin(2*pi*self.frequency*time)*(2*pi*self.frequency)**2
+      return -self.amplitude*math.sin(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
 
     if self.typeOfMotion == "BLENDED_STEP":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
       if time < self.tmax:
-        return self.amplitude/2.0*cos(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
+        return self.amplitude/2.0*math.cos(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
       return 0.0
 
     if self.typeOfMotion == "COSINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
-      return self.amplitude*cos(2*pi*self.frequency*time)*(2*pi*self.frequency)**2
+      return self.amplitude*math.cos(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
 
 
 class RefSystem:
@@ -573,7 +573,7 @@ class Solver:
           k_i = float(line[2])
           self.M[imode][imode] = 1
           self.K[imode][imode] = k_i
-          w_i = sqrt(k_i)
+          w_i = math.sqrt(k_i)
           self.C[imode][imode] = 2 * self.ModalDamping * w_i
           iPoint = 0
           for indexIter in range(self.nPoint):
@@ -679,12 +679,12 @@ class Solver:
 
   def __setNonDiagonalDamping(self):
 
-    D , V = linalg.eig(self.K,self.M)
+    D , V = linalg.eig(self.K, self.M)
     D = D.real
     D = np.sqrt(D)
     Mmodal = ((V.transpose()).dot(self.M)).dot(V)
     Mmodal = np.diag(Mmodal)
-    C = 2 * self.ModalDamping * np.multiply(D,Mmodal)
+    C = 2 * self.ModalDamping * np.multiply(D, Mmodal)
     C = np.diag(C)
     Vinv = linalg.inv(V)
     C = C.dot(Vinv)

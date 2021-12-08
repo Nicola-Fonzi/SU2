@@ -33,7 +33,7 @@ import os
 import csv
 import numpy as np
 import scipy.spatial.distance as spdist
-from math import *
+import math
 from rtree import index
 from petsc4py import PETSc
 
@@ -1625,7 +1625,7 @@ class Interface:
         del predDisp_array_Y
         del predDisp_array_Z
 
-        return sqrt(normInterfaceResidualSquare)
+        return math.sqrt(normInterfaceResidualSquare)
 
     def relaxSolidPosition(self,FSI_config):
         """
