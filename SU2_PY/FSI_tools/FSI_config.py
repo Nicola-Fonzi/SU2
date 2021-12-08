@@ -54,7 +54,7 @@ class FSIConfig:
     Read the file and store all the options into a dictionary.
     """
 
-    def __init__(self,FileName,comm):
+    def __init__(self, FileName, comm):
         self.ConfigFileName = FileName
         self.comm = comm
         self._ConfigContent = {}
@@ -89,22 +89,22 @@ class FSIConfig:
             this_param = line[0].strip()
             this_value = line[1].strip()
 
-	        #integer values
-            if (this_param == "NDIM")	or \
-               (this_param == "RESTART_ITER")	or \
+            # Integer values
+            if (this_param == "NDIM") or \
+               (this_param == "RESTART_ITER") or \
                (this_param == "TIME_TRESHOLD") or \
-               (this_param == "NB_FSI_ITER") :
+               (this_param == "NB_FSI_ITER"):
                 self._ConfigContent[this_param] = int(this_value)
 
-            #float values
+            # Float values
             elif (this_param == "RBF_RADIUS") or \
                  (this_param == "AITKEN_PARAM") or \
                  (this_param == "UNST_TIMESTEP") or \
                  (this_param == "UNST_TIME") or \
-                 (this_param == "FSI_TOLERANCE") :
+                 (this_param == "FSI_TOLERANCE"):
                 self._ConfigContent[this_param] = float(this_value)
 
-            #string values
+            # String values
             elif (this_param == "CFD_CONFIG_FILE_NAME") or \
                  (this_param == "CSD_SOLVER") or \
                  (this_param == "CSD_CONFIG_FILE_NAME") or \
@@ -118,8 +118,8 @@ class FSIConfig:
                  (this_param == "MAPPING_MODES"):
                 self._ConfigContent[this_param] = this_value
 
-            else :
-                self.MPIPrint(this_param + " is an invalid option !",False)
+            else:
+                self.MPIPrint(this_param + " is an invalid option !", False)
 
     def applyDefaults(self):
 
@@ -139,8 +139,8 @@ class FSIConfig:
             if self._ConfigContent["TIME_TRESHOLD"] != -1:
                 self.MPIPrint("When restarting a simulation, the time threshold must be -1 for immediate coupling",True)
 
-        if self._ConfigContent["MAPPING_MODES"] == "YES" and self._ConfigContent["CSD_SOLVER"]!="NATIVE":
-            self.MPIPrint("Mapping modes only works with the native solver",True)
+        if self._ConfigContent["MAPPING_MODES"] == "YES" and self._ConfigContent["CSD_SOLVER"] != "NATIVE":
+            self.MPIPrint("Mapping modes only works with the native solver", True)
 
     def MPIPrint(self, message, error):
         """
