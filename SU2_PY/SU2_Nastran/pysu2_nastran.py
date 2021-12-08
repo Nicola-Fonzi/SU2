@@ -283,7 +283,7 @@ class Solver:
     self.Config = {}
 
     print("\n")
-    print(" Configuring the structural tester solver for FSI simulation ".center(80,"-"))
+    print(" Configuring the structural solver for FSI simulation ".center(80,"-"))
     self.__readConfig()
 
     self.Mesh_file = self.Config['MESH_FILE']
