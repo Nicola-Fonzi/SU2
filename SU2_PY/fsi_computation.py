@@ -31,10 +31,7 @@
 
 import os
 import sys
-import shutil
-import copy
 import time as timer
-import math
 from optparse import OptionParser  # use a parser for configuration
 
 # imports the CFD (SU2) module for FSI computation
