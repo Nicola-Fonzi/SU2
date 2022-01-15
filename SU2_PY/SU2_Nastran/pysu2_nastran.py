@@ -63,9 +63,22 @@ class ImposedMotionClass:
       self.tmax = 2*math.pi/self.kmax*self.lref/self.vinf
       self.omega0 = 1/2*self.kmax
 
+    elif self.typeOfMotion == "BLENDED_PULSE":
+      self.kmax = parameters["K_MAX"]
+      self.vinf = parameters["V_INF"]
+      self.lref = parameters["L_REF"]
+      self.tmax = 2 * math.pi / self.kmax * self.lref / self.vinf
+      self.omega0 = 1 / 2 * self.kmax
+      self.r = parameters["R"]
+
     elif self.typeOfMotion == "COSINUSOIDAL":
       self.bias = parameters["BIAS"]
       self.frequency = parameters["FREQUENCY"]
+
+    elif self.typeOfMotion == "HARMONIC_EXPONENTIAL":
+      self.bias = parameters["BIAS"]
+      self.frequency = parameters["FREQUENCY"]
+      self.decay = parameters["DECAY"]
 
     else:
       raise Exception('Imposed function {} not found, please implement it in pysu2_nastran.py'.format(self.typeOfMotion))
@@ -85,10 +98,24 @@ class ImposedMotionClass:
         return self.amplitude/2.0*(1.0-math.cos(self.omega0*time*self.vinf/self.lref))
       return self.amplitude
 
+    if self.typeOfMotion == "BLENDED_PULSE":
+      if (time < 0.0) or (time > self.tmax):
+        return 0.0
+      if time < self.tmax*self.r:
+        modifiedTime = time/(self.r*self.tmax)
+      if time >= self.tmax*self.r:
+        modifiedTime = time/(self.r*self.tmax)
+      return self.amplitude/2.0*(1.0-math.cos(self.omega0*modifiedTime*self.vinf/self.lref))
+
     if self.typeOfMotion == 'COSINUSOIDAL':
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
       return self.bias+self.amplitude*(1-math.cos(2*math.pi*self.frequency*time))
+
+    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
+      if (time < 0.0) or (time > self.timeStop):
+        return 0.0
+      return self.bias+self.amplitude*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
 
 
   def GetVel(self,time):
@@ -106,10 +133,25 @@ class ImposedMotionClass:
         return self.amplitude/2.0*math.sin(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
       return 0.0
 
+    if self.typeOfMotion == "BLENDED_PULSE":
+      if (time < 0.0) or (time > self.tmax):
+        return 0.0
+      if time < self.tmax*self.r:
+        modifiedTime = time/(self.r*self.tmax)
+      if time >= self.tmax*self.r:
+        modifiedTime = time/(self.r*self.tmax)
+      return self.amplitude/2.0*math.sin(self.omega0*modifiedTime*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
+
     if self.typeOfMotion == "COSINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
       return self.amplitude*math.sin(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
+
+    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
+      if (time < 0.0) or (time > self.timeStop):
+        return 0.0
+      return self.amplitude*(self.decay*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
+             + math.exp(self.decay*time)*2*math.pi*self.frequency*math.sin(2*math.pi*self.frequency*time))
 
   def GetAcc(self,time):
     time = time - self.time0 - self.timeStart
@@ -126,11 +168,26 @@ class ImposedMotionClass:
         return self.amplitude/2.0*math.cos(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
       return 0.0
 
+    if self.typeOfMotion == "BLENDED_PULSE":
+      if (time < 0.0) or (time > self.tmax):
+        return 0.0
+      if time < self.tmax*self.r:
+        modifiedTime = time/(self.r*self.tmax)
+      if time >= self.tmax*self.r:
+        modifiedTime = time/(self.r*self.tmax)
+      return self.amplitude/2.0*math.cos(self.omega0*modifiedTime*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
+
     if self.typeOfMotion == "COSINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
         return 0.0
       return self.amplitude*math.cos(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
 
+    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
+      if (time < 0.0) or (time > self.timeStop):
+        return 0.0
+      return self.amplitude*(self.decay**2*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
+             + 2*self.decay*math.exp(self.decay*time)*2*math.pi*self.frequency*math.sin(2*math.pi*self.frequency*time)
+             + (2*math.pi*self.frequency)**2*math.exp(self.decay*time)*math.cos(2*math.pi*self.frequency*time))
 
 class RefSystem:
 
