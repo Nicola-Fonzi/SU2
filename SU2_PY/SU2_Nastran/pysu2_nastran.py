@@ -102,10 +102,10 @@ class ImposedMotionClass:
       if (time < 0.0) or (time > self.tmax):
         return 0.0
       if time < self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)
-      if time >= self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)
-      return self.amplitude/2.0*(1.0-math.cos(self.omega0*modifiedTime*self.vinf/self.lref))
+        modifiedTime = time/(self.r*self.tmax)*math.pi
+      else:
+        modifiedTime = math.pi + (time-self.r*self.tmax)/(self.r*self.tmax)*math.pi
+      return self.amplitude/2.0*(1.0-math.cos(modifiedTime))
 
     if self.typeOfMotion == 'COSINUSOIDAL':
       if (time < 0.0) or (time > self.timeStop):
@@ -136,11 +136,11 @@ class ImposedMotionClass:
     if self.typeOfMotion == "BLENDED_PULSE":
       if (time < 0.0) or (time > self.tmax):
         return 0.0
-      if time < self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)
-      if time >= self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)
-      return self.amplitude/2.0*math.sin(self.omega0*modifiedTime*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
+      if time < self.tmax * self.r:
+        modifiedTime = time / (self.r * self.tmax) * math.pi
+      else:
+        modifiedTime = math.pi + (time - self.r * self.tmax) / (self.r * self.tmax) * math.pi
+      return self.amplitude/2.0*math.sin(modifiedTime)*(math.pi / (self.r * self.tmax))
 
     if self.typeOfMotion == "COSINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
@@ -171,11 +171,11 @@ class ImposedMotionClass:
     if self.typeOfMotion == "BLENDED_PULSE":
       if (time < 0.0) or (time > self.tmax):
         return 0.0
-      if time < self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)
-      if time >= self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)
-      return self.amplitude/2.0*math.cos(self.omega0*modifiedTime*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
+      if time < self.tmax * self.r:
+        modifiedTime = time / (self.r * self.tmax) * math.pi
+      else:
+        modifiedTime = math.pi + (time - self.r * self.tmax) / (self.r * self.tmax) * math.pi
+      return self.amplitude/2.0*math.cos(modifiedTime)*(math.pi / (self.r * self.tmax))**2
 
     if self.typeOfMotion == "COSINUSOIDAL":
       if (time < 0.0) or (time > self.timeStop):
