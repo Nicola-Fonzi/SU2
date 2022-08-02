@@ -32,7 +32,8 @@
 import numpy as np
 import scipy.linalg as linalg
 import math
-from FSI_tools import FSI_utils
+from ../FSI_tools import FSI_utils.Point as Point
+from ../FSI_tools import FSI_utils.RefSystem as RefSystem
 
 # ----------------------------------------------------------------------
 #  Classes

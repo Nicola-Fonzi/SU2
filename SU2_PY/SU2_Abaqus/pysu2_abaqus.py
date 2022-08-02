@@ -33,7 +33,7 @@ import numpy as np
 from math import *
 import subprocess
 import pickle
-from FSI_tools import FSI_utils
+from ../FSI_tools import FSI_utils.Point as Point
 
 # ----------------------------------------------------------------------
 #  Solver class
