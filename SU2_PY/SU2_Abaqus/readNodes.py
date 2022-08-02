@@ -24,27 +24,11 @@ def readNodes(modelName,inputFileName,partName):
     
       node.append(Point())
       ID = label
-      CP = 0
       x = nodes[index].coordinates[0]
       y = nodes[index].coordinates[1]
       z = nodes[index].coordinates[2]
-      if CP != 0:
-        raise Exception('TODO')
-        #for iRefSys in range(self.nRefSys):
-        #  if self.refsystems[iRefSys].GetCID()==CP:
-        #    break
-        #if self.refsystems[iRefSys].GetCID()!=CP:
-        #  raise Exception('Definition reference {} system not found'.format(CP))
-        #DeltaPos = self.refsystems[iRefSys].GetOrigin()
-        #RotatedPos = self.refsystems[iRefSys].GetRotMatrix().dot(np.array([[x],[y],[z]]))
-        #x = RotatedPos[0]+DeltaPos[0]
-        #y = RotatedPos[1]+DeltaPos[1]
-        #z = RotatedPos[2]+DeltaPos[2]
-      CD = 0
       node[nPoint].SetCoord((x,y,z))
       node[nPoint].SetID(ID)
-      node[nPoint].SetCP(CP)
-      node[nPoint].SetCD(CD)
       node[nPoint].SetCoord0((x,y,z))
       node[nPoint].SetCoord_n((x,y,z))
       nPoint += 1
@@ -101,15 +85,6 @@ def readNodes(modelName,inputFileName,partName):
 
     pickle.dump(node, open('node.p','wb'))
     pickle.dump(markers, open('markers.p','wb'))
-	
-    #jobName = 'Job-0'
-    #myJob = mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF,
-    #    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF,
-    #    memory=90, memoryUnits=PERCENTAGE, model=modelName, modelPrint=OFF,
-    #    multiprocessingMode=DEFAULT, name=jobName, nodalOutputPrecision=SINGLE,
-    #    numCpus=1, numGPUs=0, queue=None, resultsFormat=ODB, scratch='', type=
-    #    ANALYSIS, userSubroutine='', waitHours=0, waitMinutes=0)
-    #myJob.writeInput(consistencyChecking=OFF)
     
     pathName = '{}.cae'.format(modelName)
     mdb.saveAs(pathName=pathName)

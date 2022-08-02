@@ -6,22 +6,13 @@ def runner(modelName,iStepForce,iStepFSI):
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
     
-    #jobName = modelName
-    f = open("debug.txt", "w")
-    #f.write(modelName)
-    #f.write('\n')
-    #f.write(inputFileName)
-    #f.write('\n')
-    #f.write(str(len(mdb.jobs)))
-    #f.close()
-    
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
-    if iStepForce == 0 and iStepFSI == 0:			# migliorare criterio??
+    if iStepForce == 0 and iStepFSI == 0:
       type = ANALYSIS
-      f.write('iStepForce = {}, iStepFSI = {}: type = ANALYSIS\n'.format(iStepForce,iStepFSI))
+      #f.write('iStepForce = {}, iStepFSI = {}: type = ANALYSIS\n'.format(iStepForce,iStepFSI))
     else:
       type = RESTART
-      f.write('iStepForce = {}, iStepFSI = {}: type = RESTART\n'.format(iStepForce,iStepFSI))
+      #f.write('iStepForce = {}, iStepFSI = {}: type = RESTART\n'.format(iStepForce,iStepFSI))
     
     jobName = 'Job-{}-{}'.format(iStepForce,iStepFSI)
     myJob = mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF,
@@ -36,11 +27,12 @@ def runner(modelName,iStepForce,iStepFSI):
     
     extensions = ['com','dat','ipm','log','msg','sim','sta','lck']
     for ext in extensions:
-        filename = jobName + '.' + ext
-    	#command = 'rm ' + filename
-    	#command = 'del ' + filename
-        command = 'IF EXIST {} ( del {} )'.format(filename,filename)
-        os.system(command)
+       filename = jobName + '.' + ext
+       if os.sep == '/':
+         command = 'rm -f ' + filename
+       else:
+         command = 'IF EXIST {} ( del {} )'.format(filename,filename)
+       os.system(command)
     
     pathName = '{}.cae'.format(modelName)
     mdb.saveAs(pathName=pathName)

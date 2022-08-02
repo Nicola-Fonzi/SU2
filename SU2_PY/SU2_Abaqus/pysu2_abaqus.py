@@ -2,7 +2,7 @@
 
 ## \file pysu2_abaqus.py
 #  \brief Structural solver using Abaqus models
-#  \authors Nicola Fonzi, Vittorio Cavalieri, based on the work of David Thomas
+#  \authors Vittorio Cavalieri, Nicola Fonzi, based on the work of David Thomas
 #  \version 7.1.1 "Blackbird"
 #
 # SU2 Project Website: https://su2code.github.io
@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2021, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ class Solver:
     self.Generator_file = self.Config['GENERATOR_FILE']
     self.Data_file = self.Config['DATA_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
-    self.Set_name = self.Config['SET_NAME']			# a cosa serve????
+    self.Set_name = self.Config['SET_NAME']
     self.Part_name = self.Config['PART_NAME']
     self.Unsteady = (self.Config['TIME_MARCHING']=="YES")
     self.ImposedMotion = ImposedMotion
@@ -71,8 +71,6 @@ class Solver:
 
 
     self.ActForce = self.Config['ACT_FORCE']
-    #self.deltaT = self.Config['DELTA_T']
-    #self.rhoAlphaGen = self.Config['RHO']
 
     self.nPoint = int()
     self.nMarker = int()
@@ -91,11 +89,7 @@ class Solver:
     print(" Opening/generating the model ".center(80,"-"))
     self.__readAbaqusModel()
 
-    #print("\n")
-    #print(" Setting the integration parameters ".center(80,"-"))
-    #self.__setIntegrationParameters()
-    #self.__setInitialConditions()
-    #
+
     # Prepare the output file
     if self.Config["RESTART_SOL"]=="NO":
       histFile = open('StructHistoryModal.dat', "w")
@@ -137,9 +131,9 @@ class Solver:
 
 
         #float values
-        elif (this_param == "DELTA_T") or \
-             (this_param == "RHO"):
-          self.Config[this_param] = float(this_value)
+        #elif (this_param == "DELTA_T") or \
+        #     (this_param == "RHO"):
+        #  self.Config[this_param] = float(this_value)
 
 
         #string values
@@ -185,98 +179,42 @@ class Solver:
 
       self.Model_name = self.Inp_file.split('.')[0]
 
-      command = 'abaqus cae noGUI=readNodes.py -- {} {} {}'.format(self.Model_name,self.Inp_file,self.Part_name) # meglio??
-      process = subprocess.call(command,shell=True)
+      self.__runAbaqusScript('readNodes',self.Model_name,self.Inp_file,self.Part_name)
 
       self.node = pickle.load(open('node.p','rb'))
       self.nPoint = len(self.node)
       self.markers = pickle.load(open('markers.p','rb'))
       self.nMarker = len(self.markers)
 
-      #if not any(self.FSI_marker in key for key in self.markers.keys()):
-      #    raise Exception("The FSI marker was not found in the available sets")
-	  #
-      #self.markers[self.FSI_marker].sort()
-	  #
-      #print("Number of points: {}".format(self.nPoint))
-      #print("Number of markers: {}".format(self.nMarker))
-      #print("Number of reference systems: {}".format(self.nRefSys))
-      #print("Moving marker: {}".format(self.FSI_marker))
-      #print("Number of points in the moving marker: {}".format(len(self.markers[self.FSI_marker])))
-
-  def __checkBlankField(self, string):
-    """
-    This method considers that Nastran apply 0 when the reference system is not specified
-    """
-
-    if string == '        ':
-      return int(0)
-    else:
-      return int(string)
+      if not any(self.FSI_marker in key for key in self.markers.keys()):
+          raise Exception("The FSI marker was not found in the available sets")
+	  
+      self.markers[self.FSI_marker].sort()
+	  
+      print("Number of points: {}".format(self.nPoint))
+      print("Number of markers: {}".format(self.nMarker))
+      print("Number of reference systems: {}".format(self.nRefSys))
+      print("Moving marker: {}".format(self.FSI_marker))
+      print("Number of points in the moving marker: {}".format(len(self.markers[self.FSI_marker])))
 
 
-  def __setIntegrationParameters(self):
-    """
-    This method uses the time step size to define the integration parameters.
-    """
-
-    self.alpha_m = (2.0*self.rhoAlphaGen-1.0)/(self.rhoAlphaGen+1.0)
-    self.alpha_f = (self.rhoAlphaGen)/(self.rhoAlphaGen+1.0)
-    self.gamma = 0.5+self.alpha_f-self.alpha_m
-    self.beta = 0.25*(self.gamma+0.5)**2
-
-    self.gammaPrime = self.gamma/(self.deltaT*self.beta)
-    self.betaPrime = (1.0-self.alpha_m)/((self.deltaT**2)*self.beta*(1.0-self.alpha_f))
-
-    print('Time integration with the alpha-generalized algorithm.')
-    print('rho : {}'.format(self.rhoAlphaGen))
-    print('alpha_m : {}'.format(self.alpha_m))
-    print('alpha_f : {}'.format(self.alpha_f))
-    print('gamma : {}'.format(self.gamma))
-    print('beta : {}'.format(self.beta))
-    print('gammaPrime : {}'.format(self.gammaPrime))
-    print('betaPrime : {}'.format(self.betaPrime))
-
-  def __setInitialConditions(self):
-    """
-    This method uses the list of initial modal amplitudes to set the initial conditions
-    """
-
-    print('Setting initial conditions.')
-
-    print('Using modal amplitudes from config file')
-    for imode in range(self.nDof):
-        if imode in self.Config["INITIAL_MODES"].keys():
-            self.q[imode] = float(self.Config["INITIAL_MODES"][imode])
-            self.q_n[imode] = float(self.Config["INITIAL_MODES"][imode])
-
-    RHS = np.zeros((self.nDof,1))
-    RHS += self.F
-    RHS -= self.C.dot(self.qdot)
-    RHS -= self.K.dot(self.q)
-    self.qddot = linalg.solve(self.M, RHS)
-    self.qddot_n = np.copy(self.qddot)
-    self.a = np.copy(self.qddot)
-    self.a_n = np.copy(self.qddot)
-
-  def __reset(self, vector):
-    """
-    This method set to zero any vector.
-    """
-
-    for ii in range(vector.shape[0]):
-      vector[ii] = 0.0
-
+  def __runAbaqusScript(self,pyfun,*args):
+      """
+      This method runs a python script from the command line without the Abaqus/CAE GUI.
+      """
+      n = len(args)
+      str = 'abaqus cae noGUI={}.py --' + n*' {}'
+      command = str.format(pyfun,*args)
+      process = subprocess.call(command, shell=True)
+	  
   def __computeInterfacePosVel(self, initialize):
     """
-    This method uses the mode shapes to compute, based on the modal velocities, the
-    nodal velocities at the interface.
+    This method extracts from the ODB the nodal positions and velocities at the interface.
     """
 
     pickle.dump(self.node, open('node.p','wb'))
 
-    command = 'abaqus cae noGUI=readPosVel.py -- {} {} {} {}'.format(self.Part_name,self.iStepForce,self.iStepFSI,initialize) # meglio??
-    process = subprocess.call(command,shell=True)
+    self.__runAbaqusScript('readPosVel',self.Part_name,self.iStepForce,self.iStepFSI,initialize)
     
     self.node = pickle.load(open('node.p','rb'))
 
@@ -349,11 +287,6 @@ class Solver:
     """
     This method integrates in time the solution.
     """
-    #self.__reset(self.q)
-    #self.__reset(self.qdot)
-    #self.__reset(self.qddot)
-    #self.__reset(self.a)
-
     if not self.ImposedMotion:
 
       if time > self.lastTime: 		# migliorare criterio?
@@ -362,19 +295,13 @@ class Solver:
       else:
         self.iStepFSI += 1
 
-      #print('Before createStep.py')
-      command = 'abaqus cae noGUI=createStep.py -- {} {} {}'.format(self.Model_name, self.iStepForce, self.iStepFSI) # meglio??
-      process = subprocess.call(command, shell=True)
-      #print('After createStep.py')
+      self.__runAbaqusScript('createStep',self.Model_name,self.iStepForce,self.iStepFSI)
 
       self.__SetLoads(time)
 
-      #print('Before runner.py')
-      command = 'abaqus cae noGUI=runner.py -- {} {} {}'.format(self.Model_name, self.iStepForce, self.iStepFSI) # meglio??
-      process = subprocess.call(command, shell=True)
-      #print('After runner.py')
-	  
-    self.lastTime = time		# qui?
+      self.__runAbaqusScript('runner',self.Model_name,self.iStepForce,self.iStepFSI)
+
+    self.lastTime = time
 
     #else:
     #  if self.ImposedMotionToSet:
@@ -406,9 +333,7 @@ class Solver:
     node = self.node
     pickle.dump(self.node, open('node.p','wb'))
     
-    #command = 'abaqus cae noGUI=setLoads.py -- {} {} {}'.format(self.Model_name,self.Part_name,self.iStep) # meglio??
-    command = 'abaqus cae noGUI=setLoads.py -- {} {} {} {} {} {} {} {} {}'.format(self.Model_name,self.Part_name,self.Set_name,time,self.ActForce[0],self.ActForce[1],self.ActForce[2],self.iStepForce,self.iStepFSI) # meglio??
-    process = subprocess.call(command,shell=True)
+    self.__runAbaqusScript('setLoads',self.Model_name,self.Part_name,self.Set_name,time,self.ActForce[0],self.ActForce[1],self.ActForce[2],self.iStepForce,self.iStepFSI)
 
 
   def exit(self):
@@ -463,15 +388,6 @@ class Solver:
     This method updates the solution.
     """
 
-    #self.q_n = np.copy(self.q)
-    #self.qdot_n = np.copy(self.qdot)
-    #self.qddot_n = np.copy(self.qddot)
-    #self.a_n = np.copy(self.a)
-    #self.__reset(self.q)
-    #self.__reset(self.qdot)
-    #self.__reset(self.qddot)
-    #self.__reset(self.a)
-
     for iPoint in range(self.nPoint):
       self.node[iPoint].updateCoordVel()
 
@@ -481,7 +397,6 @@ class Solver:
     This method can be accessed from outside to set the nodal forces.
     """
     iPoint = self.getVertexGlobalIndex(self.FSI_marker, iVertex)
-    #print('{}\n'.format(fx))
     self.node[iPoint].SetForce((fx,fy,fz))
     
 

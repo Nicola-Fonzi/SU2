@@ -10,16 +10,13 @@ def createStep(modelName,iStepForce,iStepFSI):
     myModel = mdb.models[modelName]
     
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
-    if iStepForce == 0 and iStepFSI == 0:			# migliorare criterio??
+    if iStepForce == 0 and iStepFSI == 0:
       #type = ANALYSIS
       myModel.StaticStep(name=stepName, previous='Initial', initialInc=0.01, nlgeom=ON)
     else:
       #type = RESTART
-      #previous = 'Step-' + str(iStep-1)
       previous = myModel.steps.keys()[-1]
       myModel.StaticStep(name=stepName, previous=previous, initialInc=0.01)
-      #myModel.steps[previous].suppress()
-      #restartJob = 'Job-' + str(iStep-1)
       restartJob = 'Job-' + previous.split('-',1)[-1]
       myModel.setValues(restartJob=restartJob, restartStep=previous)
       #myModel.steps[stepName].Restart(frequency=999, numberIntervals=0, 
