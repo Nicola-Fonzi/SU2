@@ -32,8 +32,8 @@
 import numpy as np
 import scipy.linalg as linalg
 import math
-from ../FSI_tools import FSI_utils.Point as Point
-from ../FSI_tools import FSI_utils.RefSystem as RefSystem
+from FSI_tools.FSI_utils import Point
+from FSI_tools.FSI_utils import RefSystem
 
 # ----------------------------------------------------------------------
 #  Classes
@@ -682,7 +682,8 @@ class Solver:
     Y_disp = self.Uy.dot(self.q)
     Z_disp = self.Uz.dot(self.q)
 
-    for iPoint in range(self.nPoint):
+    nodeList = self.markers[self.FSI_marker]
+    for iPoint in nodeList:
       coord0 = self.node[iPoint].GetCoord0()
       self.node[iPoint].SetCoord((X_disp[iPoint]+coord0[0],Y_disp[iPoint]+coord0[1],Z_disp[iPoint]+coord0[2]))
       self.node[iPoint].SetVel((X_vel[iPoint],Y_vel[iPoint],Z_vel[iPoint]))

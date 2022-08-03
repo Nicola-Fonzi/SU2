@@ -30,10 +30,10 @@
 # ----------------------------------------------------------------------
 
 import numpy as np
-from math import *
 import subprocess
 import pickle
-from ../FSI_tools import FSI_utils.Point as Point
+from FSI_tools.FSI_utils import Point
+from FSI_tools.FSI_utils import RefSystem
 
 # ----------------------------------------------------------------------
 #  Solver class
