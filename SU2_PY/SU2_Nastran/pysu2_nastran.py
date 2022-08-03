@@ -884,7 +884,7 @@ class Solver:
     self.__reset(self.q)
     if not isinstance(iMode, str):
       self.q[iMode] = 1.0
-    self.__computeInterfacePosVel(True)
+    self.__computeInterfacePosVel(False)
 
   def setInitialDisplacements(self):
     """
