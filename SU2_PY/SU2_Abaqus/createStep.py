@@ -1,6 +1,6 @@
-from pysu2_utils import *
 from abaqus_modules import *
 import pickle
+from FSI_tools.FSI_utils import Point
 
 def createStep(modelName,iStepForce,iStepFSI):
 
