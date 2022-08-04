@@ -1,7 +1,7 @@
-from pysu2_utils import *
 from abaqus_modules import *
 import pickle
 import numpy as np
+from FSI_tools.FSI_utils import Point
 
 def setLoads(modelName,partName,setName,time,Fx,Fy,Fz,iStepForce,iStepFSI):
 
