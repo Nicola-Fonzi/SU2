@@ -70,7 +70,12 @@ class Solver:
       raise Exception('Not implemented.')
 
 
-    self.ActForce = self.Config['ACT_FORCE']
+    self.ActLoad = self.Config['ACT_LOAD']
+    self.SliderAngle = self.Config['SLIDER_ANGLE']
+    inputPoint = self.Config['INPUT_POINT']
+    self.InputPointX = inputPoint[0]
+    self.InputPointY = inputPoint[1]
+    self.InputPointZ = inputPoint[2]
 
     self.nPoint = int()
     self.nMarker = int()
@@ -131,9 +136,9 @@ class Solver:
 
 
         #float values
-        #elif (this_param == "DELTA_T") or \
-        #     (this_param == "RHO"):
-        #  self.Config[this_param] = float(this_value)
+        elif (this_param == "ACT_LOAD") or \
+             (this_param == "SLIDER_ANGLE"):
+          self.Config[this_param] = float(this_value)
 
 
         #string values
@@ -149,7 +154,7 @@ class Solver:
 
 
         #lists values
-        elif (this_param == "ACT_FORCE"):
+        elif (this_param == "INPUT_POINT"):
           self.Config[this_param] = eval(this_value)
 
 
@@ -178,8 +183,7 @@ class Solver:
 
 
       self.Model_name = self.Inp_file.split('.')[0]
-
-      self.__runAbaqusScript('readNodes',self.Model_name,self.Inp_file,self.Part_name)
+      self.__runAbaqusScript('readNodes',self.Model_name,self.Inp_file,self.Part_name,self.FSI_marker)
 
       self.node = pickle.load(open('node.p','rb'))
       self.nPoint = len(self.node)
@@ -213,9 +217,7 @@ class Solver:
     """
 
     pickle.dump(self.node, open('node.p','wb'))
-
     self.__runAbaqusScript('readPosVel',self.Part_name,self.iStepForce,self.iStepFSI,initialize)
-    
     self.node = pickle.load(open('node.p','rb'))
 
 
@@ -330,10 +332,8 @@ class Solver:
     """
     nodeList = self.markers[self.FSI_marker]
     pickle.dump(nodeList, open('nodeList.p','wb'))
-    node = self.node
     pickle.dump(self.node, open('node.p','wb'))
-    
-    self.__runAbaqusScript('setLoads',self.Model_name,self.Part_name,self.Set_name,time,self.ActForce[0],self.ActForce[1],self.ActForce[2],self.iStepForce,self.iStepFSI)
+    self.__runAbaqusScript('setLoads',self.Model_name,self.Part_name,self.Set_name,time,self.ActLoad,self.SliderAngle,self.InputPointX,self.InputPointY,self.InputPointZ,self.iStepForce,self.iStepFSI)
 
 
   def exit(self):

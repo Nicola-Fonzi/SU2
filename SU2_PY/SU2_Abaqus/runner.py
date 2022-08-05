@@ -9,10 +9,8 @@ def runner(modelName,iStepForce,iStepFSI):
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
     if iStepForce == 0 and iStepFSI == 0:
       type = ANALYSIS
-      #f.write('iStepForce = {}, iStepFSI = {}: type = ANALYSIS\n'.format(iStepForce,iStepFSI))
     else:
       type = RESTART
-      #f.write('iStepForce = {}, iStepFSI = {}: type = RESTART\n'.format(iStepForce,iStepFSI))
     
     jobName = 'Job-{}-{}'.format(iStepForce,iStepFSI)
     myJob = mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF,
