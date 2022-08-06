@@ -2,13 +2,14 @@ from abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readNodes(modelName,inputFileName,partName):
+def readNodes(modelName,inputFileName,partName,FSI_marker):
     
     
     mdb.ModelFromInputFile(name=modelName, inputFileName=inputFileName)
     myModel = mdb.models[modelName]
-    
-    nodes = myModel.parts[partName].nodes
+    myPart = myModel.parts[partName]
+
+    nodes = myPart.nodes
     
     dict_index = {}
     for i in range(len(nodes)):
@@ -20,8 +21,8 @@ def readNodes(modelName,inputFileName,partName):
     
     for label in dict_index:
       index = dict_index[label]
-      myModel.parts[partName].Set(name='NODE-'+str(label), nodes=nodes[index:index+1])
-    
+      myPart.Set(name='NODE-'+str(label), nodes=nodes[index:index+1])
+      
       node.append(Point())
       ID = label
       x = nodes[index].coordinates[0]
@@ -70,10 +71,10 @@ def readNodes(modelName,inputFileName,partName):
     markers = {}
     nMarker = int()
     
-    for markerTag in myModel.parts[partName].sets.keys():
-      if 'SET' in markerTag:	# TODO meglio (per evitare di controllare tutti i set)
+    for markerTag in myPart.sets.keys():
+      if FSI_marker == markerTag:	# TODO meglio (per evitare di controllare tutti i set)
         markers[markerTag] = []
-        for item_node in myModel.parts[partName].sets[markerTag].nodes:
+        for item_node in myPart.sets[markerTag].nodes:
           ID = item_node.label
           for iPoint in range(nPoint):
             if node[iPoint].GetID() == ID:
@@ -91,7 +92,8 @@ def readNodes(modelName,inputFileName,partName):
 
 
 if __name__ == "__main__":
-    modelName = sys.argv[-3]
-    inputFileName = sys.argv[-2]
-    partName = sys.argv[-1]
-    readNodes(modelName,inputFileName,partName)
+    modelName = sys.argv[-4]
+    inputFileName = sys.argv[-3]
+    partName = sys.argv[-2]
+    FSI_marker = sys.argv[-1]
+    readNodes(modelName,inputFileName,partName,FSI_marker)
