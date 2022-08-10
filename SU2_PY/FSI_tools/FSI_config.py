@@ -65,7 +65,7 @@ class SolverCapability:
             FSIConfig.MPIPrint("Steady simulation not available with the requested solver", True)
         if config["RESTART_SOL"] == "YES" and not self.restart:
             FSIConfig.MPIPrint("Restart simulation not available with the requested solver", True)
-        if config["MODES_MAPPING"] == "YES" and not self.modesMapping:
+        if config["MAPPING_MODES"] == "YES" and not self.modesMapping:
             FSIConfig.MPIPrint("Modes mapping not available with the requested solver", True)
         if config["IMPOSED_MOTION"] == "YES" and not self.imposedMotion:
             FSIConfig.MPIPrint("Imposed motion not available with the requested solver", True)
