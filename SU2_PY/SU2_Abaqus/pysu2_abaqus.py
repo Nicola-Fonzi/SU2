@@ -185,7 +185,7 @@ class Solver:
       This method runs a python script from the command line without the Abaqus/CAE GUI.
       """
       n = len(args)
-      str = 'abaqus cae noGUI={}.py --' + n*' {}'
+      str = 'abaqus cae noGUI=SU2_Abaqus/{}.py --' + n*' {}'
       command = str.format(pyfun, *args)
       process = subprocess.call(command, shell=True)
 
