@@ -1898,7 +1898,7 @@ class Interface:
           totTime = FSI_config['UNST_TIME']                # physical simulation time
           NbFSIIterMax = FSI_config['NB_FSI_ITER']        # maximum number of FSI iteration (for each time step)
           FSITolerance = FSI_config['FSI_TOLERANCE']        # f/s interface tolerance
-          TimeIterTreshold = FSI_config['TIME_THRESHOLD']				# time iteration from which we allow the solid to deform
+          TimeIterTreshold = FSI_config['TIME_TRESHOLD']				# time iteration from which we allow the solid to deform
           self.MPIPrint('The FSI coupling will start after {} iterations'.format(TimeIterTreshold))
 
           if FSI_config['RESTART_SOL'] == 'YES':

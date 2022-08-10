@@ -116,7 +116,7 @@ class FSIConfig:
             # Integer values
             if (this_param == "NDIM") or \
                (this_param == "RESTART_ITER") or \
-               (this_param == "TIME_THRESHOLD") or \
+               (this_param == "TIME_TRESHOLD") or \
                (this_param == "NB_FSI_ITER"):
                 self._ConfigContent[this_param] = int(this_value)
 
@@ -147,8 +147,8 @@ class FSIConfig:
 
     def __applyDefaults(self):
 
-        if "TIME_THRESHOLD" in self._ConfigContent and self._ConfigContent["TIME_MARCHING"] == "QUASI":
-            self.MPIPrint("TIME_THRESHOLD can only be used with physical time solutions (i.e., unsteady simulations)", True)
+        if "TIME_TRESHOLD" in self._ConfigContent and self._ConfigContent["TIME_MARCHING"] == "QUASI":
+            self.MPIPrint("TIME_TRESHOLD can only be used with physical time solutions (i.e., unsteady simulations)", True)
 
         if "MAPPING_MODES" not in self._ConfigContent:
             self._ConfigContent["MAPPING_MODES"] = "NO"
@@ -163,7 +163,7 @@ class FSIConfig:
                 self.MPIPrint("When imposing motion, the Aitken parameter must be static and equal to 1", True)
 
         if self._ConfigContent["RESTART_SOL"] == "YES":
-            if self._ConfigContent["TIME_THRESHOLD"] != -1:
+            if self._ConfigContent["TIME_TRESHOLD"] != -1:
                 self.MPIPrint("When restarting a simulation, the time threshold must be -1 for immediate coupling", True)
 
     def MPIPrint(self, message, error):
