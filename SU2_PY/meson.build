@@ -65,10 +65,22 @@ install_data(['SU2/util/bunch.py',
 	      install_dir: join_paths(get_option('bindir'), 'SU2/util'))
 
 install_data(['FSI_tools/__init__.py',
-              'FSI_tools/FSIInterface.py',
+              'FSI_tools/FSI_interface.py',
+              'FSI_tools/FSI_utils.py',
               'FSI_tools/FSI_config.py'],
 	      install_dir: join_paths(get_option('bindir'), 'FSI_tools'))
 
+install_data(['SU2_Abaqus/__init__.py',
+              'SU2_Abaqus/abaqus_modules.py',
+              'SU2_Abaqus/createStep.py',
+              'SU2_Abaqus/pysu2_abaqus.py',
+              'SU2_Abaqus/readNodes.py',
+              'SU2_Abaqus/readPosVel.py',
+              'SU2_Abaqus/runner.py',
+              'SU2_Abaqus/setLoads.py'],
+	      install_dir: join_paths(get_option('bindir'), 'SU2_Abaqus'))
+
 install_data(['SU2_Nastran/__init__.py',
-              'SU2_Nastran/pysu2_nastran.py'],
+              'SU2_Nastran/pysu2_nastran.py',
+              'SU2_Nastran/imposed_motion.py'],
         install_dir: join_paths(get_option('bindir'), 'SU2_Nastran'))
