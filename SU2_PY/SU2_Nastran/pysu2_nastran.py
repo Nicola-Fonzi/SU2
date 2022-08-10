@@ -34,163 +34,11 @@ import scipy.linalg as linalg
 import math
 from FSI_tools.FSI_utils import Point
 from FSI_tools.FSI_utils import RefSystem
+from SU2_Nastran import ImposedMotionClass
 
 # ----------------------------------------------------------------------
 #  Classes
 # ----------------------------------------------------------------------
-
-class ImposedMotionClass:
-
-  def __init__(self,time0,typeOfMotion,parameters,mode):
-
-    self.time0 = time0
-    self.typeOfMotion = typeOfMotion
-    self.mode = mode
-
-    self.amplitude = parameters["AMPLITUDE"]
-    self.timeStart = parameters["TIME_START"]
-    if "TIME_STOP" in parameters.keys():
-      self.timeStop  = parameters["TIME_STOP"]
-    else:
-      self.timeStop = math.inf
-
-    if self.typeOfMotion == "SINUSOIDAL":
-      self.bias = parameters["BIAS"]
-      self.frequency = parameters["FREQUENCY"]
-
-    elif self.typeOfMotion == "BLENDED_STEP":
-      self.kmax = parameters["K_MAX"]
-      self.vinf = parameters["V_INF"]
-      self.lref = parameters["L_REF"]
-      self.tmax = 2*math.pi/self.kmax*self.lref/self.vinf
-      self.omega0 = 1/2*self.kmax
-
-    elif self.typeOfMotion == "BLENDED_PULSE":
-      self.kmax = parameters["K_MAX"]
-      self.vinf = parameters["V_INF"]
-      self.lref = parameters["L_REF"]
-      self.tmax = 2 * math.pi / self.kmax * self.lref / self.vinf
-      self.omega0 = 1 / 2 * self.kmax
-      self.r = parameters["R"]
-
-    elif self.typeOfMotion == "COSINUSOIDAL":
-      self.bias = parameters["BIAS"]
-      self.frequency = parameters["FREQUENCY"]
-
-    elif self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      self.bias = parameters["BIAS"]
-      self.frequency = parameters["FREQUENCY"]
-      self.decay = parameters["DECAY"]
-
-    else:
-      raise Exception('Imposed function {} not found, please implement it in pysu2_nastran.py'.format(self.typeOfMotion))
-
-
-  def GetDispl(self,time):
-    time = time - self.time0 - self.timeStart
-    if self.typeOfMotion == "SINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.bias+self.amplitude*math.sin(2*math.pi*self.frequency*time)
-
-    if self.typeOfMotion == "BLENDED_STEP":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      if time < self.tmax:
-        return self.amplitude/2.0*(1.0-math.cos(self.omega0*time*self.vinf/self.lref))
-      return self.amplitude
-
-    if self.typeOfMotion == "BLENDED_PULSE":
-      if (time < 0.0) or (time > self.tmax):
-        return 0.0
-      if time < self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)*math.pi
-      else:
-        modifiedTime = math.pi + (time-self.r*self.tmax)/(self.r*self.tmax)*math.pi
-      return self.amplitude/2.0*(1.0-math.cos(modifiedTime))
-
-    if self.typeOfMotion == 'COSINUSOIDAL':
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.bias+self.amplitude*(1-math.cos(2*math.pi*self.frequency*time))
-
-    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.bias+self.amplitude*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
-
-
-  def GetVel(self,time):
-    time = time - self.time0 - self.timeStart
-
-    if self.typeOfMotion == "SINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*math.cos(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
-
-    if self.typeOfMotion == "BLENDED_STEP":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      if time < self.tmax:
-        return self.amplitude/2.0*math.sin(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
-      return 0.0
-
-    if self.typeOfMotion == "BLENDED_PULSE":
-      if (time < 0.0) or (time > self.tmax):
-        return 0.0
-      if time < self.tmax * self.r:
-        modifiedTime = time / (self.r * self.tmax) * math.pi
-      else:
-        modifiedTime = math.pi + (time - self.r * self.tmax) / (self.r * self.tmax) * math.pi
-      return self.amplitude/2.0*math.sin(modifiedTime)*(math.pi / (self.r * self.tmax))
-
-    if self.typeOfMotion == "COSINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*math.sin(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
-
-    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*(self.decay*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
-             + math.exp(self.decay*time)*2*math.pi*self.frequency*math.sin(2*math.pi*self.frequency*time))
-
-  def GetAcc(self,time):
-    time = time - self.time0 - self.timeStart
-
-    if self.typeOfMotion == "SINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return -self.amplitude*math.sin(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
-
-    if self.typeOfMotion == "BLENDED_STEP":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      if time < self.tmax:
-        return self.amplitude/2.0*math.cos(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
-      return 0.0
-
-    if self.typeOfMotion == "BLENDED_PULSE":
-      if (time < 0.0) or (time > self.tmax):
-        return 0.0
-      if time < self.tmax * self.r:
-        modifiedTime = time / (self.r * self.tmax) * math.pi
-      else:
-        modifiedTime = math.pi + (time - self.r * self.tmax) / (self.r * self.tmax) * math.pi
-      return self.amplitude/2.0*math.cos(modifiedTime)*(math.pi / (self.r * self.tmax))**2
-
-    if self.typeOfMotion == "COSINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*math.cos(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
-
-    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*(self.decay**2*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
-             + 2*self.decay*math.exp(self.decay*time)*2*math.pi*self.frequency*math.sin(2*math.pi*self.frequency*time)
-             + (2*math.pi*self.frequency)**2*math.exp(self.decay*time)*math.cos(2*math.pi*self.frequency*time))
-
 
 class Solver:
   """
@@ -213,10 +61,11 @@ class Solver:
     self.Mesh_file = self.Config['MESH_FILE']
     self.Punch_file = self.Config['PUNCH_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
-    self.Unsteady = (self.Config['TIME_MARCHING']=="YES")
     self.ImposedMotion = ImposedMotion
-    if self.Unsteady:
+    if self.Config['TIME_MARCHING'] == "YES":
       print('Dynamic computation.')
+    elif self.Config['TIME_MARCHING'] == "QUASI":
+      print('Quasi-steady computation.')
     self.nDof = self.Config['NMODES']
     print("Reading number of modes from file")
 
@@ -857,7 +706,7 @@ class Solver:
     This method cleanly exits the structural solver.
     """
 
-    print("\n**************** Exiting the structural tester solver ****************")
+    print("\n**************** Exiting the native structural solver ****************")
 
   def run(self,time):
     """
@@ -879,7 +728,7 @@ class Solver:
   def activateMode(self, iMode):
     """
     This method is used to artificially set only one mode activated, thus
-    with non zero amplitude.
+    with non-zero amplitude.
     """
     self.__reset(self.q)
     if not isinstance(iMode, str):
@@ -931,7 +780,7 @@ class Solver:
     This method can be accessed from outside to set the nodal forces.
     """
     iPoint = self.getVertexGlobalIndex(self.FSI_marker, iVertex)
-    self.node[iPoint].SetForce((fx,fy,fz))
+    self.node[iPoint].SetForce((fx, fy, fz))
 
   def getNumberOfModes(self):
     """

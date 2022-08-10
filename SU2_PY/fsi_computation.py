@@ -111,22 +111,22 @@ def main():
 
   # --- Initialize the solid solver --- #
   # Serial solvers
-  if CSD_Solver in ["NATIVE"]:
-    if myid == rootProcess:
-      print("\n")
-      print(" Initializing solid solver ".center(80,"*"))
-      if CSD_Solver == 'NATIVE':
-        from SU2_Nastran import pysu2_nastran
-        if FSI_config["IMPOSED_MOTION"] == "NO":
-          SolidSolver = pysu2_nastran.Solver(CSD_ConFile,False)
-        else:
-          SolidSolver = pysu2_nastran.Solver(CSD_ConFile,True)
-    else:
-      SolidSolver = None
+  if myid == rootProcess:
+    print("\n")
+    print(" Initializing solid solver ".center(80, "*"))
+    if CSD_Solver == 'NATIVE':
+      from SU2_Nastran import pysu2_nastran
+      if FSI_config["IMPOSED_MOTION"] == "NO":
+        SolidSolver = pysu2_nastran.Solver(CSD_ConFile, False)
+      else:
+        SolidSolver = pysu2_nastran.Solver(CSD_ConFile, True)
+    if CSD_Solver == 'ABAQUS':
+      from SU2_Abaqus import pysu2_abaqus
+      SolidSolver = pysu2_abaqus.Solver(CSD_ConFile)
+  else:
+    SolidSolver = None
   # Parallel solvers
   # For now we are only using serial solvers
-  else:
-    raise Exception('\n Invalid solid solver option')
 
   if have_MPI:
     comm.barrier()

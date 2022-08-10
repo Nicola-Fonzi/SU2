@@ -30,6 +30,47 @@
 #  FSI Configuration Class
 # ----------------------------------------------------------------------
 
+class SolverCapability:
+    """
+    This class is used to store the capabilities of the different solver (i.e., the types of simulation they can perform)
+    and to check the compatibility with the requested analysis.
+    """
+
+    def __init__(self, config):
+        self.availableSovers = ["NATIVE", "ABAQUS"]
+        if config["CSD_SOLVER"] == self.availableSovers[0]:
+            self.restart = True
+            self.imposedMotion = True
+            self.dynamic = True
+            self.quasiSteady = True
+            self.steady = True
+            self.modesMapping = True
+        elif config["CSD_SOLVER"] == self.availableSovers[1]:
+            self.restart = False
+            self.imposedMotion = False
+            self.dynamic = False
+            self.quasiSteady = True
+            self.steady = True
+            self.modesMapping = False
+        else:
+            FSIConfig.MPIPrint("Invalid solid solver option", True)
+        self.__verifyCompatibility(config)
+
+    def __verifyCompatibility(self, config):
+        if config["TIME_MARCHING"] == "YES" and not self.dynamic:
+            FSIConfig.MPIPrint("Unsteady simulation not available with the requested solver", True)
+        if config["TIME_MARCHING"] == "QUASI" and not self.quasiSteady:
+            FSIConfig.MPIPrint("Quasi-steady simulation not available with the requested solver", True)
+        if config["TIME_MARCHING"] == "NO" and not self.steady:
+            FSIConfig.MPIPrint("Steady simulation not available with the requested solver", True)
+        if config["RESTART_SOL"] == "YES" and not self.restart:
+            FSIConfig.MPIPrint("Restart simulation not available with the requested solver", True)
+        if config["MODES_MAPPING"] == "YES" and not self.modesMapping:
+            FSIConfig.MPIPrint("Modes mapping not available with the requested solver", True)
+        if config["IMPOSED_MOTION"] == "YES" and not self.imposedMotion:
+            FSIConfig.MPIPrint("Imposed motion not available with the requested solver", True)
+
+
 class FSIConfig:
     """
     Class that contains all the parameters coming from the FSI configuration file.
@@ -40,22 +81,23 @@ class FSIConfig:
         self.ConfigFileName = FileName
         self.comm = comm
         self._ConfigContent = {}
-        self.readConfig()
-        self.applyDefaults()
+        self.__readConfig()
+        self.__applyDefaults()
+        self.solverCapability = SolverCapability(self._ConfigContent)
 
     def __str__(self):
         tempString = str()
         for key, value in self._ConfigContent.items():
-            tempString += "{} = {}\n".format(key,value)
+            tempString += "{} = {}\n".format(key, value)
         return tempString
 
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         return self._ConfigContent[key]
 
     def __setitem__(self, key, value):
         self._ConfigContent[key] = value
 
-    def readConfig(self):
+    def __readConfig(self):
         input_file = open(self.ConfigFileName)
         while 1:
             line = input_file.readline()
@@ -103,7 +145,7 @@ class FSIConfig:
             else:
                 self.MPIPrint(this_param + " is an invalid option !", False)
 
-    def applyDefaults(self):
+    def __applyDefaults(self):
 
         if "TIME_THRESHOLD" in self._ConfigContent and self._ConfigContent["TIME_MARCHING"] == "QUASI":
             self.MPIPrint("TIME_THRESHOLD can only be used with physical time solutions (i.e., unsteady simulations)", True)
@@ -123,9 +165,6 @@ class FSIConfig:
         if self._ConfigContent["RESTART_SOL"] == "YES":
             if self._ConfigContent["TIME_THRESHOLD"] != -1:
                 self.MPIPrint("When restarting a simulation, the time threshold must be -1 for immediate coupling", True)
-
-        if self._ConfigContent["MAPPING_MODES"] == "YES" and self._ConfigContent["CSD_SOLVER"] != "NATIVE":
-            self.MPIPrint("Mapping modes only works with the native solver", True)
 
     def MPIPrint(self, message, error):
         """

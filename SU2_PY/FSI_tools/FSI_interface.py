@@ -2121,6 +2121,8 @@ class Interface:
                  # --- Relax the solid displacement and update the solid solution --- #
                  self.MPIPrint('\nProcessing interface displacements...\n')
                  self.relaxSolidPosition(FSI_config)
+                 if myid in self.solidSolverProcessors:
+                     SolidSolver.updateSolution()
 
                  if varCoordNorm < FSITolerance:
                      FSIConv = True
@@ -2135,7 +2137,6 @@ class Interface:
              self.writeFSIHistory(TimeIter, time, varCoordNorm, FSIConv)
 
              if myid in self.solidSolverProcessors:
-                 SolidSolver.updateSolution()
                  SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
 
              # --- Update, monitor and output the fluid solution before the next time step  ---#
