@@ -163,25 +163,37 @@ def main():
         FSIInterface.UnsteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.UnsteadyFSI : ',exception)
+          print('An NameError occured in FSIInterface.UnsteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
-          print('A TypeError occured in FSIInterface.UnsteadyFSI : ',exception)
+          print('A TypeError occured in FSIInterface.UnsteadyFSI : ', exception)
       except KeyboardInterrupt as exception :
         if myid == rootProcess:
-          print('A KeyboardInterrupt occured in FSIInterface.UnsteadyFSI : ',exception)
+          print('A KeyboardInterrupt occured in FSIInterface.UnsteadyFSI : ', exception)
+    elif FSI_config['TIME_MARCHING'] == "QUASI":
+      try:
+        FSIInterface.QuasiSteadyFSI(FSI_config, FluidSolver, SolidSolver)
+      except NameError as exception:
+        if myid == rootProcess:
+          print('An NameError occured in FSIInterface.QuasiSteadyFSI : ', exception)
+      except TypeError as exception:
+        if myid == rootProcess:
+          print('A TypeError occured in FSIInterface.QuasiSteadyFSI : ', exception)
+      except KeyboardInterrupt as exception :
+        if myid == rootProcess:
+          print('A KeyboardInterrupt occured in FSIInterface.QuasiSteadyFSI : ', exception)
     else:
       try:
         FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.SteadyFSI : ',exception)
+          print('An NameError occured in FSIInterface.SteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
-          print('A TypeError occured in FSIInterface.SteadyFSI : ',exception)
+          print('A TypeError occured in FSIInterface.SteadyFSI : ', exception)
       except KeyboardInterrupt as exception :
         if myid == rootProcess:
-          print('A KeyboardInterrupt occured in FSIInterface.SteadyFSI : ',exception)
+          print('A KeyboardInterrupt occured in FSIInterface.SteadyFSI : ', exception)
   else:
     try:
       FSIInterface.MapModes(FSI_config, FluidSolver, SolidSolver)

@@ -74,7 +74,7 @@ class FSIConfig:
             # Integer values
             if (this_param == "NDIM") or \
                (this_param == "RESTART_ITER") or \
-               (this_param == "TIME_TRESHOLD") or \
+               (this_param == "TIME_THRESHOLD") or \
                (this_param == "NB_FSI_ITER"):
                 self._ConfigContent[this_param] = int(this_value)
 
@@ -105,21 +105,24 @@ class FSIConfig:
 
     def applyDefaults(self):
 
+        if "TIME_THRESHOLD" in self._ConfigContent and self._ConfigContent["TIME_MARCHING"] == "QUASI":
+            self.MPIPrint("TIME_THRESHOLD can only be used with physical time solutions (i.e., unsteady simulations)", True)
+
         if "MAPPING_MODES" not in self._ConfigContent:
             self._ConfigContent["MAPPING_MODES"] = "NO"
-            self.MPIPrint("MAPPING_MODES keyword was not found in the configuration file of the interface, setting to NO",False)
+            self.MPIPrint("MAPPING_MODES keyword was not found in the configuration file of the interface, setting to NO", False)
 
         if "IMPOSED_MOTION" not in self._ConfigContent:
             self._ConfigContent["IMPOSED_MOTION"] = "NO"
-            self.MPIPrint("IMPOSED_MOTION keyword was not found in the configuration file of the interface, setting to NO",False)
+            self.MPIPrint("IMPOSED_MOTION keyword was not found in the configuration file of the interface, setting to NO", False)
 
         if self._ConfigContent["IMPOSED_MOTION"] == "YES":
             if self._ConfigContent["AITKEN_RELAX"] != "STATIC" or self._ConfigContent["AITKEN_PARAM"] != 1.0:
-                self.MPIPrint("When imposing motion, the Aitken parameter must be static and equal to 1",True)
+                self.MPIPrint("When imposing motion, the Aitken parameter must be static and equal to 1", True)
 
         if self._ConfigContent["RESTART_SOL"] == "YES":
-            if self._ConfigContent["TIME_TRESHOLD"] != -1:
-                self.MPIPrint("When restarting a simulation, the time threshold must be -1 for immediate coupling",True)
+            if self._ConfigContent["TIME_THRESHOLD"] != -1:
+                self.MPIPrint("When restarting a simulation, the time threshold must be -1 for immediate coupling", True)
 
         if self._ConfigContent["MAPPING_MODES"] == "YES" and self._ConfigContent["CSD_SOLVER"] != "NATIVE":
             self.MPIPrint("Mapping modes only works with the native solver", True)

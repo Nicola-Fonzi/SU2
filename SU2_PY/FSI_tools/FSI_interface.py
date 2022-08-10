@@ -157,6 +157,9 @@ class Interface:
         if FSI_config['TIME_MARCHING'] == 'YES':
           self.MPIPrint('Unsteady coupled simulation with physical time step : {} s'.format(FSI_config['UNST_TIMESTEP']))
           self.unsteady = True
+        elif  FSI_config['TIME_MARCHING'] == 'QUASI':
+          self.MPIPrint('Quasi-steady coupled simulation with fictitious time step : {} s'.format(FSI_config['UNST_TIMESTEP']))
+          self.unsteady = True
         else:
           self.MPIPrint('Steady coupled simulation')
 
@@ -1895,7 +1898,7 @@ class Interface:
           totTime = FSI_config['UNST_TIME']                # physical simulation time
           NbFSIIterMax = FSI_config['NB_FSI_ITER']        # maximum number of FSI iteration (for each time step)
           FSITolerance = FSI_config['FSI_TOLERANCE']        # f/s interface tolerance
-          TimeIterTreshold = FSI_config['TIME_TRESHOLD']				# time iteration from which we allow the solid to deform
+          TimeIterTreshold = FSI_config['TIME_THRESHOLD']				# time iteration from which we allow the solid to deform
           self.MPIPrint('The FSI coupling will start after {} iterations'.format(TimeIterTreshold))
 
           if FSI_config['RESTART_SOL'] == 'YES':
@@ -1910,7 +1913,6 @@ class Interface:
           NbTimeIter = int(NbTimeIter)			# be sure that NbTimeIter is an integer
 
           varCoordNorm = 0.0				# FSI residual
-          FSIConv = False				# FSI convergence flag
 
           self.MPIPrint('\n**********************************')
           self.MPIPrint('* Begin unsteady FSI computation *')
@@ -1996,7 +1998,7 @@ class Interface:
                             FSIConv = True
                             break
 
-                          # --- Relaxe the solid position --- #
+                          # --- Relax the solid position --- #
                           self.MPIPrint('\nProcessing interface displacements...\n')
                           self.relaxSolidPosition(FSI_config)
 
@@ -2037,6 +2039,121 @@ class Interface:
           self.MPIPrint('\n*************************')
           self.MPIPrint('*  End FSI computation  *')
           self.MPIPrint('*************************\n')
+
+    def QuasiSteadyFSI(self, FSI_config,FluidSolver, SolidSolver):
+         """
+         Runs the quasi-steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
+         """
+
+         if self.have_MPI:
+           myid = self.comm.Get_rank()
+           numberPart = self.comm.Get_size()
+         else:
+           myid = 0
+           numberPart = 1
+
+         # --- Set some general variables for the steady computation --- #
+         deltaT = FSI_config['UNST_TIMESTEP']  # fictitious time step
+         totTime = FSI_config['UNST_TIME']  # fictitious simulation time
+         NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
+         FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
+         varCoordNorm = 0.0
+         NbTimeIter = int(totTime / deltaT) - 1  # number of time iterations
+         time = 0.0
+         TimeIter = 0
+
+         self.MPIPrint('\n**************************************')
+         self.MPIPrint('* Begin quasi-steady FSI computation *')
+         self.MPIPrint('**************************************\n')
+         self.MPIPrint("\n")
+         self.MPIPrint(" Enter Block Gauss Seidel (BGS) method for strong coupling FSI ".center(80,"*"))
+
+         self.MPIPrint('Setting initial deformed mesh')
+         if myid in self.solidSolverProcessors:
+             SolidSolver.setInitialDisplacements()
+         self.getSolidInterfaceDisplacement(SolidSolver)
+         self.MPIPrint('\nFSI initial conditions are set')
+         self.MPIPrint('Beginning fictitious time integration\n')
+
+         # --- Fictitious time loop --- #
+         while TimeIter <= NbTimeIter:
+
+             FSIConv = False
+
+             # --- Internal FSI loop --- #
+             self.FSIIter = 0
+             while self.FSIIter < (NbFSIIterMax-1):
+
+                 self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter, self.FSIIter))
+                 self.MPIPrint('\nLaunching fluid solver for a quasi-steady computation...')
+                 # --- Mesh morphing step (displacement interpolation, displacements communication, and mesh morpher call) --- #
+                 self.interpolateSolidPositionOnFluidMesh(FSI_config)
+                 self.setFluidInterfaceVarCoord(FluidSolver)
+                 # --- Fluid solver call for FSI subiteration ---#
+                 if myid in self.fluidSolverProcessors:
+                     FluidSolver.ResetConvergence() #This is setting to zero the convergence in the integrator, important to reset it.
+                     # The mesh will be deformed in the context of the preprocessor, there is no need to set the initial
+                     # mesh pushing back the solution to avoid spurious velocities, as the velocity is not computed at all
+                     self.MPIPrint('\nPerforming static mesh deformation...\n')
+                     FluidSolver.Preprocess(0)# This will attempt to always set the initial condition, but there is a flag on the unsteady computation that will avoid it
+                     FluidSolver.Run()
+                     self.MPIBarrier()
+                     FluidSolver.Postprocess()
+                     self.MPIBarrier()
+
+                 # --- Surface fluid loads interpolation and communication ---#
+                 if not self.ImposedMotion:
+                     self.MPIPrint('\nProcessing interface fluid loads...\n')
+                     self.MPIBarrier()
+                     self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+                     self.MPIBarrier()
+                     self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+                     self.setSolidInterfaceLoads(SolidSolver, FSI_config)
+
+                 # --- Solid solver call for FSI subiteration --- #
+                 self.MPIPrint('\nLaunching solid solver for a static computation...\n')
+                 if myid in self.solidSolverProcessors:
+                     SolidSolver.run(time)
+
+                 # --- Compute and monitor the FSI residual --- #
+                 varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
+                 self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
+                 # --- Relax the solid displacement and update the solid solution --- #
+                 self.MPIPrint('\nProcessing interface displacements...\n')
+                 self.relaxSolidPosition(FSI_config)
+
+                 if varCoordNorm < FSITolerance:
+                     FSIConv = True
+                     break
+
+                 self.FSIIter += 1
+
+             # -- End of FSI loop --- #
+             self.MPIBarrier()
+
+             self.MPIPrint('\nBGS is converged (strong coupling)')
+             self.writeFSIHistory(TimeIter, time, varCoordNorm, FSIConv)
+
+             if myid in self.solidSolverProcessors:
+                 SolidSolver.updateSolution()
+                 SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
+
+             # --- Update, monitor and output the fluid solution before the next time step  ---#
+             if myid in self.fluidSolverProcessors:
+                 FluidSolver.Monitor(0)
+                 FluidSolver.Output(TimeIter)
+
+             TimeIter += 1
+             time += deltaT
+
+         # --- End of temporal loop --- #
+
+         self.MPIBarrier()
+         self.MPIPrint(' ')
+         self.MPIPrint('*************************')
+         self.MPIPrint('*  End FSI computation  *')
+         self.MPIPrint('*************************')
+         self.MPIPrint(' ')
 
     def SteadyFSI(self, FSI_config,FluidSolver, SolidSolver):
           """
@@ -2083,6 +2200,7 @@ class Interface:
               self.MPIPrint('\nPerforming static mesh deformation...\n')
               FluidSolver.Preprocess(0)# This will attempt to always set the initial condition, but there is a flag on the unsteady computation that will avoid it
               FluidSolver.Run()
+              self.MPIBarrier()
               FluidSolver.Postprocess()
               FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
               FluidSolver.Output(0)
@@ -2108,7 +2226,7 @@ class Interface:
             if varCoordNorm < FSITolerance:
               break
 
-            # --- Relaxe the solid displacement and update the solid solution --- #
+            # --- Relax the solid displacement and update the solid solution --- #
             self.MPIPrint('\nProcessing interface displacements...\n')
             self.relaxSolidPosition(FSI_config)
             if myid in self.solidSolverProcessors:
