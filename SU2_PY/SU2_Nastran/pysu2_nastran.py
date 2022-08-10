@@ -34,7 +34,7 @@ import scipy.linalg as linalg
 import math
 from FSI_tools.FSI_utils import Point
 from FSI_tools.FSI_utils import RefSystem
-from imposed_motion import ImposedMotionClass
+import ImposedMotionClass
 
 # ----------------------------------------------------------------------
 #  Classes
