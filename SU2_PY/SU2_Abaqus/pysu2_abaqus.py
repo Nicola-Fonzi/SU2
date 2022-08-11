@@ -87,8 +87,10 @@ class Solver:
 
     # Prepare the output file
     if self.Config["RESTART_SOL"] == "NO":
-      pass
-      # TODO Fai quel che devi fare
+      histFile = open('StructHistory.dat', "w")
+      header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t' + 'Vertical Displacement\n'
+      histFile.write(header)
+      histFile.close()
     else:
       raise Exception('It is not possible to restart an Abaqus solution at this time.')
 
@@ -254,10 +256,16 @@ class Solver:
 
   def writeSolution(self, time, timeIter, FSIIter):
     """
-    This method is the main function for output. It writes the file StructHistoryModal.dat
+    This method is the main function for output. It writes the file StructHistory.dat
     """
 
-    # TODO Stampiamo qualcosa a file
+    # Vertical Displacement History
+    histFile = open('StructHistory.dat', "a")
+    iVertexDummy = 10	# TODO: use index of trailing-edge tip
+    xDisp, yDisp, zDisp = self.getInterfaceNodeDisp(self.getFSIMarkerID(), iVertexDummy)
+    line = str(time) + '\t' + str(timeIter) + '\t' + str(FSIIter) + '\t' + '{:6.4g}'.format(yDisp[0]) + '\n'
+    histFile.write(line)
+    histFile.close()
 
   def updateSolution(self):
     """
