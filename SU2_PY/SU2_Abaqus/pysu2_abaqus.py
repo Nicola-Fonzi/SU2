@@ -86,13 +86,10 @@ class Solver:
 
 
     # Prepare the output file
-    if self.Config["RESTART_SOL"] == "NO":
-      histFile = open('StructHistory.dat', "w")
-      header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t' + 'Vertical Displacement\n'
-      histFile.write(header)
-      histFile.close()
-    else:
-      raise Exception('It is not possible to restart an Abaqus solution at this time.')
+    histFile = open('StructHistory.dat', "w")
+    header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t' + 'Vertical Displacement\n'
+    histFile.write(header)
+    histFile.close()
 
   def __readConfig(self):
     """
@@ -242,7 +239,7 @@ class Solver:
     """
     self.__temporalIteration(time)
 
-    # TODO Stampiamo qualcosa a video per far capire che gira
+    print("Calling Abaqus solver.")
 
     self.__computeInterfacePosVel(False)
 
