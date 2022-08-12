@@ -2,8 +2,8 @@
 
 ## \file pysu2_abaqus.py
 #  \brief Structural solver using Abaqus models
-#  \authors Vittorio Cavalieri, Nicola Fonzi, based on the work of David Thomas
-#  \version 7.1.1 "Blackbird"
+#  \authors Vittorio Cavalieri, Nicola Fonzi
+#  \version 7.3.1 "Blackbird"
 #
 # SU2 Project Website: https://su2code.github.io
 #
