@@ -187,13 +187,12 @@ class Solver:
       command = str.format(pyfun, *args)
       process = subprocess.call(command, shell=True)
 
-  def __computeInterfacePosVel(self, initialize):
+  def __computeInterfacePosVel(self):
     """
     This method extracts from the ODB the nodal positions and velocities at the interface.
     """
 
-    pickle.dump(self.node, open('node.p', 'wb'))
-    self.__runAbaqusScript('readPosVel', self.Part_name, self.iStepForce, self.iStepFSI, initialize)
+    self.__runAbaqusScript('readPosVel', self.Part_name, self.iStepForce, self.iStepFSI)
     self.node = pickle.load(open('node.p', 'rb'))
 
   def __temporalIteration(self, time):
@@ -219,9 +218,8 @@ class Solver:
     """
     This method applies the nodal forces on the Abaqus mesh.
     """
-    nodeList = self.markers[self.FSI_marker]
-    pickle.dump(nodeList, open('nodeList.p', 'wb'))
-    pickle.dump(self.node, open('node.p', 'wb'))
+
+    # TODO Passo in qualche modo le forze a setLoads file esterno che aggiornerà il pickle
     self.__runAbaqusScript('setLoads', self.Model_name, self.Part_name, self.Set_name, time, self.ActLoad,
                            self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ, self.iStepForce, self.iStepFSI)
 
@@ -246,10 +244,11 @@ class Solver:
   def setInitialDisplacements(self):
     """
     This method provides public access to the method __computeInterfacePosVel and
-    sets velocities for previous time steps.
+    sets velocities for previous time steps. In this nonlinear problem it is not allowed
+    to use this initial deformation, so the function only pass.
     """
 
-    self.__computeInterfacePosVel(True)
+    pass
 
   def writeSolution(self, time, timeIter, FSIIter):
     """
@@ -266,12 +265,10 @@ class Solver:
 
   def updateSolution(self):
     """
-    This method updates the solution.
+    This method updates the solution. Here we only have steady structural solutions, so they are not updated
     """
 
-    for iPoint in range(self.nPoint):
-      self.node[iPoint].updateCoordVel()
-
+    pass
 
   def applyload(self, iVertex, fx, fy, fz):
     """

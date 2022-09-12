@@ -61,40 +61,6 @@ def readNodes(modelName,inputFileName,partName,FSI_marker):
       node[nPoint].SetCoord_n((x,y,z))
       nPoint += 1
     
-    #pos = line.find('CORD2R')
-    #if pos == 30:
-    #  line = line.strip('\r\n')
-    #  self.refsystems.append(RefSystem())
-    #  line = line[30:]
-    #  CID = int(line[8:16])
-    #  self.refsystems[self.nRefSys].SetCID(CID)
-    #  RID = int(line[16:24])
-    #  if RID!=0:
-    #    raise Exception('ERROR: Reference system {} must be defined with respect to global reference system'.format(CID))
-    #  self.refsystems[self.nRefSys].SetRID(RID)
-    #  AX = nastran_float(line[24:32])
-    #  AY = nastran_float(line[32:40])
-    #  AZ = nastran_float(line[40:48])
-    #  BX = nastran_float(line[48:56])
-    #  BY = nastran_float(line[56:64])
-    #  BZ = nastran_float(line[64:72])
-    #  z_direction = np.array([BX-AX,BY-AY,BZ-AZ])
-    #  z_direction = z_direction/linalg.norm(z_direction)
-    #  line = meshfile.readline()
-    #  line = line.strip('\r\n')
-    #  line = line[30:]
-    #  CX = nastran_float(line[8:16])
-    #  CY = nastran_float(line[16:24])
-    #  CZ = nastran_float(line[24:32])
-    #  y_direction = np.cross(z_direction,[CX-AX,CY-AY,CZ-AZ])
-    #  y_direction = y_direction/linalg.norm(y_direction)
-    #  x_direction = np.cross(y_direction,z_direction)
-    #  x_direction = x_direction/linalg.norm(x_direction)
-    #  self.refsystems[self.nRefSys].SetRotMatrix(x_direction,y_direction,z_direction)
-    #  self.refsystems[self.nRefSys].SetOrigin((AX,AY,AZ))
-    #  self.nRefSys += 1
-    #  continue
-    
     markers = {}
     nMarker = int()
     
