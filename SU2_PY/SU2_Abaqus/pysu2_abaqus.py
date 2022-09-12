@@ -32,6 +32,7 @@
 import numpy as np
 import subprocess
 import pickle
+import json
 from FSI_tools.FSI_utils import Point
 
 # ----------------------------------------------------------------------
@@ -81,7 +82,7 @@ class Solver:
     self.lastTime = 0.0
 
     print("\n")
-    print(" Opening/generating the model ".center(80,"-"))
+    print(" Opening/generating the model ".center(80, "-"))
     self.__readAbaqusModel()
 
 
@@ -162,9 +163,9 @@ class Solver:
       self.Model_name = self.Inp_file.split('.')[0]
       self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.Part_name, self.FSI_marker)
 
-      self.node = pickle.load(open('node.p', 'rb'))
+      self.node = pickle.load(open('node.p', 'rb'), encoding="latin1")
       self.nPoint = len(self.node)
-      self.markers = pickle.load(open('markers.p', 'rb'))
+      self.markers = pickle.load(open('markers.p', 'rb'), encoding="latin1")
       self.nMarker = len(self.markers)
 
       if not any(self.FSI_marker in key for key in self.markers.keys()):
@@ -193,7 +194,7 @@ class Solver:
     """
 
     self.__runAbaqusScript('readPosVel', self.Part_name, self.iStepForce, self.iStepFSI)
-    self.node = pickle.load(open('node.p', 'rb'))
+    self.node = pickle.load(open('node.p', 'rb'), encoding="latin1")
 
   def __temporalIteration(self, time):
     """
@@ -219,7 +220,11 @@ class Solver:
     This method applies the nodal forces on the Abaqus mesh.
     """
 
-    # TODO Passo in qualche modo le forze a setLoads file esterno che aggiornerà il pickle
+    nodeList = self.markers[self.FSI_marker]
+    dict_force = {}
+    for iPoint in nodeList:
+      dict_force[iPoint] = self.node[iPoint].GetForce().tolist()
+    json.dump(dict_force, open('Force.txt', 'w'))
     self.__runAbaqusScript('setLoads', self.Model_name, self.Part_name, self.Set_name, time, self.ActLoad,
                            self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ, self.iStepForce, self.iStepFSI)
 
@@ -239,7 +244,7 @@ class Solver:
 
     print("Calling Abaqus solver.")
 
-    self.__computeInterfacePosVel(False)
+    self.__computeInterfacePosVel()
 
   def setInitialDisplacements(self):
     """

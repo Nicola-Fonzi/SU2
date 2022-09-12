@@ -27,6 +27,7 @@
 
 from abaqus_modules import *
 import pickle
+import json
 import numpy as np
 from FSI_tools.FSI_utils import Point
 
@@ -42,8 +43,15 @@ def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inp
     if sliderAngle != 0.:
       loadname_dummy = 'dummy_load'
 
-    node = pickle.load(open('node.p','rb'))
-    nodeList = pickle.load(open('nodeList.p','rb'))
+    node = pickle.load(open('node.p', 'rb'))
+    nodeList = pickle.load(open('nodeList.p', 'rb'))
+    dict_force = json.load(open('Force.txt'))
+    for iPoint in nodeList:
+      key = str(iPoint).decode("utf-8")
+      fx, fy, fz = dict_force[key]
+      node[iPoint].SetForce((fx, fy, fz))
+    pickle.dump(node, open('node.p', 'wb'))
+
 
     if iStepFSI > 0 or iStepForce > 0:
       previous = myModel.steps.keys()[-2]

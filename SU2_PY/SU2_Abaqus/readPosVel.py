@@ -36,8 +36,8 @@ def readPosVel(partName,iStepForce,iStepFSI):
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
     lastFrame = odb.steps[stepName].frames[-1]
     displacement = lastFrame.fieldOutputs['U']
-      
-    node = pickle.load(open('node.p','rb'))
+    
+    node = pickle.load(open('node.p', 'rb'))
     nPoint = len(node)
     
     for iPoint in range(nPoint):
@@ -55,7 +55,7 @@ def readPosVel(partName,iStepForce,iStepFSI):
       node[iPoint].SetCoord((X_disp+coord0[0],Y_disp+coord0[1],Z_disp+coord0[2]))
       node[iPoint].SetVel((X_vel,Y_vel,Z_vel))
     
-    pickle.dump(node, open('node.p','wb'))
+    pickle.dump(node, open('node.p', 'wb'))
 
 
 if __name__ == "__main__":

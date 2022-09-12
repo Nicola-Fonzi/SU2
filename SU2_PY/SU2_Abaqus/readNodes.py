@@ -77,8 +77,11 @@ def readNodes(modelName,inputFileName,partName,FSI_marker):
           markers[markerTag].append(iPoint)
         nMarker += 1
 
-    pickle.dump(node, open('node.p','wb'))
-    pickle.dump(markers, open('markers.p','wb'))
+    pickle.dump(node, open('node.p', 'wb'))
+    pickle.dump(markers, open('markers.p', 'wb'))
+    
+    nodeList = markers[FSI_marker]
+    pickle.dump(nodeList, open('nodeList.p', 'wb'))
     
     pathName = '{}.cae'.format(modelName)
     mdb.saveAs(pathName=pathName)
