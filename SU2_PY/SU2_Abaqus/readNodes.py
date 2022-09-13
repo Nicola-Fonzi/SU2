@@ -73,7 +73,7 @@ def readNodes(modelName,inputFileName,partName,FSI_marker):
             if node[iPoint].GetID() == ID:
               break
           if (iPoint == (nPoint-1)) and (node[iPoint].GetID() != ID):
-            raise Exception("Point {} in the set {} was not found in the mesh".format(ID,markerTag))
+            raise Exception("Point {} in the set {} was not found in the mesh".format(ID, markerTag))
           markers[markerTag].append(iPoint)
         nMarker += 1
 
