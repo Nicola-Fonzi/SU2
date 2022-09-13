@@ -1886,7 +1886,7 @@ class Interface:
         return globalIndex
 
 
-    def UnsteadyFSI(self,FSI_config, FluidSolver, SolidSolver):
+    def UnsteadyFSI(self, FSI_config, FluidSolver, SolidSolver):
           """
           Run the unsteady FSI computation by synchronizing the fluid and solid solvers.
           F/s interface data are exchanged through interface mapping and interpolation (if non mathcing meshes).
@@ -2046,7 +2046,7 @@ class Interface:
           self.MPIPrint('*  End FSI computation  *')
           self.MPIPrint('*************************\n')
 
-    def QuasiSteadyFSI(self, FSI_config,FluidSolver, SolidSolver):
+    def QuasiSteadyFSI(self, FSI_config, FluidSolver, SolidSolver):
          """
          Runs the quasi-steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
          """
@@ -2150,14 +2150,14 @@ class Interface:
                  FluidSolver.Monitor(0)
                  FluidSolver.Output(TimeIter)
 
-             output_names = ['surface_flow', 'flow']
-             extensions = ['vtu', 'csv', 'dat', 'vtk']
-             for name in output_names:
-               for ext in extensions:
-                 filename = '{}.{}'.format(name, ext)
-                 if os.path.exists(filename):
-                   filename_new = '{}_{}.{}'.format(name, TimeIter, ext)
-                   os.rename(filename, filename_new)
+                 output_names = ['surface_flow', 'flow']
+                 extensions = ['vtu', 'csv', 'dat', 'vtk']
+                 for name in output_names:
+                   for ext in extensions:
+                     filename = '{}.{}'.format(name, ext)
+                     if os.path.exists(filename):
+                       filename_new = '{}_{}.{}'.format(name, TimeIter, ext)
+                       os.rename(filename, filename_new)
 
              TimeIter += 1
              time += deltaT
@@ -2171,7 +2171,7 @@ class Interface:
          self.MPIPrint('*************************')
          self.MPIPrint(' ')
 
-    def SteadyFSI(self, FSI_config,FluidSolver, SolidSolver):
+    def SteadyFSI(self, FSI_config, FluidSolver, SolidSolver):
           """
           Runs the steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
           """
