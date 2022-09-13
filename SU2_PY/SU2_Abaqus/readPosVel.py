@@ -25,7 +25,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
-from abaqus_modules import *
+from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
