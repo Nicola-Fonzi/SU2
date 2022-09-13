@@ -53,11 +53,8 @@ def runner(modelName,iStepForce,iStepFSI):
     extensions = ['com','dat','ipm','log','msg','sim','sta','lck']
     for ext in extensions:
        filename = jobName + '.' + ext
-       if os.sep == '/':
-         command = 'rm -f ' + filename
-       else:
-         command = 'IF EXIST {} ( del {} )'.format(filename,filename)
-       os.system(command)
+       if os.path.exists(filename):
+         os.remove(filename)
     
     pathName = '{}.cae'.format(modelName)
     mdb.saveAs(pathName=pathName)

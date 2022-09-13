@@ -270,6 +270,14 @@ class Solver:
     histFile.write(line)
     histFile.close()
 
+    # Remove Abaqus files at current timeIter (except for the last FSIIter)
+    extensions = ['inp','mdl','odb','prt','res','stt']
+    for iter in range(FSIIter-1):
+      for ext in extensions:
+       filename = 'Job-{}-{}.{}'.format(timeIter, iter, ext)
+       if os.path.exists(filename):
+         os.remove(filename)
+
   def updateSolution(self):
     """
     This method updates the solution. Here we only have steady structural solutions, so they are not updated

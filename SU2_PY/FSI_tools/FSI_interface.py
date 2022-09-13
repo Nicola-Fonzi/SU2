@@ -2150,6 +2150,15 @@ class Interface:
                  FluidSolver.Monitor(0)
                  FluidSolver.Output(TimeIter)
 
+             output_names = ['surface_flow', 'flow']
+             extensions = ['vtu', 'csv', 'dat', 'vtk']
+             for name in output_names:
+               for ext in extensions:
+                 filename = '{}.{}'.format(name, ext)
+                 if os.path.exists(filename):
+                   filename_new = '{}_{}.{}'.format(name, TimeIter, ext)
+                   os.rename(filename, filename_new)
+
              TimeIter += 1
              time += deltaT
 
