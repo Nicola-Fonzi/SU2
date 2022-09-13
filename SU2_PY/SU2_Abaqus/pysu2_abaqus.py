@@ -184,9 +184,10 @@ class Solver:
       This method runs a python script from the command line without the Abaqus/CAE GUI.
       """
       n = len(args)
-      mypath = os.path.join(os.getenv('SU2 RUN'),'SU2_Abaqus')
+      su2_path = os.environ['SU2 RUN']
+      su2_abq_path = os.path.join(su2_path, 'SU2_Abaqus')
       str = 'abq cae noGUI={}/{}.py --' + n*' {}'
-      command = str.format(mypath,pyfun, *args)
+      command = str.format(su2_abq_path, pyfun, *args)
       process = subprocess.call(command, shell=True)
 
   def __computeInterfacePosVel(self):
