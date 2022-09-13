@@ -43,14 +43,14 @@ class Interface:
     """
     FSI interface class that handles fluid/solid solvers synchronisation and communication
     """
+    from rtree import index
+    from petsc4py import PETSc
 
     def __init__(self, FSI_config, FluidSolver, SolidSolver, have_MPI):
         """
         Class constructor. Declare some variables and do some screen outputs.
         """
 
-        from rtree import index
-        from petsc4py import PETSc
         if have_MPI:
           from mpi4py import MPI
           self.MPI = MPI
