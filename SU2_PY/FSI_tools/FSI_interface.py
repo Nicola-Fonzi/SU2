@@ -2150,6 +2150,7 @@ class Interface:
                  FluidSolver.Monitor(0)
                  FluidSolver.Output(TimeIter)
 
+             if myid == self.rootProcess:
                  output_names = ['surface_flow', 'flow']
                  extensions = ['vtu', 'csv', 'dat', 'vtk']
                  for name in output_names:
