@@ -30,6 +30,7 @@
 # ----------------------------------------------------------------------
 
 import numpy as np
+import os
 import subprocess
 import pickle
 import json
@@ -183,8 +184,9 @@ class Solver:
       This method runs a python script from the command line without the Abaqus/CAE GUI.
       """
       n = len(args)
-      str = 'abaqus cae noGUI=SU2_Abaqus/{}.py --' + n*' {}'
-      command = str.format(pyfun, *args)
+      mypath = os.path.join(os.getenv('SU2 RUN'),'SU2_Abaqus')
+      str = 'abq cae noGUI={}/{}.py --' + n*' {}'
+      command = str.format(mypath,pyfun, *args)
       process = subprocess.call(command, shell=True)
 
   def __computeInterfacePosVel(self):
