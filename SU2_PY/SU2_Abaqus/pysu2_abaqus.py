@@ -125,7 +125,6 @@ class Solver:
              (this_param == "INP_FILE") or \
              (this_param == "GENERATOR_FILE") or \
              (this_param == "DATA_FILE") or \
-             (this_param == "RESTART_SOL") or \
              (this_param == "MOVING_MARKER") or \
              (this_param == "PART_NAME") or \
              (this_param == "SET_NAME"):
