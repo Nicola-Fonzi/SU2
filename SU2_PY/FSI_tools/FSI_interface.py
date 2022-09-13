@@ -175,7 +175,8 @@ class Interface:
           else:
             self.MPIPrint('Non matching fluid-solid interface with Nearest Neighboor interpolation')
 
-        self.MPIPrint('Solid predictor : {}'.format(FSI_config['DISP_PRED']))
+        if self.unsteady:
+            self.MPIPrint('Solid predictor : {}'.format(FSI_config['DISP_PRED']))
 
         self.MPIPrint('Maximum number of FSI iterations : {}'.format(FSI_config['NB_FSI_ITER']))
 
