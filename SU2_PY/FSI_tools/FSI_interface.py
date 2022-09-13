@@ -34,8 +34,6 @@ import csv
 import numpy as np
 import scipy.spatial.distance as spdist
 import math
-from rtree import index
-from petsc4py import PETSc
 
 # ----------------------------------------------------------------------
 #  FSI Interface Class
@@ -51,6 +49,8 @@ class Interface:
         Class constructor. Declare some variables and do some screen outputs.
         """
 
+        from rtree import index
+        from petsc4py import PETSc
         if have_MPI:
           from mpi4py import MPI
           self.MPI = MPI
