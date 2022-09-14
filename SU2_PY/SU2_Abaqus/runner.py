@@ -33,7 +33,6 @@ def runner(modelName,iStepForce,iStepFSI):
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
     
-    stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
     if iStepForce == 0 and iStepFSI == 0:
       type = ANALYSIS
     else:
