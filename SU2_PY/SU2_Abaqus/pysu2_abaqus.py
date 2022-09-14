@@ -64,6 +64,7 @@ class Solver:
     self.FSI_marker = self.Config['MOVING_MARKER']
     self.Set_name = self.Config['SET_NAME']
     self.Part_name = self.Config['PART_NAME']
+    self.Monitor_setname = self.Config['MONITOR_SET']
 
 
     self.ActLoad = self.Config['ACT_LOAD']
@@ -77,6 +78,7 @@ class Solver:
     self.nMarker = int()
     self.node = []
     self.markers = {}
+    self.monitorID = []
 
     self.iStepForce = 0
     self.iStepFSI = -1
@@ -89,7 +91,7 @@ class Solver:
 
     # Prepare the output file
     histFile = open('StructHistory.dat', "w")
-    header = 'Time\t' + 'Time Iteration\t' + 'FSI Iteration\t' + 'Vertical Displacement\n'
+    header = '{:<8s}{:<16s}{:<16s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Vertical Displacement')
     histFile.write(header)
     histFile.close()
 
@@ -128,7 +130,8 @@ class Solver:
              (this_param == "DATA_FILE") or \
              (this_param == "MOVING_MARKER") or \
              (this_param == "PART_NAME") or \
-             (this_param == "SET_NAME"):
+             (this_param == "SET_NAME") or \
+             (this_param == "MONITOR_SET"):
           self.Config[this_param] = this_value
 
 
@@ -161,12 +164,14 @@ class Solver:
 
 
       self.Model_name = self.Inp_file.split('.')[0]
-      self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.Part_name, self.FSI_marker)
+      self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.Part_name, self.Monitor_setname, self.FSI_marker)
 
       self.node = pickle.load(open('node.p', 'rb'), encoding="latin1")
       self.nPoint = len(self.node)
       self.markers = pickle.load(open('markers.p', 'rb'), encoding="latin1")
       self.nMarker = len(self.markers)
+      with open('monitor.txt', 'r') as f:
+        self.monitorID = int(f.read())
 
       if not any(self.FSI_marker in key for key in self.markers.keys()):
         raise Exception("The FSI marker was not found in the available sets")
@@ -264,9 +269,8 @@ class Solver:
 
     # Vertical Displacement History
     histFile = open('StructHistory.dat', "a")
-    iVertexDummy = 10	# TODO: use index of trailing-edge tip
-    xDisp, yDisp, zDisp = self.getInterfaceNodeDisp(self.getFSIMarkerID(), iVertexDummy)
-    line = str(time) + '\t' + str(timeIter) + '\t' + str(FSIIter) + '\t' + '{:6.4g}'.format(yDisp[0]) + '\n'
+    xDisp, yDisp, zDisp = self.getInterfaceNodeDisp(self.getFSIMarkerID(), self.monitorID)
+    line = '{:<8g}{:<16g}{:<16g}{:<24g}\n'.format(time,timeIter,FSIIter,yDisp[0])
     histFile.write(line)
     histFile.close()
 

@@ -29,7 +29,7 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readNodes(modelName,inputFileName,partName,FSI_marker):
+def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker):
     
     
     mdb.ModelFromInputFile(name=modelName, inputFileName=inputFileName)
@@ -49,7 +49,10 @@ def readNodes(modelName,inputFileName,partName,FSI_marker):
     for label in dict_index:
       index = dict_index[label]
       myPart.Set(name='NODE-'+str(label), nodes=nodes[index:index+1])
-      
+
+      if label == myPart.sets[monitorSet].nodes[0].label:
+        ID_monitor = label
+
       node.append(Point())
       ID = label
       x = nodes[index].coordinates[0]
@@ -75,6 +78,8 @@ def readNodes(modelName,inputFileName,partName,FSI_marker):
           if (iPoint == (nPoint-1)) and (node[iPoint].GetID() != ID):
             raise Exception("Point {} in the set {} was not found in the mesh".format(ID, markerTag))
           markers[markerTag].append(iPoint)
+          if ID == ID_monitor:
+            iVertex_monitor = len(markers[markerTag])-1
         nMarker += 1
 
     pickle.dump(node, open('node.p', 'wb'))
@@ -83,13 +88,17 @@ def readNodes(modelName,inputFileName,partName,FSI_marker):
     nodeList = markers[FSI_marker]
     pickle.dump(nodeList, open('nodeList.p', 'wb'))
     
+    with open('monitor.txt', 'w') as f:
+      f.write(str(iVertex_monitor))
+    
     pathName = '{}.cae'.format(modelName)
     mdb.saveAs(pathName=pathName)
 
 
 if __name__ == "__main__":
-    modelName = sys.argv[-4]
-    inputFileName = sys.argv[-3]
-    partName = sys.argv[-2]
+    modelName = sys.argv[-5]
+    inputFileName = sys.argv[-4]
+    partName = sys.argv[-3]
+    monitorSet = sys.argv[-2]
     FSI_marker = sys.argv[-1]
-    readNodes(modelName,inputFileName,partName,FSI_marker)
+    readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker)
