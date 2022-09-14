@@ -53,14 +53,6 @@ def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inp
     pickle.dump(node, open('node.p', 'wb'))
 
 
-    if iStepFSI > 0 or iStepForce > 0:
-      previous = myModel.steps.keys()[-2]
-      for iPoint in nodeList:
-        label = node[iPoint].GetID()
-        loadname = 'Load-{}-{}'.format(label,previous.split('-',1)[-1])	# invertire?
-        if loadname in myModel.loads.keys():
-          myModel.loads[loadname].deactivate(stepName)	# necessario perche devo cambiare step??
-
     if sliderAngle != 0. and iStepForce == 0 and iStepFSI == 0:
       input_point_skin = np.array([inputPointX,inputPointY,inputPointZ])
       csys_point1 = input_point_skin + [cos(sliderAngle), sin(sliderAngle), 0]
@@ -98,27 +90,30 @@ def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inp
       if sliderAngle != 0.:
         myModel.loads[loadname_dummy].deactivate(stepName)
 
-    if iStepForce > 0 and iStepFSI == 0:
+    loadname = 'ActLoad'
+    if iStepFSI == 0:
       force_unit_length = time * actLoad
-      region = myAssembly.instances[partName+'-1'].surfaces[setName]
-      loadname = 'ActLoad-{}'.format(iStepForce)
-      myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
-        region=region, magnitude=force_unit_length, directionVector=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)), 
-        distributionType=UNIFORM, field='', localCsys=localCsys, 
-        traction=GENERAL, follower=OFF, resultant=ON)
-    if iStepForce > 1 and iStepFSI == 0:
-      loadname = 'ActLoad-{}'.format(iStepForce-1)
-      myModel.loads[loadname].deactivate(stepName)
+      if iStepForce == 1:
+        region = myAssembly.instances[partName+'-1'].surfaces[setName]
+        myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
+          region=region, magnitude=force_unit_length, directionVector=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)), 
+          distributionType=UNIFORM, field='', localCsys=localCsys, 
+          traction=GENERAL, follower=OFF, resultant=ON)
+      elif iStepForce > 1:
+        myModel.loads[loadname].setValuesInStep(stepName=stepName, magnitude=force_unit_length)
 
     for iPoint in nodeList:
       Force = node[iPoint].GetForce()
-      if np.any(Force):
-        label = node[iPoint].GetID()
-        region = myAssembly.instances[partName+'-1'].sets['NODE-'+str(label)]
-        loadname = 'Load-{}-{}-{}'.format(label,iStepForce,iStepFSI)		# invertire?
+      label = node[iPoint].GetID()
+      region = myAssembly.instances[partName+'-1'].sets['NODE-'+str(label)]
+      loadname = 'Load-{}'.format(label)
+      if iStepFSI == 0 and iStepForce == 0:
         myModel.ConcentratedForce(name=loadname, createStepName=stepName, 
           region=region, cf1=float(Force[0]), cf2=float(Force[1]), cf3=float(Force[2]), distributionType=UNIFORM, 
           field='', localCsys=None)
+      else:
+        myModel.loads[loadname].setValuesInStep(stepName=stepName, cf1=float(Force[0]), cf2=float(Force[1]), cf3=float(Force[2]))
+
 
     pathName = '{}.cae'.format(modelName)
     mdb.saveAs(pathName=pathName)
