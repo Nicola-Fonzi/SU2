@@ -241,7 +241,7 @@ class Interface:
                 self.nLocalFluidInterfaceNodes = FluidSolver.GetNumberVertices(self.fluidInterfaceIdentifier)
             if self.nLocalFluidInterfaceNodes != 0:
               self.haveFluidInterface = True
-              print('Number of interface fluid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalFluidInterfaceNodes))
+              print('Number of interface fluid nodes (halo nodes included) on process {} : {}'.format(myid,self.nLocalFluidInterfaceNodes))
         else:
             pass
 
@@ -252,7 +252,7 @@ class Interface:
             self.nLocalSolidInterfaceNodes = SolidSolver.getNumberOfSolidInterfaceNodes(self.solidInterfaceIdentifier)
             if self.nLocalSolidInterfaceNodes != 0:
               self.haveSolidInterface = True
-              print('Number of interface solid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalSolidInterfaceNodes))
+              print('Number of interface solid nodes (halo nodes included) on process {} : {}'.format(myid,self.nLocalSolidInterfaceNodes))
         else:
             pass
 
@@ -545,7 +545,7 @@ class Interface:
         self.solidInterfaceResidualnM1_array_Y.set(0.0)
         self.solidInterfaceResidualnM1_array_Z.set(0.0)
 
-    def interfaceMapping(self,FluidSolver, SolidSolver, FSI_config):
+    def interfaceMapping(self, FluidSolver, SolidSolver, FSI_config):
         """
         Creates the one-to-one mapping between interfaces in case of matching meshes.
         Creates the interpolation rules between interfaces in case of non-matching meshes.
@@ -779,7 +779,7 @@ class Interface:
         del self.localFluidInterface_array_Y_init
         del self.localFluidInterface_array_Z_init
 
-    def matchingMeshMapping(self,solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
+    def matchingMeshMapping(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
         Fill the mapping matrix in case of matching meshes at the f/s interface.
         """
@@ -1636,7 +1636,7 @@ class Interface:
 
         return math.sqrt(normInterfaceResidualSquare)
 
-    def relaxSolidPosition(self,FSI_config):
+    def relaxSolidPosition(self, FSI_config):
         """
         Apply solid displacement under-relaxation.
         """
@@ -2026,7 +2026,7 @@ class Interface:
 
                 if TimeIter >= TimeIterTreshold:
                   if myid in self.solidSolverProcessors:
-                    # --- Output the solid solution before thr next time step --- #
+                    # --- Output the solid solution before the next time step --- #
                     SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
 
                 if TimeIter > TimeIterTreshold:

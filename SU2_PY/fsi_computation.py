@@ -131,7 +131,7 @@ def main():
   if have_MPI:
     comm.barrier()
 
-  # --- Initialize and set the FSI interface (coupling environement) --- #
+  # --- Initialize and set the FSI interface (coupling environment) --- #
   if myid == rootProcess:
     print("\n")
     print(" Initializing FSI interface ".center(80,"*"))
@@ -163,7 +163,7 @@ def main():
         FSIInterface.UnsteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.UnsteadyFSI : ', exception)
+          print('A NameError occured in FSIInterface.UnsteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
           print('A TypeError occured in FSIInterface.UnsteadyFSI : ', exception)
@@ -175,7 +175,7 @@ def main():
         FSIInterface.QuasiSteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.QuasiSteadyFSI : ', exception)
+          print('A NameError occured in FSIInterface.QuasiSteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
           print('A TypeError occured in FSIInterface.QuasiSteadyFSI : ', exception)
@@ -187,7 +187,7 @@ def main():
         FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.SteadyFSI : ', exception)
+          print('A NameError occured in FSIInterface.SteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
           print('A TypeError occured in FSIInterface.SteadyFSI : ', exception)
@@ -199,7 +199,7 @@ def main():
       FSIInterface.MapModes(FSI_config, FluidSolver, SolidSolver)
     except NameError as exception:
       if myid == rootProcess:
-        print('An NameError occured in FSIInterface.MapModes : ',exception)
+        print('A NameError occured in FSIInterface.MapModes : ',exception)
     except TypeError as exception:
       if myid == rootProcess:
         print('A TypeError occured in FSIInterface.MapModes : ',exception)
