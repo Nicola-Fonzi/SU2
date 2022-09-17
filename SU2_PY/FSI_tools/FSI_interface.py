@@ -2130,6 +2130,10 @@ class Interface:
                  if myid in self.solidSolverProcessors:
                      SolidSolver.updateSolution()
 
+                 if myid in self.fluidSolverProcessors:
+                     FluidSolver.Monitor(0)
+                     FluidSolver.Output(TimeIter)
+
                  if varCoordNorm < FSITolerance:
                      FSIConv = True
                      break
@@ -2144,11 +2148,6 @@ class Interface:
 
              if myid in self.solidSolverProcessors:
                  SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
-
-             # --- Update, monitor and output the fluid solution before the next time step  ---#
-             if myid in self.fluidSolverProcessors:
-                 FluidSolver.Monitor(0)
-                 FluidSolver.Output(TimeIter)
 
              if myid == self.rootProcess:
                  output_names = ['surface_flow', 'flow']
