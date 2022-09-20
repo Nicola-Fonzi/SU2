@@ -619,31 +619,19 @@ class Interface:
             self.MappingMatrixB = PETSc.Mat().create(self.comm)
             self.MappingMatrixA_T = PETSc.Mat().create(self.comm)
             self.MappingMatrixB_T = PETSc.Mat().create(self.comm)
-            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' :
-              self.MappingMatrixA.setType('mpiaij')
-              self.MappingMatrixB.setType('mpiaij')
-              self.MappingMatrixA_T.setType('mpiaij')
-              self.MappingMatrixB_T.setType('mpiaij')
-            else:
-              self.MappingMatrixA.setType('mpiaij')
-              self.MappingMatrixB.setType('mpiaij')
-              self.MappingMatrixA_T.setType('mpiaij')
-              self.MappingMatrixB_T.setType('mpiaij')
+            self.MappingMatrixA.setType('mpiaij')
+            self.MappingMatrixB.setType('mpiaij')
+            self.MappingMatrixA_T.setType('mpiaij')
+            self.MappingMatrixB_T.setType('mpiaij')
           else:
             self.MappingMatrixA = PETSc.Mat().create()
             self.MappingMatrixB = PETSc.Mat().create()
             self.MappingMatrixA_T = PETSc.Mat().create()
             self.MappingMatrixB_T = PETSc.Mat().create()
-            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' :
-              self.MappingMatrixA.setType('aij')
-              self.MappingMatrixB.setType('aij')
-              self.MappingMatrixA_T.setType('aij')
-              self.MappingMatrixB_T.setType('aij')
-            else:
-              self.MappingMatrixA.setType('aij')
-              self.MappingMatrixB.setType('aij')
-              self.MappingMatrixA_T.setType('aij')
-              self.MappingMatrixB_T.setType('aij')
+            self.MappingMatrixA.setType('aij')
+            self.MappingMatrixB.setType('aij')
+            self.MappingMatrixA_T.setType('aij')
+            self.MappingMatrixB_T.setType('aij')
           self.MappingMatrixA.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nSolidInterfacePhysicalNodes+self.d_RBF))
           self.MappingMatrixA.setUp()
           self.MappingMatrixA.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
@@ -895,7 +883,7 @@ class Interface:
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-          if self.nDim == 2 :
+          if self.nDim == 2:
             SolidSpatialTree.add(jVertex, (posX, posY))
           else :
             SolidSpatialTree.add(jVertex, (posX, posY, posZ))
@@ -917,16 +905,25 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixA.setValue(iGlobalVertexSolid, jGlobalVertexSolid, phi)
             self.MappingMatrixA_T.setValue(jGlobalVertexSolid, iGlobalVertexSolid, phi)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes, 1.0)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+1, posX)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+2, posY)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes+1, posX)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes+2, posY)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexSolid, posX)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexSolid, posY)
           if self.nDim == 3:
-            self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
-          self.MappingMatrixA_T.setValue(nSolidNodes, iGlobalVertexSolid, 1.0)
-          self.MappingMatrixA_T.setValue(nSolidNodes+1, iGlobalVertexSolid, posX)
-          self.MappingMatrixA_T.setValue(nSolidNodes+2, iGlobalVertexSolid, posY)
+            self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes+3, posZ)
+            self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexSolid, posZ)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexSolid, posX)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexSolid, posY)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 1, posX)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 2, posY)
           if self.nDim == 3:
-            self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
+            self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexSolid, posZ)
+            self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 3, posZ)
+
 
     def RBFMeshMapping_B(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc, rad):
         """
@@ -972,16 +969,16 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixB.setValue(iGlobalVertexFluid, jGlobalVertexSolid, phi)
             self.MappingMatrixB_T.setValue(jGlobalVertexSolid, iGlobalVertexFluid, phi)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes, 1.0)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+1, posX)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+2, posY)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+1, posX)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+2, posY)
           if self.nDim == 3:
-            self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
-          self.MappingMatrixB_T.setValue(nSolidNodes, iGlobalVertexFluid, 1.0)
-          self.MappingMatrixB_T.setValue(nSolidNodes+1, iGlobalVertexFluid, posX)
-          self.MappingMatrixB_T.setValue(nSolidNodes+2, iGlobalVertexFluid, posY)
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+3, posZ)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexFluid, 1.0)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexFluid, posX)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexFluid, posY)
           if self.nDim == 3:
-            self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
+            self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexFluid, posZ)
 
     def TPSMeshMapping_A(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -1010,16 +1007,24 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixA.setValue(iGlobalVertexSolid, jGlobalVertexSolid, phi)
             self.MappingMatrixA_T.setValue(jGlobalVertexSolid, iGlobalVertexSolid, phi)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes, 1.0)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+1, posX)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+2, posY)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 1, posX)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 2, posY)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes + 1, iGlobalVertexSolid, posX)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes + 2, iGlobalVertexSolid, posY)
           if self.nDim == 3:
-            self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
-          self.MappingMatrixA_T.setValue(nSolidNodes, iGlobalVertexSolid, 1.0)
-          self.MappingMatrixA_T.setValue(nSolidNodes+1, iGlobalVertexSolid, posX)
-          self.MappingMatrixA_T.setValue(nSolidNodes+2, iGlobalVertexSolid, posY)
+              self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 3, posZ)
+              self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes + 3, iGlobalVertexSolid, posZ)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes + 1, iGlobalVertexSolid, posX)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes + 2, iGlobalVertexSolid, posY)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 1, posX)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 2, posY)
           if self.nDim == 3:
-            self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
+              self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes + 3, iGlobalVertexSolid, posZ)
+              self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 3, posZ)
 
     def TPSMeshMapping_B(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -1047,16 +1052,16 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixB.setValue(iGlobalVertexFluid, jGlobalVertexSolid, phi)
             self.MappingMatrixB_T.setValue(jGlobalVertexSolid, iGlobalVertexFluid, phi)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes, 1.0)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+1, posX)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+2, posY)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+1, posX)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+2, posY)
           if self.nDim == 3:
-            self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
-          self.MappingMatrixB_T.setValue(nSolidNodes, iGlobalVertexFluid, 1.0)
-          self.MappingMatrixB_T.setValue(nSolidNodes+1, iGlobalVertexFluid, posX)
-          self.MappingMatrixB_T.setValue(nSolidNodes+2, iGlobalVertexFluid, posY)
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+3, posZ)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexFluid, 1.0)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexFluid, posX)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexFluid, posY)
           if self.nDim == 3:
-            self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
+            self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexFluid, posZ)
 
 
     def __CPC2(self, distance, rad):
@@ -1091,7 +1096,7 @@ class Interface:
 
     def interpolateSolidPositionOnFluidMesh(self, FSI_config):
         """
-        Applies the one-to-one mapping or the interpolaiton rules from solid to fluid mesh.
+        Applies the one-to-one mapping or the interpolation rules from solid to fluid mesh.
         """
         from petsc4py import PETSc
         if self.have_MPI:
@@ -1266,7 +1271,7 @@ class Interface:
 
     def interpolateFluidLoadsOnSolidMesh(self, FSI_config):
         """
-        Applies the one-to-one mapping or the interpolaiton rules from fluid to solid mesh.
+        Applies the one-to-one mapping or the interpolation rules from fluid to solid mesh.
         """
         from petsc4py import PETSc
         if self.have_MPI:
