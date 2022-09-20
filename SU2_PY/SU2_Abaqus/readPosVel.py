@@ -43,7 +43,11 @@ def readPosVel(partName,iStepForce,iStepFSI):
     for iPoint in range(nPoint):
       coord0 = node[iPoint].GetCoord0()
       label = node[iPoint].GetID()
-      region = odb.rootAssembly.instances[partName+'-1'].nodeSets['NODE-'+str(label)]
+      name = 'NODE-'+str(label)
+      if name in odb.rootAssembly.instances[partName+'-1'].nodeSets.keys():	# migliorare criterio
+		region = odb.rootAssembly.instances[partName+'-1'].nodeSets[name]
+      else:
+        region = odb.rootAssembly.nodeSets[name]
       v = displacement.getSubset(region=region).values[0]
       X_disp = v.data[0]
       Y_disp = v.data[1]

@@ -35,8 +35,16 @@ def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker):
     mdb.ModelFromInputFile(name=modelName, inputFileName=inputFileName)
     myModel = mdb.models[modelName]
     myPart = myModel.parts[partName]
+    myAssembly = myModel.rootAssembly
 
-    nodes = myPart.nodes
+    if FSI_marker in myPart.sets.keys():
+      nodes = myPart.nodes
+      myFeature = myPart
+    elif FSI_marker in myAssembly.sets.keys():
+      nodes = myAssembly.sets[FSI_marker].nodes
+      myFeature = myAssembly
+    else:
+      raise Exception("Set {} was not found in the part nor in the assembly".format(FSI_marker))
     
     dict_index = {}
     for i in range(len(nodes)):
@@ -48,9 +56,9 @@ def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker):
     
     for label in dict_index:
       index = dict_index[label]
-      myPart.Set(name='NODE-'+str(label), nodes=nodes[index:index+1])
+      myFeature.Set(name='NODE-'+str(label), nodes=nodes[index:index+1])
 
-      if label == myPart.sets[monitorSet].nodes[0].label:
+      if label == myFeature.sets[monitorSet].nodes[0].label:
         ID_monitor = label
 
       node.append(Point())
@@ -67,10 +75,10 @@ def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker):
     markers = {}
     nMarker = int()
     
-    for markerTag in myPart.sets.keys():
+    for markerTag in myFeature.sets.keys():
       if FSI_marker == markerTag:	# TODO meglio (per evitare di controllare tutti i set)
         markers[markerTag] = []
-        for item_node in myPart.sets[markerTag].nodes:
+        for item_node in myFeature.sets[markerTag].nodes:
           ID = item_node.label
           for iPoint in range(nPoint):
             if node[iPoint].GetID() == ID:

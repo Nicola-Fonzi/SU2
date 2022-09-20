@@ -105,7 +105,11 @@ def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inp
     for iPoint in nodeList:
       Force = node[iPoint].GetForce()
       label = node[iPoint].GetID()
-      region = myAssembly.instances[partName+'-1'].sets['NODE-'+str(label)]
+      name = 'NODE-'+str(label)
+      if name in myAssembly.instances[partName+'-1'].sets.keys():	# migliorare criterio
+		region = myAssembly.instances[partName+'-1'].sets[name]
+      else:
+        region = myAssembly.sets[name]
       loadname = 'Load-{}'.format(label)
       if iStepFSI == 0 and iStepForce == 0:
         myModel.ConcentratedForce(name=loadname, createStepName=stepName, 
