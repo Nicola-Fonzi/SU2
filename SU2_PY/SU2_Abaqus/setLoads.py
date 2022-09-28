@@ -92,7 +92,7 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputP
 
     loadname = 'ActLoad'
     if iStepFSI == 0:
-      force_unit_length = time * actLoad
+      force_unit_length = time * actLoad / span
       if iStepForce == 1:
         region = myAssembly.instances[partName+'-1'].surfaces[setName]
         myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
