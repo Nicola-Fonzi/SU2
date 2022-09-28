@@ -66,7 +66,9 @@ class Solver:
     self.Part_name = self.Config['PART_NAME']
     self.Monitor_setname = self.Config['MONITOR_SET']
 
+    self.Marker_dim = self.Config['MARKER_DIM']
 
+    self.Span = self.Config['SPAN']
     self.ActLoad = self.Config['ACT_LOAD']
     self.SliderAngle = self.Config['SLIDER_ANGLE']
     inputPoint = self.Config['INPUT_POINT']
@@ -117,8 +119,14 @@ class Solver:
         this_param = line[0].strip()
         this_value = line[1].strip()
 
+        #integer values
+        if (this_param == "MARKER_DIM"):
+          self.Config[this_param] = int(this_value)
+
+
         #float values
-        if (this_param == "ACT_LOAD") or \
+        elif (this_param == "SPAN") or \
+           (this_param == "ACT_LOAD") or \
              (this_param == "SLIDER_ANGLE"):
           self.Config[this_param] = float(this_value)
 
@@ -232,8 +240,9 @@ class Solver:
     for iPoint in nodeList:
       dict_force[iPoint] = self.node[iPoint].GetForce().tolist()
     json.dump(dict_force, open('Force.txt', 'w'))
-    self.__runAbaqusScript('setLoads', self.Model_name, self.Part_name, self.Set_name, time, self.ActLoad,
-                           self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ, self.iStepForce, self.iStepFSI)
+    self.__runAbaqusScript('setLoads', self.Model_name, self.Part_name, self.Set_name, self.Span, self.Marker_dim, time,
+                           self.ActLoad, self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ,
+                           self.iStepForce, self.iStepFSI)
 
 
   def exit(self):

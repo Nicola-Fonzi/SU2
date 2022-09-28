@@ -31,7 +31,7 @@ import json
 import numpy as np
 from FSI_tools.FSI_utils import Point
 
-def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI):
+def setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI):
 
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
@@ -104,6 +104,8 @@ def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inp
 
     for iPoint in nodeList:
       Force = node[iPoint].GetForce()
+      if dim == 2:
+        Force = Force * span
       label = node[iPoint].GetID()
       name = 'NODE-'+str(label)
       if name in myAssembly.instances[partName+'-1'].sets.keys():	# migliorare criterio
@@ -123,9 +125,11 @@ def setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inp
     mdb.saveAs(pathName=pathName)
 
 if __name__ == "__main__":
-    modelName = sys.argv[-11]
-    partName = sys.argv[-10]
-    setName = sys.argv[-9]
+    modelName = sys.argv[-13]
+    partName = sys.argv[-12]
+    setName = sys.argv[-11]
+    span = float(sys.argv[-10])
+    dim = int(sys.argv[-9])
     time = float(sys.argv[-8])
     actLoad = float(sys.argv[-7])
     sliderAngle = float(sys.argv[-6])
@@ -134,4 +138,4 @@ if __name__ == "__main__":
     inputPointZ = float(sys.argv[-3])
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    setLoads(modelName,partName,setName,time,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI)
+    setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI)
