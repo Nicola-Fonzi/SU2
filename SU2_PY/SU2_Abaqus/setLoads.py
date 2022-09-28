@@ -31,7 +31,7 @@ import json
 import numpy as np
 from FSI_tools.FSI_utils import Point
 
-def setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI):
+def setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI):
 
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
@@ -90,17 +90,18 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputP
       if sliderAngle != 0.:
         myModel.loads[loadname_dummy].deactivate(stepName)
 
-    loadname = 'ActLoad'
-    if iStepFSI == 0:
-      force_unit_length = time * actLoad / span
-      if iStepForce == 1:
-        region = myAssembly.instances[partName+'-1'].surfaces[setName]
-        myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
-          region=region, magnitude=force_unit_length, directionVector=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)), 
-          distributionType=UNIFORM, field='', localCsys=localCsys, 
-          traction=GENERAL, follower=OFF, resultant=ON)
-      elif iStepForce > 1:
-        myModel.loads[loadname].setValuesInStep(stepName=stepName, magnitude=force_unit_length)
+    if iStepForce > 0:
+      loadname = 'ActLoad'
+      if iStepFSI == 0:
+        force_unit_length = (actLoad0 + time * (actLoad - actLoad0)) / span
+        if iStepForce == 1:
+          region = myAssembly.instances[partName+'-1'].surfaces[setName]
+          myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
+            region=region, magnitude=force_unit_length, directionVector=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)), 
+            distributionType=UNIFORM, field='', localCsys=localCsys, 
+            traction=GENERAL, follower=OFF, resultant=ON)
+        elif iStepForce > 1:
+          myModel.loads[loadname].setValuesInStep(stepName=stepName, magnitude=force_unit_length)
 
     for iPoint in nodeList:
       Force = node[iPoint].GetForce()
@@ -125,12 +126,13 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputP
     mdb.saveAs(pathName=pathName)
 
 if __name__ == "__main__":
-    modelName = sys.argv[-13]
-    partName = sys.argv[-12]
-    setName = sys.argv[-11]
-    span = float(sys.argv[-10])
-    dim = int(sys.argv[-9])
-    time = float(sys.argv[-8])
+    modelName = sys.argv[-14]
+    partName = sys.argv[-13]
+    setName = sys.argv[-12]
+    span = float(sys.argv[-11])
+    dim = int(sys.argv[-10])
+    time = float(sys.argv[-9])
+    actLoad0 = float(sys.argv[-8])
     actLoad = float(sys.argv[-7])
     sliderAngle = float(sys.argv[-6])
     inputPointX = float(sys.argv[-5])
@@ -138,4 +140,4 @@ if __name__ == "__main__":
     inputPointZ = float(sys.argv[-3])
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    setLoads(modelName,partName,setName,span,dim,time,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI)
+    setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI)

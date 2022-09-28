@@ -69,6 +69,7 @@ class Solver:
     self.Marker_dim = self.Config['MARKER_DIM']
 
     self.Span = self.Config['SPAN']
+    self.ActLoad0 = 0.
     self.ActLoad = self.Config['ACT_LOAD']
     self.SliderAngle = self.Config['SLIDER_ANGLE']
     inputPoint = self.Config['INPUT_POINT']
@@ -217,6 +218,10 @@ class Solver:
     """
 
     if time > self.lastTime:
+      if self.iStepForce == 0:
+        self.__runAbaqusScript('readReactionForce', self.Part_name, self.Set_name, self.iStepForce, self.iStepFSI)
+        with open('RF1.txt', 'r') as f:
+          self.ActLoad0 = float(f.read())
       self.iStepForce += 1
       self.iStepFSI = 0
     else:
@@ -241,7 +246,7 @@ class Solver:
       dict_force[iPoint] = self.node[iPoint].GetForce().tolist()
     json.dump(dict_force, open('Force.txt', 'w'))
     self.__runAbaqusScript('setLoads', self.Model_name, self.Part_name, self.Set_name, self.Span, self.Marker_dim, time,
-                           self.ActLoad, self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ,
+                           self.ActLoad0, self.ActLoad, self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ,
                            self.iStepForce, self.iStepFSI)
 
 
