@@ -77,7 +77,8 @@ install_data(['SU2_Abaqus/__init__.py',
               'SU2_Abaqus/readNodes.py',
               'SU2_Abaqus/readPosVel.py',
               'SU2_Abaqus/runner.py',
-              'SU2_Abaqus/setLoads.py'],
+              'SU2_Abaqus/setLoads.py',
+              'SU2_Abaqus/readReactionForce.py'],
 	      install_dir: join_paths(get_option('bindir'), 'SU2_Abaqus'))
 
 install_data(['SU2_Nastran/__init__.py',
