@@ -83,7 +83,7 @@ def main():
 
   confFile = str(options.filename)
 
-  FSI_config = FSI.FSIConfig(confFile, comm) 		# FSI configuration file
+  FSI_config = FSI.FSI_config.FSIConfig(confFile, comm) 		# FSI configuration file
   CFD_ConFile = FSI_config['CFD_CONFIG_FILE_NAME']	# CFD configuration file
   CSD_ConFile = FSI_config['CSD_CONFIG_FILE_NAME']	# CSD configuration file
 
@@ -137,7 +137,7 @@ def main():
     print(" Initializing FSI interface ".center(80,"*"))
   if have_MPI:
     comm.barrier()
-  FSIInterface = FSI.Interface(FSI_config, FluidSolver, SolidSolver, have_MPI)
+  FSIInterface = FSI.FSI_interface.Interface(FSI_config, FluidSolver, SolidSolver, have_MPI)
 
   if myid == rootProcess:
     print("\n")
