@@ -135,6 +135,7 @@ class FSIConfig:
                  (this_param == "RESTART_SOL") or \
                  (this_param == "MATCHING_MESH") or \
                  (this_param == "MESH_INTERP_METHOD") or \
+                 (this_param == "APPROXIMATE_RBF") or \
                  (this_param == "DISP_PRED") or \
                  (this_param == "AITKEN_RELAX") or \
                  (this_param == "TIME_MARCHING") or \
@@ -149,6 +150,11 @@ class FSIConfig:
 
         if "TIME_TRESHOLD" in self._ConfigContent and self._ConfigContent["TIME_MARCHING"] == "QUASI":
             self.MPIPrint("TIME_TRESHOLD can only be used with physical time solutions (i.e., unsteady simulations)", True)
+
+        if "MESH_INTERP_METHOD" in self._ConfigContent:
+            if self._ConfigContent["MESH_INTERP_METHOD"] == "RBF" and "APPROXIMATE_RBF" not in self._ConfigContent:
+                self._ConfigContent["APPROXIMATE_RBF"] = "NO"
+                self.MPIPrint("APPROXIMATE_RBF keyword was not found in the configuration file of the interface, setting to NO", False)
 
         if "MAPPING_MODES" not in self._ConfigContent:
             self._ConfigContent["MAPPING_MODES"] = "NO"
