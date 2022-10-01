@@ -34,6 +34,7 @@ import csv
 import numpy as np
 import scipy.spatial.distance as spdist
 import math
+from petsc4py import PETSc
 
 # ----------------------------------------------------------------------
 #  FSI Interface Class
@@ -217,7 +218,6 @@ class Interface:
         Creates the communication support between the two solvers.
         Gets information about f/s interfaces from the two solvers.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
           MPIsize = self.comm.Get_size()
@@ -551,7 +551,6 @@ class Interface:
         Creates the one-to-one mapping between interfaces in case of matching meshes.
         Creates the interpolation rules between interfaces in case of non-matching meshes.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
           MPIsize = self.comm.Get_size()
@@ -1101,7 +1100,6 @@ class Interface:
         """
         Applies the one-to-one mapping or the interpolation rules from solid to fluid mesh.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
           MPIsize = self.comm.Get_size()
@@ -1276,7 +1274,6 @@ class Interface:
         """
         Applies the one-to-one mapping or the interpolation rules from fluid to solid mesh.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
           MPIsize = self.comm.Get_size()
@@ -1432,7 +1429,6 @@ class Interface:
         """
         Gets the current solid interface position from the solid solver.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -1462,7 +1458,6 @@ class Interface:
         """
         Gets the fluid interface loads from the fluid solver.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -1580,7 +1575,6 @@ class Interface:
         """
         Computes the solid interface FSI displacement residual.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -1673,7 +1667,6 @@ class Interface:
         """
         Computes the Aitken coefficients for solid displacement under-relaxation.
         """
-        from petsc4py import PETSc
         deltaResNormSquare = 0.0
         prodScalRes = 0.0
 
@@ -1738,7 +1731,6 @@ class Interface:
         """
         Calculates a prediciton for the solid interface position for the next time step.
         """
-        from petsc4py import PETSc
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
