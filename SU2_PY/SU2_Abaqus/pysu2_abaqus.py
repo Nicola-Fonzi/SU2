@@ -91,12 +91,18 @@ class Solver:
     print(" Opening/generating the model ".center(80, "-"))
     self.__readAbaqusModel()
 
-
-    # Prepare the output file
-    histFile = open('StructHistory.dat', "w")
-    header = '{:<8s}{:<16s}{:<16s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Vertical Displacement')
-    histFile.write(header)
-    histFile.close()
+    if self.Config["RESTART_SOL"] == "YES":
+      self.iStepForce = self.Config['RESTART_ITER'] - 1
+      with open('RF1.txt', 'r') as f:
+        self.ActLoad0 = float(f.read())
+      self.saveCaeFlag = False
+    else:
+      # Prepare the output file
+      histFile = open('StructHistory.dat', "w")
+      header = '{:<8s}{:<16s}{:<16s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Vertical Displacement')
+      histFile.write(header)
+      histFile.close()
+      self.saveCaeFlag = True
 
   def __readConfig(self):
     """
@@ -121,7 +127,8 @@ class Solver:
         this_value = line[1].strip()
 
         #integer values
-        if (this_param == "MARKER_DIM"):
+        if (this_param == "MARKER_DIM") or \
+           (this_param == "RESTART_ITER"):
           self.Config[this_param] = int(this_value)
 
 
@@ -140,7 +147,8 @@ class Solver:
              (this_param == "MOVING_MARKER") or \
              (this_param == "PART_NAME") or \
              (this_param == "SET_NAME") or \
-             (this_param == "MONITOR_SET"):
+             (this_param == "MONITOR_SET") or \
+             (this_param == "RESTART_SOL"):
           self.Config[this_param] = this_value
 
 
@@ -173,7 +181,7 @@ class Solver:
 
 
       self.Model_name = self.Inp_file.split('.')[0]
-      self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.Part_name, self.Monitor_setname, self.FSI_marker)
+      self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.Part_name, self.Monitor_setname, self.FSI_marker, self.saveCaeFlag)
 
       self.node = pickle.load(open('node.p', 'rb'), encoding="latin1")
       self.nPoint = len(self.node)

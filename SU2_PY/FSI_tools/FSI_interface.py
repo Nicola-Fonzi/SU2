@@ -1908,7 +1908,7 @@ class Interface:
           self.MPIPrint('The FSI coupling will start after {} iterations'.format(TimeIterTreshold))
 
           if FSI_config['RESTART_SOL'] == 'YES':
-            NbTimeIter = ((totTime)/deltaT)-1
+            NbTimeIter = (totTime/deltaT)-1
             time = (FSI_config['RESTART_ITER'])*deltaT
             TimeIter = FSI_config['RESTART_ITER']
           else:
@@ -2065,8 +2065,13 @@ class Interface:
          FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
          varCoordNorm = 0.0
          NbTimeIter = int(totTime / deltaT) - 1  # number of time iterations
-         time = 0.0
-         TimeIter = 0
+
+         if FSI_config['RESTART_SOL'] == 'YES':
+           time = (FSI_config['RESTART_ITER'])*deltaT
+           TimeIter = FSI_config['RESTART_ITER']
+         else:
+           time = 0.0				# initial time
+           TimeIter = 0				# initial time iteration
 
          self.MPIPrint('\n**************************************')
          self.MPIPrint('* Begin quasi-steady FSI computation *')

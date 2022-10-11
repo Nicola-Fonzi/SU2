@@ -29,7 +29,7 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker):
+def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker,saveCaeFlag):
     
     
     mdb.ModelFromInputFile(name=modelName, inputFileName=inputFileName)
@@ -98,15 +98,20 @@ def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker):
     
     with open('monitor.txt', 'w') as f:
       f.write(str(iVertex_monitor))
-    
-    pathName = '{}.cae'.format(modelName)
-    mdb.saveAs(pathName=pathName)
+
+    if saveCaeFlag:
+      pathName = '{}.cae'.format(modelName)
+      mdb.saveAs(pathName=pathName)
 
 
 if __name__ == "__main__":
-    modelName = sys.argv[-5]
-    inputFileName = sys.argv[-4]
-    partName = sys.argv[-3]
-    monitorSet = sys.argv[-2]
-    FSI_marker = sys.argv[-1]
-    readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker)
+    modelName = sys.argv[-6]
+    inputFileName = sys.argv[-5]
+    partName = sys.argv[-4]
+    monitorSet = sys.argv[-3]
+    FSI_marker = sys.argv[-2]
+    if sys.argv[-1] == 'True':
+      saveCaeFlag = True
+    else:
+      saveCaeFlag = False
+    readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker,saveCaeFlag)
