@@ -87,10 +87,6 @@ class Solver:
     self.iStepFSI = -1
     self.lastTime = 0.0
 
-    print("\n")
-    print(" Opening/generating the model ".center(80, "-"))
-    self.__readAbaqusModel()
-
     if self.Config["RESTART_SOL"] == "YES":
       self.iStepForce = self.Config['RESTART_ITER'] - 1
       with open('RF1.txt', 'r') as f:
@@ -103,6 +99,10 @@ class Solver:
       histFile.write(header)
       histFile.close()
       self.saveCaeFlag = True
+
+    print("\n")
+    print(" Opening/generating the model ".center(80, "-"))
+    self.__readAbaqusModel()
 
   def __readConfig(self):
     """
