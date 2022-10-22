@@ -2027,7 +2027,7 @@ class Interface:
                 if TimeIter >= TimeIterTreshold:
                   if myid in self.solidSolverProcessors:
                     # --- Output the solid solution before the next time step --- #
-                    SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
+                    SolidSolver.writeSolution(time, TimeIter, self.FSIIter+1)
 
                 if TimeIter > TimeIterTreshold:
                   # --- Displacement predictor for the next time step and update of the solid solution --- #
@@ -2152,7 +2152,7 @@ class Interface:
              self.writeFSIHistory(TimeIter, time, varCoordNorm, FSIConv)
 
              if myid in self.solidSolverProcessors:
-                 SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
+                 SolidSolver.writeSolution(time, TimeIter, self.FSIIter+1)
 
              if myid == self.rootProcess:
                  output_names = ['surface_flow', 'flow']
@@ -2238,7 +2238,7 @@ class Interface:
               self.MPIPrint('\nLaunching solid solver for a static computation...\n')
               if myid in self.solidSolverProcessors:
                 SolidSolver.run(0.0)
-                SolidSolver.writeSolution(0.0, 0, self.FSIIter)
+                SolidSolver.writeSolution(0.0, 0, self.FSIIter+1)
 
             # --- Compute and monitor the FSI residual --- #
             varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
