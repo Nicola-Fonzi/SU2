@@ -2317,10 +2317,10 @@ class Interface:
 
       self.comm.Bcast(modesNumber, root=self.rootProcess)
 
-      for mode in range(np.asscalar(modesNumber)+1):
+      for mode in range(modesNumber.item(0)+1):
         self.MPIPrint("Setting mode {} active".format(mode))
         if myid in self.solidSolverProcessors:
-          if mode == np.asscalar(modesNumber):
+          if mode == modesNumber.item(0):
             SolidSolver.activateMode("Undeformed")
           else:
             SolidSolver.activateMode(mode)
@@ -2340,7 +2340,7 @@ class Interface:
             if SurfaceFileName in FileName:
               file = FileName.split(".")[0]
               extension = FileName.split(".")[1]
-              if mode == np.asscalar(modesNumber):
+              if mode == modesNumber.item(0):
                 os.rename(file+"."+extension,"Undeformed."+extension)
               else:
                 os.rename(file+"."+extension,"Mode{}.".format(mode)+extension)
