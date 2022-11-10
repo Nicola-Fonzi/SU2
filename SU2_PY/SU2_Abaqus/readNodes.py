@@ -38,7 +38,7 @@ def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker,saveCaeFlag
     myAssembly = myModel.rootAssembly
 
     if FSI_marker in myPart.sets.keys():
-      nodes = myPart.nodes
+      nodes = myPart.sets[FSI_marker].nodes
       myFeature = myPart
     elif FSI_marker in myAssembly.sets.keys():
       nodes = myAssembly.sets[FSI_marker].nodes
