@@ -2302,6 +2302,10 @@ class Interface:
           for key, value in normalsToPrint.items():
             writer.writerow([key, value])
 
+      self.MPIPrint('\n********************************')
+      self.MPIPrint('*        Normals obtained       *')
+      self.MPIPrint('********************************\n')
+      self.MPIPrint("\n")
 
       SurfaceFileName = FluidSolver.GetSurfaceFileName()
 
