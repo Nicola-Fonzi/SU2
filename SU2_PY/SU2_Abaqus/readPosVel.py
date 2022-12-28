@@ -29,7 +29,7 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readPosVel(partName,iStepForce,iStepFSI):
+def readPosVel(flexPartName,rigidPartName,iStepForce,iStepFSI):
 
     odbFile = 'Job-{}-{}.odb'.format(iStepForce,iStepFSI)
     odb = openOdb(path=odbFile)
@@ -44,15 +44,19 @@ def readPosVel(partName,iStepForce,iStepFSI):
       coord0 = node[iPoint].GetCoord0()
       label = node[iPoint].GetID()
       name = 'NODE-'+str(label)
-      if name in odb.rootAssembly.instances[partName+'-1'].nodeSets.keys():	# migliorare criterio
-		region = odb.rootAssembly.instances[partName+'-1'].nodeSets[name]
+      if label < 100000:
+        if name in odb.rootAssembly.instances[flexPartName+'-1'].nodeSets.keys():	# migliorare criterio
+          region = odb.rootAssembly.instances[flexPartName+'-1'].nodeSets[name]
+        else:
+          region = odb.rootAssembly.nodeSets[name]
       else:
-        region = odb.rootAssembly.nodeSets[name]
+        region = odb.rootAssembly.instances[rigidPartName+'-1'].nodeSets[name]
+        
       v = displacement.getSubset(region=region).values[0]
       X_disp = v.data[0]
       Y_disp = v.data[1]
       Z_disp = v.data[2]
-
+	
       X_vel = 0		# Static analysis
       Y_vel = 0		# Static analysis
       Z_vel = 0		# Static analysis
@@ -63,7 +67,8 @@ def readPosVel(partName,iStepForce,iStepFSI):
 
 
 if __name__ == "__main__":
-    partName = sys.argv[-3]
+    flexPartName = sys.argv[-4]
+    rigidPartName = sys.argv[-3]
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    readPosVel(partName,iStepForce,iStepFSI)
+    readPosVel(flexPartName,rigidPartName,iStepForce,iStepFSI)

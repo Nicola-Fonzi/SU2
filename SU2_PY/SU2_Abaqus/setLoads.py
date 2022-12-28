@@ -31,12 +31,12 @@ import json
 import numpy as np
 from FSI_tools.FSI_utils import Point
 
-def setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI):
+def setLoads(modelName,device,flexPartName,rigidPartName,setName,span,dim,time,actLoad0,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI):
 
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
     myModel = mdb.models[modelName]
-    myPart = myModel.parts[partName]
+    myFlexPart = myModel.parts[flexPartName]
     myAssembly = myModel.rootAssembly
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
 	
@@ -53,11 +53,11 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAng
     pickle.dump(node, open('node.p', 'wb'))
 
 
-    if sliderAngle != 0. and iStepForce == 0 and iStepFSI == 0:
+    if device == 'TE' and sliderAngle != 0. and iStepForce == 0 and iStepFSI == 0:
       input_point_skin = np.array([inputPointX,inputPointY,inputPointZ])
       csys_point1 = input_point_skin + [cos(sliderAngle), sin(sliderAngle), 0]
       csys_point2 = input_point_skin + [-sin(sliderAngle), cos(sliderAngle), 0]
-      myPart.DatumCsysByThreePoints(name='Datum csys-1', coordSysType=CARTESIAN, 
+      myFlexPart.DatumCsysByThreePoints(name='Datum csys-1', coordSysType=CARTESIAN, 
         origin=input_point_skin, point1=csys_point1, point2=csys_point2)
       keys = myAssembly.datums.keys()
       for key in keys:
@@ -71,37 +71,56 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAng
         distributionType=UNIFORM, field='', localCsys=localCsys, 
         traction=GENERAL, follower=OFF, resultant=ON)
 
-    localCsys = None
-    if sliderAngle != 0. and iStepForce > 0 and iStepFSI == 0:
-      keys = myAssembly.datums.keys()
-      for key in keys:
-        if myAssembly.datums[key].axis1.direction[0] < 1.0:
-          localCsys = myAssembly.datums[key]
+    if device == 'TE':
+      localCsys = None
+      if sliderAngle != 0. and iStepForce > 0 and iStepFSI == 0:
+        keys = myAssembly.datums.keys()
+        for key in keys:
+          if myAssembly.datums[key].axis1.direction[0] < 1.0:
+            localCsys = myAssembly.datums[key]
 
     if iStepForce == 1 and iStepFSI == 0:
       for bc in myModel.boundaryConditions.values():
         if bc.region[0] == setName:		# migliorare criterio
           bc.deactivate(stepName)
-      region = myAssembly.instances[partName+'-1'].sets[setName]
-      myModel.DisplacementBC(name='slider', createStepName=stepName, 
-        region=region, u1=UNSET, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0, 
-        amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
-        localCsys=localCsys)
-      if sliderAngle != 0.:
-        myModel.loads[loadname_dummy].deactivate(stepName)
+      if device == 'TE':
+        region = myAssembly.instances[flexPartName+'-1'].sets[setName]
+        myModel.DisplacementBC(name='slider', createStepName=stepName, 
+          region=region, u1=UNSET, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0, 
+          amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
+          localCsys=localCsys)
+        if sliderAngle != 0.:
+          myModel.loads[loadname_dummy].deactivate(stepName)
 
     if iStepForce > 0:
-      loadname = 'ActLoad'
-      if iStepFSI == 0:
-        force_unit_length = (actLoad0 + time * (actLoad - actLoad0)) / span
-        if iStepForce == 1:
-          region = myAssembly.instances[partName+'-1'].surfaces[setName]
-          myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
-            region=region, magnitude=force_unit_length, directionVector=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)), 
-            distributionType=UNIFORM, field='', localCsys=localCsys, 
-            traction=GENERAL, follower=OFF, resultant=ON)
-        elif iStepForce > 1:
-          myModel.loads[loadname].setValuesInStep(stepName=stepName, magnitude=force_unit_length)
+      if device == 'TE':
+        loadname = 'ActLoad'
+        if iStepFSI == 0:
+          force_unit_length = (actLoad0 + time * (actLoad - actLoad0)) / span
+          if iStepForce == 1:
+            region = myAssembly.instances[flexPartName+'-1'].surfaces[setName]
+            myModel.ShellEdgeLoad(name=loadname, createStepName=stepName, 
+              region=region, magnitude=force_unit_length, directionVector=((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)), 
+              distributionType=UNIFORM, field='', localCsys=localCsys, 
+              traction=GENERAL, follower=OFF, resultant=ON)
+          elif iStepForce > 1:
+            myModel.loads[loadname].setValuesInStep(stepName=stepName, magnitude=force_unit_length)
+      elif device == 'LE':
+        name = 'ActRot'
+        if iStepFSI == 0:
+          rot = (actLoad0 + time * (actLoad - actLoad0))
+          if iStepForce == 1:
+            for bc in myModel.boundaryConditions.values():
+              if bc.region[0] == setName:		# migliorare criterio
+                key = bc.localCsys
+            region = myAssembly.sets[setName]
+            localCsys = myAssembly.datums[key]
+            myModel.DisplacementBC(name=name, createStepName=stepName, 
+                region=region, u1=0.0, u2=0.0, u3=0.0, ur1=rot, ur2=0.0, ur3=0.0, 
+                amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
+                localCsys=localCsys)
+          elif iStepForce > 1:
+            myModel.boundaryConditions[name].setValuesInStep(stepName=stepName, ur1=rot)
 
     for iPoint in nodeList:
       Force = node[iPoint].GetForce()
@@ -109,10 +128,13 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAng
         Force = Force * span
       label = node[iPoint].GetID()
       name = 'NODE-'+str(label)
-      if name in myAssembly.instances[partName+'-1'].sets.keys():	# migliorare criterio
-		region = myAssembly.instances[partName+'-1'].sets[name]
+      if label < 100000:
+        if name in myAssembly.instances[flexPartName+'-1'].sets.keys():	# migliorare criterio
+		  region = myAssembly.instances[flexPartName+'-1'].sets[name]
+        else:
+          region = myAssembly.sets[name]
       else:
-        region = myAssembly.sets[name]
+        region = myAssembly.instances[rigidPartName+'-1'].sets[name]
       loadname = 'Load-{}'.format(label)
       if iStepFSI == 0 and iStepForce == 0:
         myModel.ConcentratedForce(name=loadname, createStepName=stepName, 
@@ -126,8 +148,10 @@ def setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAng
     mdb.saveAs(pathName=pathName)
 
 if __name__ == "__main__":
-    modelName = sys.argv[-14]
-    partName = sys.argv[-13]
+    modelName = sys.argv[-16]
+    device = sys.argv[-15]
+    flexPartName = sys.argv[-14]
+    rigidPartName = sys.argv[-13]
     setName = sys.argv[-12]
     span = float(sys.argv[-11])
     dim = int(sys.argv[-10])
@@ -140,4 +164,4 @@ if __name__ == "__main__":
     inputPointZ = float(sys.argv[-3])
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    setLoads(modelName,partName,setName,span,dim,time,actLoad0,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI)
+    setLoads(modelName,device,flexPartName,rigidPartName,setName,span,dim,time,actLoad0,actLoad,sliderAngle,inputPointX,inputPointY,inputPointZ,iStepForce,iStepFSI)
