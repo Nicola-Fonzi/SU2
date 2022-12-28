@@ -37,6 +37,7 @@ from optparse import OptionParser  # use a parser for configuration
 # imports the CFD (SU2) module for FSI computation
 import pysu2
 import FSI_tools as FSI	# imports FSI python tools
+from FSI_tools.FSI_interface import Interface # This is not imported automatically at __init__
 
 # -------------------------------------------------------------------
 #  Main
@@ -111,33 +112,33 @@ def main():
 
   # --- Initialize the solid solver --- #
   # Serial solvers
-  if CSD_Solver in ["NATIVE"]:
-    if myid == rootProcess:
-      print("\n")
-      print(" Initializing solid solver ".center(80,"*"))
-      if CSD_Solver == 'NATIVE':
-        from SU2_Nastran import pysu2_nastran
-        if FSI_config["IMPOSED_MOTION"] == "NO":
-          SolidSolver = pysu2_nastran.Solver(CSD_ConFile,False)
-        else:
-          SolidSolver = pysu2_nastran.Solver(CSD_ConFile,True)
-    else:
-      SolidSolver = None
+  if myid == rootProcess:
+    print("\n")
+    print(" Initializing solid solver ".center(80, "*"))
+    if CSD_Solver == 'NATIVE':
+      from SU2_Nastran import pysu2_nastran
+      if FSI_config["IMPOSED_MOTION"] == "NO":
+        SolidSolver = pysu2_nastran.Solver(CSD_ConFile, False)
+      else:
+        SolidSolver = pysu2_nastran.Solver(CSD_ConFile, True)
+    if CSD_Solver == 'ABAQUS':
+      from SU2_Abaqus import pysu2_abaqus
+      SolidSolver = pysu2_abaqus.Solver(CSD_ConFile)
+  else:
+    SolidSolver = None
   # Parallel solvers
   # For now we are only using serial solvers
-  else:
-    raise Exception('\n Invalid solid solver option')
 
   if have_MPI:
     comm.barrier()
 
-  # --- Initialize and set the FSI interface (coupling environement) --- #
+  # --- Initialize and set the FSI interface (coupling environment) --- #
   if myid == rootProcess:
     print("\n")
     print(" Initializing FSI interface ".center(80,"*"))
   if have_MPI:
     comm.barrier()
-  FSIInterface = FSI.Interface(FSI_config, FluidSolver, SolidSolver, have_MPI)
+  FSIInterface = Interface(FSI_config, FluidSolver, SolidSolver, have_MPI)
 
   if myid == rootProcess:
     print("\n")
@@ -163,31 +164,43 @@ def main():
         FSIInterface.UnsteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.UnsteadyFSI : ',exception)
+          print('A NameError occured in FSIInterface.UnsteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
-          print('A TypeError occured in FSIInterface.UnsteadyFSI : ',exception)
+          print('A TypeError occured in FSIInterface.UnsteadyFSI : ', exception)
       except KeyboardInterrupt as exception :
         if myid == rootProcess:
-          print('A KeyboardInterrupt occured in FSIInterface.UnsteadyFSI : ',exception)
+          print('A KeyboardInterrupt occured in FSIInterface.UnsteadyFSI : ', exception)
+    elif FSI_config['TIME_MARCHING'] == "QUASI":
+      try:
+        FSIInterface.QuasiSteadyFSI(FSI_config, FluidSolver, SolidSolver)
+      except NameError as exception:
+        if myid == rootProcess:
+          print('A NameError occured in FSIInterface.QuasiSteadyFSI : ', exception)
+      except TypeError as exception:
+        if myid == rootProcess:
+          print('A TypeError occured in FSIInterface.QuasiSteadyFSI : ', exception)
+      except KeyboardInterrupt as exception :
+        if myid == rootProcess:
+          print('A KeyboardInterrupt occured in FSIInterface.QuasiSteadyFSI : ', exception)
     else:
       try:
         FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver)
       except NameError as exception:
         if myid == rootProcess:
-          print('An NameError occured in FSIInterface.SteadyFSI : ',exception)
+          print('A NameError occured in FSIInterface.SteadyFSI : ', exception)
       except TypeError as exception:
         if myid == rootProcess:
-          print('A TypeError occured in FSIInterface.SteadyFSI : ',exception)
+          print('A TypeError occured in FSIInterface.SteadyFSI : ', exception)
       except KeyboardInterrupt as exception :
         if myid == rootProcess:
-          print('A KeyboardInterrupt occured in FSIInterface.SteadyFSI : ',exception)
+          print('A KeyboardInterrupt occured in FSIInterface.SteadyFSI : ', exception)
   else:
     try:
       FSIInterface.MapModes(FSI_config, FluidSolver, SolidSolver)
     except NameError as exception:
       if myid == rootProcess:
-        print('An NameError occured in FSIInterface.MapModes : ',exception)
+        print('A NameError occured in FSIInterface.MapModes : ',exception)
     except TypeError as exception:
       if myid == rootProcess:
         print('A TypeError occured in FSIInterface.MapModes : ',exception)

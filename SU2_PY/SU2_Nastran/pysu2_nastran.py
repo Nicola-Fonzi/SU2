@@ -32,298 +32,13 @@
 import numpy as np
 import scipy.linalg as linalg
 import math
+from FSI_tools.FSI_utils import Point
+from FSI_tools.FSI_utils import RefSystem
+from SU2_Nastran.imposed_motion import ImposedMotionClass
 
 # ----------------------------------------------------------------------
-#  Config class
+#  Classes
 # ----------------------------------------------------------------------
-
-class ImposedMotionClass:
-
-  def __init__(self,time0,typeOfMotion,parameters,mode):
-
-    self.time0 = time0
-    self.typeOfMotion = typeOfMotion
-    self.mode = mode
-
-    self.amplitude = parameters["AMPLITUDE"]
-    self.timeStart = parameters["TIME_START"]
-    if "TIME_STOP" in parameters.keys():
-      self.timeStop  = parameters["TIME_STOP"]
-    else:
-      self.timeStop = math.inf
-
-    if self.typeOfMotion == "SINUSOIDAL":
-      self.bias = parameters["BIAS"]
-      self.frequency = parameters["FREQUENCY"]
-
-    elif self.typeOfMotion == "BLENDED_STEP":
-      self.kmax = parameters["K_MAX"]
-      self.vinf = parameters["V_INF"]
-      self.lref = parameters["L_REF"]
-      self.tmax = 2*math.pi/self.kmax*self.lref/self.vinf
-      self.omega0 = 1/2*self.kmax
-
-    elif self.typeOfMotion == "BLENDED_PULSE":
-      self.kmax = parameters["K_MAX"]
-      self.vinf = parameters["V_INF"]
-      self.lref = parameters["L_REF"]
-      self.tmax = 2 * math.pi / self.kmax * self.lref / self.vinf
-      self.omega0 = 1 / 2 * self.kmax
-      self.r = parameters["R"]
-
-    elif self.typeOfMotion == "COSINUSOIDAL":
-      self.bias = parameters["BIAS"]
-      self.frequency = parameters["FREQUENCY"]
-
-    elif self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      self.bias = parameters["BIAS"]
-      self.frequency = parameters["FREQUENCY"]
-      self.decay = parameters["DECAY"]
-
-    else:
-      raise Exception('Imposed function {} not found, please implement it in pysu2_nastran.py'.format(self.typeOfMotion))
-
-
-  def GetDispl(self,time):
-    time = time - self.time0 - self.timeStart
-    if self.typeOfMotion == "SINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.bias+self.amplitude*math.sin(2*math.pi*self.frequency*time)
-
-    if self.typeOfMotion == "BLENDED_STEP":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      if time < self.tmax:
-        return self.amplitude/2.0*(1.0-math.cos(self.omega0*time*self.vinf/self.lref))
-      return self.amplitude
-
-    if self.typeOfMotion == "BLENDED_PULSE":
-      if (time < 0.0) or (time > self.tmax):
-        return 0.0
-      if time < self.tmax*self.r:
-        modifiedTime = time/(self.r*self.tmax)*math.pi
-      else:
-        modifiedTime = math.pi + (time-self.r*self.tmax)/(self.r*self.tmax)*math.pi
-      return self.amplitude/2.0*(1.0-math.cos(modifiedTime))
-
-    if self.typeOfMotion == 'COSINUSOIDAL':
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.bias+self.amplitude*(1-math.cos(2*math.pi*self.frequency*time))
-
-    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.bias+self.amplitude*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
-
-
-  def GetVel(self,time):
-    time = time - self.time0 - self.timeStart
-
-    if self.typeOfMotion == "SINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*math.cos(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
-
-    if self.typeOfMotion == "BLENDED_STEP":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      if time < self.tmax:
-        return self.amplitude/2.0*math.sin(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)
-      return 0.0
-
-    if self.typeOfMotion == "BLENDED_PULSE":
-      if (time < 0.0) or (time > self.tmax):
-        return 0.0
-      if time < self.tmax * self.r:
-        modifiedTime = time / (self.r * self.tmax) * math.pi
-      else:
-        modifiedTime = math.pi + (time - self.r * self.tmax) / (self.r * self.tmax) * math.pi
-      return self.amplitude/2.0*math.sin(modifiedTime)*(math.pi / (self.r * self.tmax))
-
-    if self.typeOfMotion == "COSINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*math.sin(2*math.pi*self.frequency*time)*2*math.pi*self.frequency
-
-    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*(self.decay*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
-             + math.exp(self.decay*time)*2*math.pi*self.frequency*math.sin(2*math.pi*self.frequency*time))
-
-  def GetAcc(self,time):
-    time = time - self.time0 - self.timeStart
-
-    if self.typeOfMotion == "SINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return -self.amplitude*math.sin(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
-
-    if self.typeOfMotion == "BLENDED_STEP":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      if time < self.tmax:
-        return self.amplitude/2.0*math.cos(self.omega0*time*self.vinf/self.lref)*(self.omega0*self.vinf/self.lref)**2
-      return 0.0
-
-    if self.typeOfMotion == "BLENDED_PULSE":
-      if (time < 0.0) or (time > self.tmax):
-        return 0.0
-      if time < self.tmax * self.r:
-        modifiedTime = time / (self.r * self.tmax) * math.pi
-      else:
-        modifiedTime = math.pi + (time - self.r * self.tmax) / (self.r * self.tmax) * math.pi
-      return self.amplitude/2.0*math.cos(modifiedTime)*(math.pi / (self.r * self.tmax))**2
-
-    if self.typeOfMotion == "COSINUSOIDAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*math.cos(2*math.pi*self.frequency*time)*(2*math.pi*self.frequency)**2
-
-    if self.typeOfMotion == "HARMONIC_EXPONENTIAL":
-      if (time < 0.0) or (time > self.timeStop):
-        return 0.0
-      return self.amplitude*(self.decay**2*math.exp(self.decay*time)*(1-math.cos(2*math.pi*self.frequency*time))
-             + 2*self.decay*math.exp(self.decay*time)*2*math.pi*self.frequency*math.sin(2*math.pi*self.frequency*time)
-             + (2*math.pi*self.frequency)**2*math.exp(self.decay*time)*math.cos(2*math.pi*self.frequency*time))
-
-class RefSystem:
-
-  def __init__(self):
-    self.CID = 0
-    self.RID = 0
-    self.Origin = np.array([[0.],[0.],[0.]])
-    self.Rot = np.array([[0.,0.,0.],[0.,0.,0.],[0.,0.,0.]])
-
-  def SetOrigin(self,A):
-    AX , AY , AZ = A
-    self.Origin[0] =  AX
-    self.Origin[1] =  AY
-    self.Origin[2] =  AZ
-
-  def SetRotMatrix(self,x,y,z):
-    self.Rot = np.array([[x[0],y[0],z[0]],[x[1],y[1],z[1]],[x[2],y[2],z[2]]])
-
-  def SetCID(self,CID):
-    self.CID = CID
-
-  def SetRID(self,RID):
-    self.RID = RID
-
-  def GetOrigin(self):
-    return self.Origin
-
-  def GetRotMatrix(self):
-    return self.Rot
-
-  def GetRID(self):
-    return self.RID
-
-  def GetCID(self):
-    return self.CID
-
-class Point:
-  """
-  Class containing data regarding all the structural nodes.
-  Coord0: Coordinates at the initial time iteration.
-  Coord: Coordinates at the current time iteration.
-  Coord_n: Coordinates at the previous time iteration.
-  Vel: Velocity at the current time iteration.
-  Vel_n: Velocity at the previous time iteration.
-  Force: Nodal force provided by the aerodynamics.
-  ID: ID of the node.
-  CP: Coordinate system definition of the position.
-  CD: Coordinate system definition of the output coming from Nastran.
-  """
-
-  def __init__(self):
-    self.Coord0 = np.zeros((3,1))
-    self.Coord = np.zeros((3,1))
-    self.Coord_n = np.zeros((3,1))
-    self.Vel = np.zeros((3,1))
-    self.Vel_n = np.zeros((3,1))
-    self.Force = np.zeros((3,1))
-    self.ID = 0
-    self.CP = 0
-    self.CD = 0
-
-  def GetCoord0(self):
-    return self.Coord0
-
-  def GetCoord(self):
-    return self.Coord
-
-  def GetCoord_n(self):
-    return self.Coord_n
-
-  def GetVel(self):
-    return self.Vel
-
-  def GetVel_n(self):
-    return self.Vel_n
-
-  def GetForce(self):
-    return self.Force
-
-  def GetID(self):
-    return self.ID
-
-  def GetCP(self):
-    return self.CP
-
-  def GetCD(self):
-    return self.CD
-
-  def SetCoord0(self, val_Coord):
-    x, y, z = val_Coord
-    self.Coord0[0] = x
-    self.Coord0[1] = y
-    self.Coord0[2] = z
-
-  def SetCoord(self, val_Coord):
-    x, y, z = val_Coord
-    self.Coord[0] = x
-    self.Coord[1] = y
-    self.Coord[2] = z
-
-  def SetCoord_n(self, val_Coord):
-    x, y, z = val_Coord
-    self.Coord_n[0] = x
-    self.Coord_n[1] = y
-    self.Coord_n[2] = z
-
-  def SetVel(self, val_Vel):
-    vx, vy, vz = val_Vel
-    self.Vel[0] = vx
-    self.Vel[1] = vy
-    self.Vel[2] = vz
-
-  def SetVel_n(self, val_Vel):
-    vx, vy, vz = val_Vel
-    self.Vel_n[0] = vx
-    self.Vel_n[1] = vy
-    self.Vel_n[2] = vz
-
-  def SetForce(self, val_Force):
-    fx, fy, fz = val_Force
-    self.Force[0] = fx
-    self.Force[1] = fy
-    self.Force[2] = fz
-
-  def SetID(self, ID):
-    self.ID = ID
-
-  def SetCP(self,CP):
-    self.CP = CP
-
-  def SetCD(self,CD):
-    self.CD = CD
-
-  def updateCoordVel(self):
-    self.Coord_n = np.copy(self.Coord)
-    self.Vel_n = np.copy(self.Vel)
 
 class Solver:
   """
@@ -346,10 +61,11 @@ class Solver:
     self.Mesh_file = self.Config['MESH_FILE']
     self.Punch_file = self.Config['PUNCH_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
-    self.Unsteady = (self.Config['TIME_MARCHING']=="YES")
     self.ImposedMotion = ImposedMotion
-    if self.Unsteady:
+    if self.Config['TIME_MARCHING'] == "YES":
       print('Dynamic computation.')
+    elif self.Config['TIME_MARCHING'] == "QUASI":
+      print('Quasi-steady computation.')
     self.nDof = self.Config['NMODES']
     print("Reading number of modes from file")
 
@@ -815,7 +531,8 @@ class Solver:
     Y_disp = self.Uy.dot(self.q)
     Z_disp = self.Uz.dot(self.q)
 
-    for iPoint in range(self.nPoint):
+    nodeList = self.markers[self.FSI_marker]
+    for iPoint in nodeList:
       coord0 = self.node[iPoint].GetCoord0()
       self.node[iPoint].SetCoord((X_disp[iPoint]+coord0[0],Y_disp[iPoint]+coord0[1],Z_disp[iPoint]+coord0[2]))
       self.node[iPoint].SetVel((X_vel[iPoint],Y_vel[iPoint],Z_vel[iPoint]))
@@ -989,7 +706,7 @@ class Solver:
     This method cleanly exits the structural solver.
     """
 
-    print("\n**************** Exiting the structural tester solver ****************")
+    print("\n**************** Exiting the native structural solver ****************")
 
   def run(self,time):
     """
@@ -1011,12 +728,12 @@ class Solver:
   def activateMode(self, iMode):
     """
     This method is used to artificially set only one mode activated, thus
-    with non zero amplitude.
+    with non-zero amplitude.
     """
     self.__reset(self.q)
     if not isinstance(iMode, str):
       self.q[iMode] = 1.0
-    self.__computeInterfacePosVel(True)
+    self.__computeInterfacePosVel(False)
 
   def setInitialDisplacements(self):
     """
@@ -1063,7 +780,7 @@ class Solver:
     This method can be accessed from outside to set the nodal forces.
     """
     iPoint = self.getVertexGlobalIndex(self.FSI_marker, iVertex)
-    self.node[iPoint].SetForce((fx,fy,fz))
+    self.node[iPoint].SetForce((fx, fy, fz))
 
   def getNumberOfModes(self):
     """

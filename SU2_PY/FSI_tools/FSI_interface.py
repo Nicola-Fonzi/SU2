@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-## \file FSIInterface.py
+## \file FSI_interface.py
 #  \brief FSI interface class that handles fluid/solid solvers synchronisation and communication.
 #  \authors Nicola Fonzi, Vittorio Cavalieri based on the work of David Thomas
 #  \version 7.5.0 "Blackbird"
@@ -34,7 +34,6 @@ import csv
 import numpy as np
 import scipy.spatial.distance as spdist
 import math
-from rtree import index
 from petsc4py import PETSc
 
 # ----------------------------------------------------------------------
@@ -157,6 +156,9 @@ class Interface:
         if FSI_config['TIME_MARCHING'] == 'YES':
           self.MPIPrint('Unsteady coupled simulation with physical time step : {} s'.format(FSI_config['UNST_TIMESTEP']))
           self.unsteady = True
+        elif  FSI_config['TIME_MARCHING'] == 'QUASI':
+          self.MPIPrint('Quasi-steady coupled simulation with fictitious time step : {} s'.format(FSI_config['UNST_TIMESTEP']))
+          self.unsteady = True
         else:
           self.MPIPrint('Steady coupled simulation')
 
@@ -168,11 +170,13 @@ class Interface:
           elif FSI_config['MESH_INTERP_METHOD'] == 'RBF':
             self.MPIPrint('Non matching fluid-solid interface with Radial Basis Function interpolation')
             self.RBF_rad = FSI_config['RBF_RADIUS']
+            self.approximateRBF = FSI_config['APPROXIMATE_RBF'] == 'YES'
             self.MPIPrint('Radius value : {}'.format(self.RBF_rad))
           else:
             self.MPIPrint('Non matching fluid-solid interface with Nearest Neighboor interpolation')
 
-        self.MPIPrint('Solid predictor : {}'.format(FSI_config['DISP_PRED']))
+        if FSI_config['TIME_MARCHING'] == 'YES':
+            self.MPIPrint('Solid predictor : {}'.format(FSI_config['DISP_PRED']))
 
         self.MPIPrint('Maximum number of FSI iterations : {}'.format(FSI_config['NB_FSI_ITER']))
 
@@ -238,7 +242,7 @@ class Interface:
                 self.nLocalFluidInterfaceNodes = FluidSolver.GetNumberVertices(self.fluidInterfaceIdentifier)
             if self.nLocalFluidInterfaceNodes != 0:
               self.haveFluidInterface = True
-              print('Number of interface fluid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalFluidInterfaceNodes))
+              print('Number of interface fluid nodes (halo nodes included) on process {} : {}'.format(myid,self.nLocalFluidInterfaceNodes))
         else:
             pass
 
@@ -249,7 +253,7 @@ class Interface:
             self.nLocalSolidInterfaceNodes = SolidSolver.getNumberOfSolidInterfaceNodes(self.solidInterfaceIdentifier)
             if self.nLocalSolidInterfaceNodes != 0:
               self.haveSolidInterface = True
-              print('Number of interface solid nodes (halo nodes included) on proccess {} : {}'.format(myid,self.nLocalSolidInterfaceNodes))
+              print('Number of interface solid nodes (halo nodes included) on process {} : {}'.format(myid,self.nLocalSolidInterfaceNodes))
         else:
             pass
 
@@ -542,7 +546,7 @@ class Interface:
         self.solidInterfaceResidualnM1_array_Y.set(0.0)
         self.solidInterfaceResidualnM1_array_Z.set(0.0)
 
-    def interfaceMapping(self,FluidSolver, SolidSolver, FSI_config):
+    def interfaceMapping(self, FluidSolver, SolidSolver, FSI_config):
         """
         Creates the one-to-one mapping between interfaces in case of matching meshes.
         Creates the interpolation rules between interfaces in case of non-matching meshes.
@@ -615,31 +619,19 @@ class Interface:
             self.MappingMatrixB = PETSc.Mat().create(self.comm)
             self.MappingMatrixA_T = PETSc.Mat().create(self.comm)
             self.MappingMatrixB_T = PETSc.Mat().create(self.comm)
-            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' :
-              self.MappingMatrixA.setType('mpiaij')
-              self.MappingMatrixB.setType('mpiaij')
-              self.MappingMatrixA_T.setType('mpiaij')
-              self.MappingMatrixB_T.setType('mpiaij')
-            else:
-              self.MappingMatrixA.setType('mpiaij')
-              self.MappingMatrixB.setType('mpiaij')
-              self.MappingMatrixA_T.setType('mpiaij')
-              self.MappingMatrixB_T.setType('mpiaij')
+            self.MappingMatrixA.setType('mpiaij')
+            self.MappingMatrixB.setType('mpiaij')
+            self.MappingMatrixA_T.setType('mpiaij')
+            self.MappingMatrixB_T.setType('mpiaij')
           else:
             self.MappingMatrixA = PETSc.Mat().create()
             self.MappingMatrixB = PETSc.Mat().create()
             self.MappingMatrixA_T = PETSc.Mat().create()
             self.MappingMatrixB_T = PETSc.Mat().create()
-            if FSI_config['MESH_INTERP_METHOD'] == 'RBF' :
-              self.MappingMatrixA.setType('aij')
-              self.MappingMatrixB.setType('aij')
-              self.MappingMatrixA_T.setType('aij')
-              self.MappingMatrixB_T.setType('aij')
-            else:
-              self.MappingMatrixA.setType('aij')
-              self.MappingMatrixB.setType('aij')
-              self.MappingMatrixA_T.setType('aij')
-              self.MappingMatrixB_T.setType('aij')
+            self.MappingMatrixA.setType('aij')
+            self.MappingMatrixB.setType('aij')
+            self.MappingMatrixA_T.setType('aij')
+            self.MappingMatrixB_T.setType('aij')
           self.MappingMatrixA.setSizes((self.nSolidInterfacePhysicalNodes+self.d_RBF, self.nSolidInterfacePhysicalNodes+self.d_RBF))
           self.MappingMatrixA.setUp()
           self.MappingMatrixA.setOption(PETSc.Mat().Option.NEW_NONZERO_ALLOCATION_ERR, False)
@@ -775,10 +767,11 @@ class Interface:
         del self.localFluidInterface_array_Y_init
         del self.localFluidInterface_array_Z_init
 
-    def matchingMeshMapping(self,solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
+    def matchingMeshMapping(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
         Fill the mapping matrix in case of matching meshes at the f/s interface.
         """
+        from rtree import index
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -830,7 +823,7 @@ class Interface:
         For each node, the mesh is scanned to find the closed node to the first
         one.
         """
-
+        from rtree import index
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -873,7 +866,7 @@ class Interface:
         obtain, from the structural displacements, the loadings of the kernel
         functions.
         """
-
+        from rtree import index
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -890,7 +883,7 @@ class Interface:
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-          if self.nDim == 2 :
+          if self.nDim == 2:
             SolidSpatialTree.add(jVertex, (posX, posY))
           else :
             SolidSpatialTree.add(jVertex, (posX, posY, posZ))
@@ -912,23 +905,33 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixA.setValue(iGlobalVertexSolid, jGlobalVertexSolid, phi)
             self.MappingMatrixA_T.setValue(jGlobalVertexSolid, iGlobalVertexSolid, phi)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes, 1.0)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+1, posX)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+2, posY)
-          if self.nDim == 3:
-            self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
-          self.MappingMatrixA_T.setValue(nSolidNodes, iGlobalVertexSolid, 1.0)
-          self.MappingMatrixA_T.setValue(nSolidNodes+1, iGlobalVertexSolid, posX)
-          self.MappingMatrixA_T.setValue(nSolidNodes+2, iGlobalVertexSolid, posY)
-          if self.nDim == 3:
-            self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
+          if not self.approximateRBF:
+            self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+            self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes+1, posX)
+            self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes+2, posY)
+            self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+            self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexSolid, posX)
+            self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexSolid, posY)
+            if self.nDim == 3:
+              self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes+3, posZ)
+              self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexSolid, posZ)
+            self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+            self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexSolid, posX)
+            self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexSolid, posY)
+            self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+            self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 1, posX)
+            self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 2, posY)
+            if self.nDim == 3:
+              self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexSolid, posZ)
+              self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 3, posZ)
+
 
     def RBFMeshMapping_B(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc, rad):
         """
         Second part of the RBF mapping. This method provides the matrix required to
         obtain, from the kernel function loadings, the fluid nodes displacements.
         """
-
+        from rtree import index
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -967,16 +970,17 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixB.setValue(iGlobalVertexFluid, jGlobalVertexSolid, phi)
             self.MappingMatrixB_T.setValue(jGlobalVertexSolid, iGlobalVertexFluid, phi)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes, 1.0)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+1, posX)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+2, posY)
-          if self.nDim == 3:
-            self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
-          self.MappingMatrixB_T.setValue(nSolidNodes, iGlobalVertexFluid, 1.0)
-          self.MappingMatrixB_T.setValue(nSolidNodes+1, iGlobalVertexFluid, posX)
-          self.MappingMatrixB_T.setValue(nSolidNodes+2, iGlobalVertexFluid, posY)
-          if self.nDim == 3:
-            self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
+          if not self.approximateRBF:
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes, 1.0)
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+1, posX)
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+2, posY)
+            if self.nDim == 3:
+              self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+3, posZ)
+            self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexFluid, 1.0)
+            self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexFluid, posX)
+            self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexFluid, posY)
+            if self.nDim == 3:
+              self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexFluid, posZ)
 
     def TPSMeshMapping_A(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -1005,16 +1009,24 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixA.setValue(iGlobalVertexSolid, jGlobalVertexSolid, phi)
             self.MappingMatrixA_T.setValue(jGlobalVertexSolid, iGlobalVertexSolid, phi)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes, 1.0)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+1, posX)
-          self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+2, posY)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 1, posX)
+          self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 2, posY)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes + 1, iGlobalVertexSolid, posX)
+          self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes + 2, iGlobalVertexSolid, posY)
           if self.nDim == 3:
-            self.MappingMatrixA.setValue(iGlobalVertexSolid, nSolidNodes+3, posZ)
-          self.MappingMatrixA_T.setValue(nSolidNodes, iGlobalVertexSolid, 1.0)
-          self.MappingMatrixA_T.setValue(nSolidNodes+1, iGlobalVertexSolid, posX)
-          self.MappingMatrixA_T.setValue(nSolidNodes+2, iGlobalVertexSolid, posY)
+              self.MappingMatrixA.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 3, posZ)
+              self.MappingMatrixA.setValue(self.nSolidInterfacePhysicalNodes + 3, iGlobalVertexSolid, posZ)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexSolid, 1.0)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes + 1, iGlobalVertexSolid, posX)
+          self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes + 2, iGlobalVertexSolid, posY)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 1, posX)
+          self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 2, posY)
           if self.nDim == 3:
-            self.MappingMatrixA_T.setValue(nSolidNodes+3, iGlobalVertexSolid, posZ)
+              self.MappingMatrixA_T.setValue(self.nSolidInterfacePhysicalNodes + 3, iGlobalVertexSolid, posZ)
+              self.MappingMatrixA_T.setValue(iGlobalVertexSolid, self.nSolidInterfacePhysicalNodes + 3, posZ)
 
     def TPSMeshMapping_B(self, solidInterfaceBuffRcv_X, solidInterfaceBuffRcv_Y, solidInterfaceBuffRcv_Z, iProc):
         """
@@ -1042,16 +1054,16 @@ class Interface:
             jGlobalVertexSolid = self.__getGlobalIndex('solid', iProc, jVertexSolid)
             self.MappingMatrixB.setValue(iGlobalVertexFluid, jGlobalVertexSolid, phi)
             self.MappingMatrixB_T.setValue(jGlobalVertexSolid, iGlobalVertexFluid, phi)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes, 1.0)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+1, posX)
-          self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+2, posY)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes, 1.0)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+1, posX)
+          self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+2, posY)
           if self.nDim == 3:
-            self.MappingMatrixB.setValue(iGlobalVertexFluid, nSolidNodes+3, posZ)
-          self.MappingMatrixB_T.setValue(nSolidNodes, iGlobalVertexFluid, 1.0)
-          self.MappingMatrixB_T.setValue(nSolidNodes+1, iGlobalVertexFluid, posX)
-          self.MappingMatrixB_T.setValue(nSolidNodes+2, iGlobalVertexFluid, posY)
+            self.MappingMatrixB.setValue(iGlobalVertexFluid, self.nSolidInterfacePhysicalNodes+3, posZ)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes, iGlobalVertexFluid, 1.0)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+1, iGlobalVertexFluid, posX)
+          self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+2, iGlobalVertexFluid, posY)
           if self.nDim == 3:
-            self.MappingMatrixB_T.setValue(nSolidNodes+3, iGlobalVertexFluid, posZ)
+            self.MappingMatrixB_T.setValue(self.nSolidInterfacePhysicalNodes+3, iGlobalVertexFluid, posZ)
 
 
     def __CPC2(self, distance, rad):
@@ -1086,7 +1098,7 @@ class Interface:
 
     def interpolateSolidPositionOnFluidMesh(self, FSI_config):
         """
-        Applies the one-to-one mapping or the interpolaiton rules from solid to fluid mesh.
+        Applies the one-to-one mapping or the interpolation rules from solid to fluid mesh.
         """
         if self.have_MPI:
           myid = self.comm.Get_rank()
@@ -1260,7 +1272,7 @@ class Interface:
 
     def interpolateFluidLoadsOnSolidMesh(self, FSI_config):
         """
-        Applies the one-to-one mapping or the interpolaiton rules from fluid to solid mesh.
+        Applies the one-to-one mapping or the interpolation rules from fluid to solid mesh.
         """
         if self.have_MPI:
           myid = self.comm.Get_rank()
@@ -1563,7 +1575,6 @@ class Interface:
         """
         Computes the solid interface FSI displacement residual.
         """
-
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -1627,7 +1638,7 @@ class Interface:
 
         return math.sqrt(normInterfaceResidualSquare)
 
-    def relaxSolidPosition(self,FSI_config):
+    def relaxSolidPosition(self, FSI_config):
         """
         Apply solid displacement under-relaxation.
         """
@@ -1656,7 +1667,6 @@ class Interface:
         """
         Computes the Aitken coefficients for solid displacement under-relaxation.
         """
-
         deltaResNormSquare = 0.0
         prodScalRes = 0.0
 
@@ -1721,7 +1731,6 @@ class Interface:
         """
         Calculates a prediciton for the solid interface position for the next time step.
         """
-
         if self.have_MPI:
           myid = self.comm.Get_rank()
         else:
@@ -1877,7 +1886,7 @@ class Interface:
         return globalIndex
 
 
-    def UnsteadyFSI(self,FSI_config, FluidSolver, SolidSolver):
+    def UnsteadyFSI(self, FSI_config, FluidSolver, SolidSolver):
           """
           Run the unsteady FSI computation by synchronizing the fluid and solid solvers.
           F/s interface data are exchanged through interface mapping and interpolation (if non mathcing meshes).
@@ -1899,7 +1908,7 @@ class Interface:
           self.MPIPrint('The FSI coupling will start after {} iterations'.format(TimeIterTreshold))
 
           if FSI_config['RESTART_SOL'] == 'YES':
-            NbTimeIter = ((totTime)/deltaT)-1
+            NbTimeIter = (totTime/deltaT)-1
             time = (FSI_config['RESTART_ITER'])*deltaT
             TimeIter = FSI_config['RESTART_ITER']
           else:
@@ -1910,7 +1919,6 @@ class Interface:
           NbTimeIter = int(NbTimeIter)			# be sure that NbTimeIter is an integer
 
           varCoordNorm = 0.0				# FSI residual
-          FSIConv = False				# FSI convergence flag
 
           self.MPIPrint('\n**********************************')
           self.MPIPrint('* Begin unsteady FSI computation *')
@@ -1996,7 +2004,7 @@ class Interface:
                             FSIConv = True
                             break
 
-                          # --- Relaxe the solid position --- #
+                          # --- Relax the solid position --- #
                           self.MPIPrint('\nProcessing interface displacements...\n')
                           self.relaxSolidPosition(FSI_config)
 
@@ -2018,8 +2026,8 @@ class Interface:
 
                 if TimeIter >= TimeIterTreshold:
                   if myid in self.solidSolverProcessors:
-                    # --- Output the solid solution before thr next time step --- #
-                    SolidSolver.writeSolution(time, TimeIter, self.FSIIter)
+                    # --- Output the solid solution before the next time step --- #
+                    SolidSolver.writeSolution(time, TimeIter, self.FSIIter+1)
 
                 if TimeIter > TimeIterTreshold:
                   # --- Displacement predictor for the next time step and update of the solid solution --- #
@@ -2038,7 +2046,137 @@ class Interface:
           self.MPIPrint('*  End FSI computation  *')
           self.MPIPrint('*************************\n')
 
-    def SteadyFSI(self, FSI_config,FluidSolver, SolidSolver):
+    def QuasiSteadyFSI(self, FSI_config, FluidSolver, SolidSolver):
+         """
+         Runs the quasi-steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
+         """
+
+         if self.have_MPI:
+           myid = self.comm.Get_rank()
+           numberPart = self.comm.Get_size()
+         else:
+           myid = 0
+           numberPart = 1
+
+         # --- Set some general variables for the steady computation --- #
+         deltaT = FSI_config['UNST_TIMESTEP']  # fictitious time step
+         totTime = FSI_config['UNST_TIME']  # fictitious simulation time
+         NbFSIIterMax = FSI_config['NB_FSI_ITER']	# maximum number of FSI iteration (for each time step)
+         FSITolerance = FSI_config['FSI_TOLERANCE']	# f/s interface tolerance
+         varCoordNorm = 0.0
+         NbTimeIter = int(totTime / deltaT) - 1  # number of time iterations
+
+         if FSI_config['RESTART_SOL'] == 'YES':
+           time = (FSI_config['RESTART_ITER'])*deltaT
+           TimeIter = FSI_config['RESTART_ITER']
+         else:
+           time = 0.0				# initial time
+           TimeIter = 0				# initial time iteration
+
+         self.MPIPrint('\n**************************************')
+         self.MPIPrint('* Begin quasi-steady FSI computation *')
+         self.MPIPrint('**************************************\n')
+         self.MPIPrint("\n")
+         self.MPIPrint(" Enter Block Gauss Seidel (BGS) method for strong coupling FSI ".center(80,"*"))
+
+         self.MPIPrint('Setting initial deformed mesh')
+         if myid in self.solidSolverProcessors:
+             SolidSolver.setInitialDisplacements()
+         self.getSolidInterfaceDisplacement(SolidSolver)
+         self.MPIPrint('\nFSI initial conditions are set')
+         self.MPIPrint('Beginning fictitious time integration\n')
+
+         # --- Fictitious time loop --- #
+         while TimeIter <= NbTimeIter:
+
+             FSIConv = False
+
+             # --- Internal FSI loop --- #
+             self.FSIIter = 0
+             while self.FSIIter < (NbFSIIterMax-1):
+
+                 self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter, self.FSIIter))
+                 self.MPIPrint('\nLaunching fluid solver for a quasi-steady computation...')
+                 # --- Mesh morphing step (displacement interpolation, displacements communication, and mesh morpher call) --- #
+                 self.interpolateSolidPositionOnFluidMesh(FSI_config)
+                 self.setFluidInterfaceVarCoord(FluidSolver)
+                 # --- Fluid solver call for FSI subiteration ---#
+                 if myid in self.fluidSolverProcessors:
+                     FluidSolver.ResetConvergence() #This is setting to zero the convergence in the integrator, important to reset it.
+                     # The mesh will be deformed in the context of the preprocessor, there is no need to set the initial
+                     # mesh pushing back the solution to avoid spurious velocities, as the velocity is not computed at all
+                     self.MPIPrint('\nPerforming static mesh deformation...\n')
+                     FluidSolver.Preprocess(0)# This will attempt to always set the initial condition, but there is a flag on the unsteady computation that will avoid it
+                     FluidSolver.Run()
+                     self.MPIBarrier()
+                     FluidSolver.Postprocess()
+                     self.MPIBarrier()
+
+                 # --- Surface fluid loads interpolation and communication ---#
+                 if not self.ImposedMotion:
+                     self.MPIPrint('\nProcessing interface fluid loads...\n')
+                     self.MPIBarrier()
+                     self.getFluidInterfaceNodalForce(FSI_config, FluidSolver)
+                     self.MPIBarrier()
+                     self.interpolateFluidLoadsOnSolidMesh(FSI_config)
+                     self.setSolidInterfaceLoads(SolidSolver, FSI_config)
+
+                 # --- Solid solver call for FSI subiteration --- #
+                 self.MPIPrint('\nLaunching solid solver for a static computation...\n')
+                 if myid in self.solidSolverProcessors:
+                     SolidSolver.run(time)
+
+                 # --- Compute and monitor the FSI residual --- #
+                 varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
+                 self.MPIPrint('\nFSI displacement norm : {}\n'.format(varCoordNorm))
+                 # --- Relax the solid displacement and update the solid solution --- #
+                 self.MPIPrint('\nProcessing interface displacements...\n')
+                 self.relaxSolidPosition(FSI_config)
+                 if myid in self.solidSolverProcessors:
+                     SolidSolver.updateSolution()
+
+                 if myid in self.fluidSolverProcessors:
+                     FluidSolver.Monitor(0)
+                     FluidSolver.Output(TimeIter)
+
+                 if varCoordNorm < FSITolerance:
+                     FSIConv = True
+                     break
+
+                 self.FSIIter += 1
+
+             # -- End of FSI loop --- #
+             self.MPIBarrier()
+
+             self.MPIPrint('\nBGS is converged (strong coupling)')
+             self.writeFSIHistory(TimeIter, time, varCoordNorm, FSIConv)
+
+             if myid in self.solidSolverProcessors:
+                 SolidSolver.writeSolution(time, TimeIter, self.FSIIter+1)
+
+             if myid == self.rootProcess:
+                 output_names = ['surface_flow', 'flow']
+                 extensions = ['vtu', 'csv', 'dat', 'vtk']
+                 for name in output_names:
+                   for ext in extensions:
+                     filename = '{}.{}'.format(name, ext)
+                     if os.path.exists(filename):
+                       filename_new = '{}_{}.{}'.format(name, TimeIter, ext)
+                       os.rename(filename, filename_new)
+
+             TimeIter += 1
+             time += deltaT
+
+         # --- End of temporal loop --- #
+
+         self.MPIBarrier()
+         self.MPIPrint(' ')
+         self.MPIPrint('*************************')
+         self.MPIPrint('*  End FSI computation  *')
+         self.MPIPrint('*************************')
+         self.MPIPrint(' ')
+
+    def SteadyFSI(self, FSI_config, FluidSolver, SolidSolver):
           """
           Runs the steady FSI computation by synchronizing the fluid and solid solver with data exchange at the f/s interface.
           """
@@ -2083,6 +2221,7 @@ class Interface:
               self.MPIPrint('\nPerforming static mesh deformation...\n')
               FluidSolver.Preprocess(0)# This will attempt to always set the initial condition, but there is a flag on the unsteady computation that will avoid it
               FluidSolver.Run()
+              self.MPIBarrier()
               FluidSolver.Postprocess()
               FluidSolver.Monitor(0) #This is actually not needed, it only saves the fact that the fluid solver converged innerly or reached max iterations
               FluidSolver.Output(0)
@@ -2099,7 +2238,7 @@ class Interface:
               self.MPIPrint('\nLaunching solid solver for a static computation...\n')
               if myid in self.solidSolverProcessors:
                 SolidSolver.run(0.0)
-                SolidSolver.writeSolution(0.0, 0, self.FSIIter)
+                SolidSolver.writeSolution(0.0, 0, self.FSIIter+1)
 
             # --- Compute and monitor the FSI residual --- #
             varCoordNorm = self.computeSolidInterfaceResidual(SolidSolver)
@@ -2108,7 +2247,7 @@ class Interface:
             if varCoordNorm < FSITolerance:
               break
 
-            # --- Relaxe the solid displacement and update the solid solution --- #
+            # --- Relax the solid displacement and update the solid solution --- #
             self.MPIPrint('\nProcessing interface displacements...\n')
             self.relaxSolidPosition(FSI_config)
             if myid in self.solidSolverProcessors:
@@ -2163,6 +2302,10 @@ class Interface:
           for key, value in normalsToPrint.items():
             writer.writerow([key, value])
 
+      self.MPIPrint('\n********************************')
+      self.MPIPrint('*        Normals obtained       *')
+      self.MPIPrint('********************************\n')
+      self.MPIPrint("\n")
 
       SurfaceFileName = FluidSolver.GetSurfaceFileName()
 
@@ -2178,10 +2321,10 @@ class Interface:
 
       self.comm.Bcast(modesNumber, root=self.rootProcess)
 
-      for mode in range(np.asscalar(modesNumber)+1):
+      for mode in range(modesNumber.item(0)+1):
         self.MPIPrint("Setting mode {} active".format(mode))
         if myid in self.solidSolverProcessors:
-          if mode == np.asscalar(modesNumber):
+          if mode == modesNumber.item(0):
             SolidSolver.activateMode("Undeformed")
           else:
             SolidSolver.activateMode(mode)
@@ -2201,7 +2344,7 @@ class Interface:
             if SurfaceFileName in FileName:
               file = FileName.split(".")[0]
               extension = FileName.split(".")[1]
-              if mode == np.asscalar(modesNumber):
+              if mode == modesNumber.item(0):
                 os.rename(file+"."+extension,"Undeformed."+extension)
               else:
                 os.rename(file+"."+extension,"Mode{}.".format(mode)+extension)
