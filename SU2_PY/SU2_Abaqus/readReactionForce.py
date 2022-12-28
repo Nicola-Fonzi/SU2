@@ -29,7 +29,7 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readReactionForce(partName,setName,iStepForce,iStepFSI):
+def readReactionForce(flexPartName,setName,iStepForce,iStepFSI):
 
     odbFile = 'Job-{}-{}.odb'.format(iStepForce,iStepFSI)
     odb = openOdb(path=odbFile)
@@ -45,7 +45,7 @@ def readReactionForce(partName,setName,iStepForce,iStepFSI):
         reaction_force = reaction_force.getTransformedField(datumCsys=localCsys)
         break
 
-    region = odb.rootAssembly.instances[partName+'-1'].nodeSets[setName]
+    region = odb.rootAssembly.instances[flexPartName+'-1'].nodeSets[setName]
     rf = reaction_force.getSubset(region=region).values
     
     RF1_tot = 0
@@ -57,8 +57,8 @@ def readReactionForce(partName,setName,iStepForce,iStepFSI):
 
 
 if __name__ == "__main__":
-    partName = sys.argv[-4]
+    flexPartName = sys.argv[-4]
     setName = sys.argv[-3]
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    readReactionForce(partName,setName,iStepForce,iStepFSI)
+    readReactionForce(flexPartName,setName,iStepForce,iStepFSI)

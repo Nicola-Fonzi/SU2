@@ -63,8 +63,10 @@ class Solver:
     self.Data_file = self.Config['DATA_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
     self.Set_name = self.Config['SET_NAME']
-    self.Part_name = self.Config['PART_NAME']
+    self.FlexPart_name = self.Config['FLEXIBLE_PART_NAME']
+    self.RigidPart_name = self.Config['RIGID_PART_NAME']
     self.Monitor_setname = self.Config['MONITOR_SET']
+    self.Device = self.Config['DEVICE']
 
     self.Marker_dim = self.Config['MARKER_DIM']
 
@@ -89,8 +91,9 @@ class Solver:
 
     if self.Config["RESTART_SOL"] == "YES":
       self.iStepForce = self.Config['RESTART_ITER'] - 1
-      with open('RF1.txt', 'r') as f:
-        self.ActLoad0 = float(f.read())
+      if self.Device == 'TE':
+        with open('RF1.txt', 'r') as f:
+          self.ActLoad0 = float(f.read())
       self.saveCaeFlag = False
     else:
       # Prepare the output file
@@ -145,9 +148,11 @@ class Solver:
              (this_param == "GENERATOR_FILE") or \
              (this_param == "DATA_FILE") or \
              (this_param == "MOVING_MARKER") or \
-             (this_param == "PART_NAME") or \
+             (this_param == "FLEXIBLE_PART_NAME") or \
+             (this_param == "RIGID_PART_NAME") or \
              (this_param == "SET_NAME") or \
              (this_param == "MONITOR_SET") or \
+             (this_param == "DEVICE") or \
              (this_param == "RESTART_SOL"):
           self.Config[this_param] = this_value
 
@@ -181,7 +186,7 @@ class Solver:
 
 
       self.Model_name = self.Inp_file.split('.')[0]
-      self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.Part_name, self.Monitor_setname, self.FSI_marker, self.saveCaeFlag)
+      self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.FlexPart_name, self.RigidPart_name, self.Monitor_setname, self.FSI_marker, self.saveCaeFlag)
 
       self.node = pickle.load(open('node.p', 'rb'), encoding="latin1")
       self.nPoint = len(self.node)
@@ -217,7 +222,7 @@ class Solver:
     This method extracts from the ODB the nodal positions and velocities at the interface.
     """
 
-    self.__runAbaqusScript('readPosVel', self.Part_name, self.iStepForce, self.iStepFSI)
+    self.__runAbaqusScript('readPosVel', self.FlexPart_name, self.RigidPart_name, self.iStepForce, self.iStepFSI)
     self.node = pickle.load(open('node.p', 'rb'), encoding="latin1")
 
   def __temporalIteration(self, time):
@@ -226,8 +231,8 @@ class Solver:
     """
 
     if time > self.lastTime:
-      if self.iStepForce == 0:
-        self.__runAbaqusScript('readReactionForce', self.Part_name, self.Set_name, self.iStepForce, self.iStepFSI)
+      if self.Device == 'TE' and self.iStepForce == 0:
+        self.__runAbaqusScript('readReactionForce', self.FlexPart_name, self.Set_name, self.iStepForce, self.iStepFSI)
         with open('RF1.txt', 'r') as f:
           self.ActLoad0 = float(f.read())
       self.iStepForce += 1
@@ -253,7 +258,7 @@ class Solver:
     for iPoint in nodeList:
       dict_force[iPoint] = self.node[iPoint].GetForce().tolist()
     json.dump(dict_force, open('Force.txt', 'w'))
-    self.__runAbaqusScript('setLoads', self.Model_name, self.Part_name, self.Set_name, self.Span, self.Marker_dim, time,
+    self.__runAbaqusScript('setLoads', self.Model_name, self.Device, self.FlexPart_name, self.RigidPart_name, self.Set_name, self.Span, self.Marker_dim, time,
                            self.ActLoad0, self.ActLoad, self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ,
                            self.iStepForce, self.iStepFSI)
 

@@ -29,66 +29,94 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker,saveCaeFlag):
+def readNodes(modelName,inputFileName,flexPartName,rigidPartName,monitorSet,FSI_marker,saveCaeFlag):
     
     
     mdb.ModelFromInputFile(name=modelName, inputFileName=inputFileName)
     myModel = mdb.models[modelName]
-    myPart = myModel.parts[partName]
+    myFlexPart = myModel.parts[flexPartName]
+    if rigidPartName != 'none':
+      myRigidPart = myModel.parts[rigidPartName]
+    else:
+      myRigidPart = None
     myAssembly = myModel.rootAssembly
 
-    if FSI_marker in myPart.sets.keys():
-      nodes = myPart.sets[FSI_marker].nodes
-      myFeature = myPart
-    elif FSI_marker in myAssembly.sets.keys():
-      nodes = myAssembly.sets[FSI_marker].nodes
-      myFeature = myAssembly
-    else:
-      raise Exception("Set {} was not found in the part nor in the assembly".format(FSI_marker))
-    
-    dict_index = {}
-    for i in range(len(nodes)):
-      label = nodes[i].label
-      dict_index[label] = i
-    
     node = []
     nPoint = int()
+    ID_monitor = None
+
+    features = []
+    if myRigidPart is None:
+      if not (FSI_marker in myFlexPart.sets.keys() or FSI_marker in myAssembly.sets.keys()):
+        raise Exception("Set {} was not found in the part nor in the assembly".format(FSI_marker))
+      elif FSI_marker in myFlexPart.sets.keys():
+        features = myFlexPart
+      else:
+        features = myAssembly
+    else:
+      if not (FSI_marker in myFlexPart.sets.keys() or FSI_marker in myRigidPart.sets.keys()):
+        raise Exception("Set {} was not found in the parts".format(FSI_marker))
+      if FSI_marker in myFlexPart.sets.keys():
+        features.append(myFlexPart)
+      if FSI_marker in myRigidPart.sets.keys():
+        features.append(myRigidPart)
+
+
+    for myFeature in features:
+      if myFeature.name == rigidPartName:
+        offset = 100000
+      else:
+        offset = 0
+      nodes = myFeature.sets[FSI_marker].nodes
     
-    for label in dict_index:
-      index = dict_index[label]
-      myFeature.Set(name='NODE-'+str(label), nodes=nodes[index:index+1])
+      dict_index = {}
+      for i in range(len(nodes)):
+        label = nodes[i].label
+        dict_index[label] = i
 
-      if label == myFeature.sets[monitorSet].nodes[0].label:
-        ID_monitor = label
 
-      node.append(Point())
-      ID = label
-      x = nodes[index].coordinates[0]
-      y = nodes[index].coordinates[1]
-      z = nodes[index].coordinates[2]
-      node[nPoint].SetCoord((x,y,z))
-      node[nPoint].SetID(ID)
-      node[nPoint].SetCoord0((x,y,z))
-      node[nPoint].SetCoord_n((x,y,z))
-      nPoint += 1
+      for label in dict_index:
+        index = dict_index[label]
+        
+        myFeature.Set(name='NODE-'+str(offset+label), nodes=nodes[index:index+1])
+	  
+        if (myFeature.name == flexPartName) and (ID_monitor is None) and (label == myFeature.sets[monitorSet].nodes[0].label):
+          ID_monitor = label
+	  
+        node.append(Point())
+        ID = offset + label
+        x = nodes[index].coordinates[0]
+        y = nodes[index].coordinates[1]
+        z = nodes[index].coordinates[2]
+        node[nPoint].SetCoord((x,y,z))
+        node[nPoint].SetID(ID)
+        node[nPoint].SetCoord0((x,y,z))
+        node[nPoint].SetCoord_n((x,y,z))
+        nPoint += 1
+    
+    if ID_monitor is None:
+      raise Exception("MONITOR_SET {} was not found".format(monitorSet))
     
     markers = {}
     nMarker = int()
     
-    for markerTag in myFeature.sets.keys():
-      if FSI_marker == markerTag:	# TODO meglio (per evitare di controllare tutti i set)
-        markers[markerTag] = []
-        for item_node in myFeature.sets[markerTag].nodes:
-          ID = item_node.label
-          for iPoint in range(nPoint):
-            if node[iPoint].GetID() == ID:
-              break
-          if (iPoint == (nPoint-1)) and (node[iPoint].GetID() != ID):
-            raise Exception("Point {} in the set {} was not found in the mesh".format(ID, markerTag))
-          markers[markerTag].append(iPoint)
-          if ID == ID_monitor:
-            iVertex_monitor = len(markers[markerTag])-1
-        nMarker += 1
+    markerTag = FSI_marker
+    markers[markerTag] = []
+    for myFeature in features:
+      if myFeature.name == rigidPartName:
+        offset = 100000
+      else:
+        offset = 0
+      for item_node in myFeature.sets[markerTag].nodes:
+        ID = offset + item_node.label
+        for iPoint in range(nPoint):
+          if node[iPoint].GetID() == ID:
+            break
+        if (iPoint == (nPoint-1)) and (node[iPoint].GetID() != ID):
+          raise Exception("Point {} in the set {} was not found in the mesh".format(ID, markerTag))
+        markers[markerTag].append(iPoint)
+        if ID == ID_monitor:
+          iVertex_monitor = len(markers[markerTag])-1
 
     pickle.dump(node, open('node.p', 'wb'))
     pickle.dump(markers, open('markers.p', 'wb'))
@@ -105,13 +133,14 @@ def readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker,saveCaeFlag
 
 
 if __name__ == "__main__":
-    modelName = sys.argv[-6]
-    inputFileName = sys.argv[-5]
-    partName = sys.argv[-4]
+    modelName = sys.argv[-7]
+    inputFileName = sys.argv[-6]
+    flexPartName = sys.argv[-5]
+    rigidPartName = sys.argv[-4]
     monitorSet = sys.argv[-3]
     FSI_marker = sys.argv[-2]
     if sys.argv[-1] == 'True':
       saveCaeFlag = True
     else:
       saveCaeFlag = False
-    readNodes(modelName,inputFileName,partName,monitorSet,FSI_marker,saveCaeFlag)
+    readNodes(modelName,inputFileName,flexPartName,rigidPartName,monitorSet,FSI_marker,saveCaeFlag)
