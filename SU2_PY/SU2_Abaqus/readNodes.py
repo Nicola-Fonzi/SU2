@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2023, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -45,14 +45,14 @@ def readNodes(modelName,inputFileName,flexPartName,rigidPartName,monitorSet,FSI_
     nPoint = int()
     ID_monitor = None
 
-    features = []
+    features = list()
     if myRigidPart is None:
       if not (FSI_marker in myFlexPart.sets.keys() or FSI_marker in myAssembly.sets.keys()):
         raise Exception("Set {} was not found in the part nor in the assembly".format(FSI_marker))
       elif FSI_marker in myFlexPart.sets.keys():
-        features = myFlexPart
+        features.append(myFlexPart)
       else:
-        features = myAssembly
+        features.append(myAssembly)
     else:
       if not (FSI_marker in myFlexPart.sets.keys() or FSI_marker in myRigidPart.sets.keys()):
         raise Exception("Set {} was not found in the parts".format(FSI_marker))
@@ -80,7 +80,7 @@ def readNodes(modelName,inputFileName,flexPartName,rigidPartName,monitorSet,FSI_
         
         myFeature.Set(name='NODE-'+str(offset+label), nodes=nodes[index:index+1])
 	  
-        if (myFeature.name == flexPartName) and (ID_monitor is None) and (label == myFeature.sets[monitorSet].nodes[0].label):
+        if (myFeature.name != rigidPartName) and (ID_monitor is None) and (label == myFeature.sets[monitorSet].nodes[0].label):
           ID_monitor = label
 	  
         node.append(Point())

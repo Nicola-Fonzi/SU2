@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2023, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
 from SU2_Abaqus.abaqus_modules import *
 from FSI_tools.FSI_utils import Point
 
-def createStep(modelName,iStepForce,iStepFSI):
+def createStep(modelName,iStepForce,iStepFSI,initialInc):
 
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
@@ -38,15 +38,13 @@ def createStep(modelName,iStepForce,iStepFSI):
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
     if iStepForce == 0 and iStepFSI == 0:
       #type = ANALYSIS
-      myModel.StaticStep(name=stepName, previous='Initial', initialInc=0.1, nlgeom=ON)
+      myModel.StaticStep(name=stepName, previous='Initial', initialInc=initialInc, nlgeom=ON)
     else:
       #type = RESTART
       previous = myModel.steps.keys()[-1]
-      myModel.StaticStep(name=stepName, previous=previous, initialInc=0.1)
+      myModel.StaticStep(name=stepName, previous=previous, initialInc=initialInc)
       restartJob = 'Job-' + previous.split('-',1)[-1]
       myModel.setValues(restartJob=restartJob, restartStep=previous)
-      #myModel.steps[stepName].Restart(frequency=999, numberIntervals=0, 
-      #    overlay=ON, timeMarks=OFF)
     myModel.steps[stepName].Restart(frequency=0, numberIntervals=1, 
         overlay=ON, timeMarks=OFF)
 	
@@ -55,7 +53,8 @@ def createStep(modelName,iStepForce,iStepFSI):
 
 
 if __name__ == "__main__":
-    modelName = sys.argv[-3]
-    iStepForce = int(sys.argv[-2])
-    iStepFSI = int(sys.argv[-1])
-    createStep(modelName,iStepForce,iStepFSI)
+    modelName = sys.argv[-4]
+    iStepForce = int(sys.argv[-3])
+    iStepFSI = int(sys.argv[-2])
+    initialInc = float(sys.argv[-1])
+    createStep(modelName,iStepForce,iStepFSI,initialInc)

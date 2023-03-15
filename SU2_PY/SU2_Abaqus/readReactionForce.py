@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2023, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readReactionForce(flexPartName,setName,iStepForce,iStepFSI):
+def readReactionForce(flexPartName,actSetName,iStepForce,iStepFSI):
 
     odbFile = 'Job-{}-{}.odb'.format(iStepForce,iStepFSI)
     odb = openOdb(path=odbFile)
@@ -45,20 +45,21 @@ def readReactionForce(flexPartName,setName,iStepForce,iStepFSI):
         reaction_force = reaction_force.getTransformedField(datumCsys=localCsys)
         break
 
-    region = odb.rootAssembly.instances[flexPartName+'-1'].nodeSets[setName]
+    region = odb.rootAssembly.instances[flexPartName+'-1'].nodeSets[actSetName]
     rf = reaction_force.getSubset(region=region).values
     
     RF1_tot = 0
     for f in rf:
       RF1_tot += f.data[0]
-    
-    with open('RF1.txt', 'w') as f:
+
+    fname = 'RF_{}.txt'.format(iStepForce)
+    with open(fname, 'w') as f:
       f.write(str(RF1_tot))
 
 
 if __name__ == "__main__":
     flexPartName = sys.argv[-4]
-    setName = sys.argv[-3]
+    actSetName = sys.argv[-3]
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    readReactionForce(flexPartName,setName,iStepForce,iStepFSI)
+    readReactionForce(flexPartName,actSetName,iStepForce,iStepFSI)

@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2023, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -59,10 +59,9 @@ class Solver:
     self.__readConfig()
 
     self.Inp_file = self.Config['INP_FILE']
-    self.Generator_file = self.Config['GENERATOR_FILE']
-    self.Data_file = self.Config['DATA_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
-    self.Set_name = self.Config['SET_NAME']
+    self.ActSet_name = self.Config['ACTUATION_SET_NAME']
+    self.Act_type = self.Config['ACTUATION_TYPE']
     self.FlexPart_name = self.Config['FLEXIBLE_PART_NAME']
     self.RigidPart_name = self.Config['RIGID_PART_NAME']
     self.Monitor_setname = self.Config['MONITOR_SET']
@@ -74,6 +73,7 @@ class Solver:
     self.ActLoad0 = 0.
     self.ActLoad = self.Config['ACT_LOAD']
     self.SliderAngle = self.Config['SLIDER_ANGLE']
+    self.Stroke = self.Config['STROKE']
     inputPoint = self.Config['INPUT_POINT']
     self.InputPointX = inputPoint[0]
     self.InputPointY = inputPoint[1]
@@ -85,6 +85,7 @@ class Solver:
     self.markers = {}
     self.monitorID = []
 
+    self.initialInc = self.Config['INITIAL_INC']
     self.iStepForce = 0
     self.iStepFSI = -1
     self.lastTime = 0.0
@@ -98,13 +99,17 @@ class Solver:
     else:
       # Prepare the output file
       histFile = open('StructHistory.dat', "w")
-      header = '{:<8s}{:<16s}{:<16s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Vertical Displacement')
+      if self.Act_type == 'FORCE':
+        load_column = 'Actuation Load'
+      elif self.Act_type == 'DISPLACEMENT':
+        load_column = 'Reaction Load'
+      header = '{:<8s}{:<16s}{:<16s}{:<24s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Vertical Displacement',load_column)
       histFile.write(header)
       histFile.close()
       self.saveCaeFlag = True
 
     print("\n")
-    print(" Opening/generating the model ".center(80, "-"))
+    print(" Opening the model ".center(80, "-"))
     self.__readAbaqusModel()
 
   def __readConfig(self):
@@ -129,35 +134,36 @@ class Solver:
         this_param = line[0].strip()
         this_value = line[1].strip()
 
-        #integer values
+        # integer values
         if (this_param == "MARKER_DIM") or \
            (this_param == "RESTART_ITER"):
           self.Config[this_param] = int(this_value)
 
 
-        #float values
-        elif (this_param == "SPAN") or \
+        # float values
+        elif (this_param == "INITIAL_INC") or \
+           (this_param == "SPAN") or \
            (this_param == "ACT_LOAD") or \
-             (this_param == "SLIDER_ANGLE"):
+           (this_param == "STROKE") or \
+           (this_param == "SLIDER_ANGLE"):
           self.Config[this_param] = float(this_value)
 
 
-        #string values
+        # string values
         elif (this_param == "TIME_MARCHING") or \
              (this_param == "INP_FILE") or \
-             (this_param == "GENERATOR_FILE") or \
-             (this_param == "DATA_FILE") or \
              (this_param == "MOVING_MARKER") or \
              (this_param == "FLEXIBLE_PART_NAME") or \
              (this_param == "RIGID_PART_NAME") or \
-             (this_param == "SET_NAME") or \
+             (this_param == "ACTUATION_SET_NAME") or \
+             (this_param == "ACTUATION_TYPE") or \
              (this_param == "MONITOR_SET") or \
              (this_param == "DEVICE") or \
              (this_param == "RESTART_SOL"):
           self.Config[this_param] = this_value
 
 
-        #lists values
+        # lists values
         elif (this_param == "INPUT_POINT"):
           self.Config[this_param] = eval(this_value)
 
@@ -165,10 +171,6 @@ class Solver:
         else:
           raise Exception('{} is an invalid option !'.format(this_param))
 
-
-  def __runGenerator(data_file):
-    raise Exception('TODO')
-    return inp_file
 
   def __readAbaqusModel(self):
       """
@@ -178,12 +180,6 @@ class Solver:
       self.nMarker = 0
       self.nPoint = 0
       self.nRefSys = 0
-
-      if self.Generator_file != 'none':
-        self.Inp_file = self.__runGenerator(self.Data_file)
-      elif self.Inp_file == 'none':
-        raise Exception('At least one between generator file and inp file must be provided')
-
 
       self.Model_name = self.Inp_file.split('.')[0]
       self.__runAbaqusScript('readNodes', self.Model_name, self.Inp_file, self.FlexPart_name, self.RigidPart_name, self.Monitor_setname, self.FSI_marker, self.saveCaeFlag)
@@ -232,19 +228,19 @@ class Solver:
 
     if time > self.lastTime:
       if self.Device == 'TE' and self.iStepForce == 0:
-        self.__runAbaqusScript('readReactionForce', self.FlexPart_name, self.Set_name, self.iStepForce, self.iStepFSI)
-        with open('RF1.txt', 'r') as f:
+        self.__runAbaqusScript('readReactionForce', self.FlexPart_name, self.ActSet_name, self.iStepForce, self.iStepFSI)
+        with open('RF_0.txt', 'r') as f:
           self.ActLoad0 = float(f.read())
       self.iStepForce += 1
       self.iStepFSI = 0
     else:
       self.iStepFSI += 1
 
-    self.__runAbaqusScript('createStep', self.Model_name, self.iStepForce, self.iStepFSI)
+    self.__runAbaqusScript('createStep', self.Model_name, self.iStepForce, self.iStepFSI, self.initialInc)
 
     self.__SetLoads(time)
 
-    self.__runAbaqusScript('runner', self.Model_name, self.iStepForce, self.iStepFSI)
+    self.__runAbaqusScript('runJob', self.Model_name, self.iStepForce, self.iStepFSI)
 
     self.lastTime = time
 
@@ -258,8 +254,8 @@ class Solver:
     for iPoint in nodeList:
       dict_force[iPoint] = self.node[iPoint].GetForce().tolist()
     json.dump(dict_force, open('Force.txt', 'w'))
-    self.__runAbaqusScript('setLoads', self.Model_name, self.Device, self.FlexPart_name, self.RigidPart_name, self.Set_name, self.Span, self.Marker_dim, time,
-                           self.ActLoad0, self.ActLoad, self.SliderAngle, self.InputPointX, self.InputPointY, self.InputPointZ,
+    self.__runAbaqusScript('setLoads', self.Model_name, self.Device, self.FlexPart_name, self.RigidPart_name, self.ActSet_name, self.Span, self.Marker_dim, time,
+                           self.Act_type, self.ActLoad0, self.ActLoad, self.SliderAngle, self.Stroke, self.InputPointX, self.InputPointY, self.InputPointZ,
                            self.iStepForce, self.iStepFSI)
 
 
@@ -284,7 +280,7 @@ class Solver:
     """
     This method provides public access to the method __computeInterfacePosVel and
     sets velocities for previous time steps. In this nonlinear problem it is not allowed
-    to use this initial deformation, so the function only pass.
+    to use this initial deformation, so the function only passes.
     """
 
     pass
@@ -294,10 +290,17 @@ class Solver:
     This method is the main function for output. It writes the file StructHistory.dat
     """
 
-    # Vertical Displacement History
+    # Vertical Displacement and Actuation/Reaction Load History
     histFile = open('StructHistory.dat', "a")
     xDisp, yDisp, zDisp = self.getInterfaceNodeDisp(self.getFSIMarkerID(), self.monitorID)
-    line = '{:<8g}{:<16g}{:<16g}{:<24g}\n'.format(time,timeIter,FSIIter,yDisp[0])
+    if self.iStepForce == 0 or self.Act_type == 'DISPLACEMENT':
+      self.__runAbaqusScript('readReactionForce', self.FlexPart_name, self.ActSet_name, self.iStepForce, self.iStepFSI)
+      fname = 'RF_{}.txt'.format(self.iStepForce)
+    elif self.Act_type == 'FORCE':
+      fname = 'AF_{}.txt'.format(self.iStepForce)
+    with open(fname, 'r') as f:
+      actuation = float(f.read())
+    line = '{:<8g}{:<16g}{:<16g}{:<24g}{:<24g}\n'.format(time,timeIter,FSIIter,yDisp[0],actuation)
     histFile.write(line)
     histFile.close()
 

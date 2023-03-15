@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2023, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
 from SU2_Abaqus.abaqus_modules import *
 
 
-def runner(modelName,iStepForce,iStepFSI):
+def runJob(modelName,iStepForce,iStepFSI):
     
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
@@ -68,4 +68,4 @@ if __name__ == "__main__":
 		iStepFSI = int(sys.argv[-1])
 	else:
 		raise Exception('iStepForce and iStepFSI must be provided')
-	runner(modelName,iStepForce,iStepFSI)
+	runJob(modelName,iStepForce,iStepFSI)

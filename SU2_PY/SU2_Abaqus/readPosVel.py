@@ -10,7 +10,7 @@
 # The SU2 Project is maintained by the SU2 Foundation
 # (http://su2foundation.org)
 #
-# Copyright 2012-2022, SU2 Contributors (cf. AUTHORS.md)
+# Copyright 2012-2023, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -52,10 +52,10 @@ def readPosVel(flexPartName,rigidPartName,iStepForce,iStepFSI):
       else:
         region = odb.rootAssembly.instances[rigidPartName+'-1'].nodeSets[name]
         
-      v = displacement.getSubset(region=region).values[0]
-      X_disp = v.data[0]
-      Y_disp = v.data[1]
-      Z_disp = v.data[2]
+      d = displacement.getSubset(region=region).values[0]
+      X_disp = d.data[0]
+      Y_disp = d.data[1]
+      Z_disp = d.data[2]
 	
       X_vel = 0		# Static analysis
       Y_vel = 0		# Static analysis
