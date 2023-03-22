@@ -240,7 +240,7 @@ class Solver:
 
     self.__SetLoads(time)
 
-    self.__runAbaqusScript('runJob', self.Model_name, self.iStepForce, self.iStepFSI)
+    self.__runAbaqusScript('runner', self.Model_name, self.iStepForce, self.iStepFSI)
 
     self.lastTime = time
 
