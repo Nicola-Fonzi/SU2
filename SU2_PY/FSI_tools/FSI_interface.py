@@ -794,7 +794,7 @@ class Interface:
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-          if self.nDim == 2 :
+          if self.nDim == 2:
             SolidSpatialTree.add(jVertex, (posX, posY))
           else :
             SolidSpatialTree.add(jVertex, (posX, posY, posZ))
@@ -846,7 +846,7 @@ class Interface:
           posX = solidInterfaceBuffRcv_X[jVertex]
           posY = solidInterfaceBuffRcv_Y[jVertex]
           posZ = solidInterfaceBuffRcv_Z[jVertex]
-          if self.nDim == 2 :
+          if self.nDim == 2:
             SolidSpatialTree.add(jVertex, (posX, posY))
           else :
             SolidSpatialTree.add(jVertex, (posX, posY, posZ))
@@ -1507,12 +1507,18 @@ class Interface:
             GlobalIndex = FluidSolver.GetNodeGlobalIndex(FluidSolver.GetMarkerNode(self.fluidInterfaceIdentifier, iVertex))
             if GlobalIndex in self.FluidHaloNodeList[myid].keys():
               DispX, DispY, DispZ = self.haloNodesDisplacements[GlobalIndex]
-              FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex), np.array([DispX, DispY, DispZ]))
+              if self.nDim == 2:
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex), np.array([DispX, DispY]))
+              else:
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex), np.array([DispX, DispY, DispZ]))
             else:
               DispX = self.localFluidInterface_array_DispX[localIndex]
               DispY = self.localFluidInterface_array_DispY[localIndex]
               DispZ = self.localFluidInterface_array_DispZ[localIndex]
-              FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex), np.array([DispX, DispY, DispZ]))
+              if self.nDim == 2:
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex),np.array([DispX, DispY]))
+              else:
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex),np.array([DispX, DispY, DispZ]))
               localIndex += 1
 
 
