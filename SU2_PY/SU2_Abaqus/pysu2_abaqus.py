@@ -306,7 +306,7 @@ class Solver:
 
     # Remove Abaqus files at current timeIter (except for the last FSIIter)
     extensions = ['inp','mdl','odb','prt','res','stt']
-    for iter in range(FSIIter-1):
+    for iter in range(FSIIter-2):
       for ext in extensions:
        filename = 'Job-{}-{}.{}'.format(timeIter, iter, ext)
        if os.path.exists(filename):
