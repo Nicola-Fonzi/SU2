@@ -236,8 +236,8 @@ class Interface:
             if not allMovingMarkersTags:
                 raise Exception('No interface for FSI was defined.')
             else:
-                if allMovingMarkersTags[0] in allMarkersID.keys():
-                    self.fluidInterfaceIdentifier = allMarkersID[allMovingMarkersTags[0]]
+                if allMovingMarkersTags[0] in allMarkersID:
+                    self.fluidInterfaceIdentifier = allMarkersID.index(allMovingMarkersTags[0])
             if self.fluidInterfaceIdentifier is not None:
                 self.nLocalFluidInterfaceNodes = FluidSolver.GetNumberMarkerNodes(self.fluidInterfaceIdentifier)
             if self.nLocalFluidInterfaceNodes != 0:
