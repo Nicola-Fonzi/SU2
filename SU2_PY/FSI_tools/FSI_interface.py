@@ -1460,7 +1460,7 @@ class Interface:
         self.solidInterface_array_DispZ.assemblyBegin()
         self.solidInterface_array_DispZ.assemblyEnd()
 
-    def getFluidInterfaceNodalForce(self, FSI_config, FluidSolver):
+    def getFluidInterfaceNodalForce(self, FSI_config, FluidSolver, deltaForces=False):
         """
         Gets the fluid interface loads from the fluid solver.
         """
@@ -1477,6 +1477,15 @@ class Interface:
             GlobalIndex = FluidSolver.GetNodeGlobalIndex(FluidSolver.GetMarkerNode(self.fluidInterfaceIdentifier, iVertex))
             if GlobalIndex not in self.FluidHaloNodeList[myid].keys():
               loadX, loadY, loadZ = FluidSolver.GetFlowLoad(self.fluidInterfaceIdentifier, iVertex)
+              if deltaForces:
+                  if self.nDim == 2:
+                      nx, ny = FluidSolver.GetMarkerVertexNormals(self.fluidInterfaceIdentifier, iVertex, False)
+                      nz = 0
+                  else:
+                      nx, ny, nz = FluidSolver.GetMarkerVertexNormals(self.fluidInterfaceIdentifier, iVertex, False)
+                  loadX -= nx*Pstatic
+                  loadY -= ny*Pstatic
+                  loadZ -= nz*Pstatic
               iGlobalVertex = self.__getGlobalIndex('fluid', myid, localIndex)
               self.fluidLoads_array_X.setValues([iGlobalVertex], loadX)
               self.fluidLoads_array_Y.setValues([iGlobalVertex], loadY)
