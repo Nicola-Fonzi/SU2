@@ -2117,7 +2117,7 @@ class Interface:
 
              # --- Internal FSI loop --- #
              self.FSIIter = 0
-             while self.FSIIter < (NbFSIIterMax-1):
+             while self.FSIIter <= (NbFSIIterMax-1):
 
                  self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter, self.FSIIter))
                  self.MPIPrint('\nLaunching fluid solver for a quasi-steady computation...')
