@@ -1472,9 +1472,6 @@ class Interface:
         GlobalIndex = int()
         localIndex = 0
 
-        deltaForces = True
-        Pstatic = 24977
-
         # --- Get the fluid interface loads from the fluid solver and directly fill the corresponding PETSc vector ---
         for iVertex in range(self.nLocalFluidInterfaceNodes):
             GlobalIndex = FluidSolver.GetNodeGlobalIndex(FluidSolver.GetMarkerNode(self.fluidInterfaceIdentifier, iVertex))
