@@ -103,7 +103,7 @@ class Solver:
         load_column = 'Actuation Load'
       elif self.Act_type == 'DISPLACEMENT':
         load_column = 'Reaction Load'
-      header = '{:<8s}{:<16s}{:<16s}{:<24s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Vertical Displacement',load_column)
+      header = '{:<8s}{:<16s}{:<16s}{:<24s}{:<24s}{:<24s}\n'.format('Time','Time Iteration','FSI Iteration','Horizontal Displacement','Vertical Displacement',load_column)
       histFile.write(header)
       histFile.close()
       self.saveCaeFlag = True
@@ -290,7 +290,7 @@ class Solver:
     This method is the main function for output. It writes the file StructHistory.dat
     """
 
-    # Vertical Displacement and Actuation/Reaction Load History
+    # Horizontal + Vertical Displacements and Actuation/Reaction Load History
     histFile = open('StructHistory.dat', "a")
     xDisp, yDisp, zDisp = self.getInterfaceNodeDisp(self.getFSIMarkerID(), self.monitorID)
     if self.iStepForce == 0 or self.Act_type == 'DISPLACEMENT':
@@ -300,7 +300,7 @@ class Solver:
       fname = 'AF_{}.txt'.format(self.iStepForce)
     with open(fname, 'r') as f:
       actuation = float(f.read())
-    line = '{:<8g}{:<16g}{:<16g}{:<24g}{:<24g}\n'.format(time,timeIter,FSIIter,yDisp[0],actuation)
+    line = '{:<8g}{:<16g}{:<16g}{:<24g}{:<24g}{:<24g}\n'.format(time,timeIter,FSIIter,xDisp[0],yDisp[0],actuation)
     histFile.write(line)
     histFile.close()
 
