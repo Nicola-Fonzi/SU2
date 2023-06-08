@@ -29,37 +29,47 @@ from SU2_Abaqus.abaqus_modules import *
 import pickle
 from FSI_tools.FSI_utils import Point
 
-def readReactionForce(flexPartName,actSetName,iStepForce,iStepFSI):
+def readReactionForce(device,flexPartName,actSetName,iStepForce,iStepFSI):
 
     odbFile = 'Job-{}-{}.odb'.format(iStepForce,iStepFSI)
     odb = openOdb(path=odbFile)
     stepName = 'Step-{}-{}'.format(iStepForce,iStepFSI)
     lastFrame = odb.steps[stepName].frames[-1]
-    reaction_force = lastFrame.fieldOutputs['RF']
+    if device == 'TE':
+      reaction_field = 'RF'
+    elif device == 'LE':
+      reaction_field = 'RM'
+    reaction = lastFrame.fieldOutputs[reaction_field]
 
     datumCsyses = odb.rootAssembly.datumCsyses
     keys = datumCsyses.keys()
     for key in keys:
-      if datumCsyses[key].xAxis[0] < 1.0:
+      if device == 'TE' and datumCsyses[key].xAxis[0] < 1.0:
         localCsys = datumCsyses[key]
-        reaction_force = reaction_force.getTransformedField(datumCsys=localCsys)
         break
+      elif device == 'LE' and 'SHAFT' in key.upper():
+        localCsys = datumCsyses[key]
+    reaction = reaction.getTransformedField(datumCsys=localCsys)
 
-    region = odb.rootAssembly.instances[flexPartName+'-1'].nodeSets[actSetName]
-    rf = reaction_force.getSubset(region=region).values
-    
-    RF1_tot = 0
-    for f in rf:
-      RF1_tot += f.data[0]
+    if device == 'TE':
+      region = odb.rootAssembly.instances[flexPartName+'-1'].nodeSets[actSetName]
+    elif device == 'LE':
+      region = odb.rootAssembly.nodeSets[actSetName]
+    r = reaction.getSubset(region=region).values
 
-    fname = 'RF_{}.txt'.format(iStepForce)
+    R1_tot = 0
+    for r_i in r:
+      R1_tot += r_i.data[0]
+
+    fname = '{}_{}.txt'.format(reaction_field,iStepForce)
     with open(fname, 'w') as f:
-      f.write(str(RF1_tot))
+      f.write(str(R1_tot))
 
 
 if __name__ == "__main__":
+    device = sys.argv[-5]
     flexPartName = sys.argv[-4]
     actSetName = sys.argv[-3]
     iStepForce = int(sys.argv[-2])
     iStepFSI = int(sys.argv[-1])
-    readReactionForce(flexPartName,actSetName,iStepForce,iStepFSI)
+    readReactionForce(device,flexPartName,actSetName,iStepForce,iStepFSI)

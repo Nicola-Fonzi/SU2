@@ -93,7 +93,7 @@ class Solver:
     if self.Config["RESTART_SOL"] == "YES":
       self.iStepForce = self.Config['RESTART_ITER'] - 1
       if self.Device == 'TE':
-        with open('RF1.txt', 'r') as f:
+        with open('RF_0.txt', 'r') as f:
           self.ActLoad0 = float(f.read())
       self.saveCaeFlag = False
     else:
@@ -107,6 +107,10 @@ class Solver:
       histFile.write(header)
       histFile.close()
       self.saveCaeFlag = True
+      if self.Device == 'TE':
+        self.reaction_field = 'RF'
+      elif self.Device == 'LE':
+        self.reaction_field = 'RM'
 
     print("\n")
     print(" Opening the model ".center(80, "-"))
@@ -228,7 +232,7 @@ class Solver:
 
     if time > self.lastTime:
       if self.Device == 'TE' and self.iStepForce == 0:
-        self.__runAbaqusScript('readReactionForce', self.FlexPart_name, self.ActSet_name, self.iStepForce, self.iStepFSI)
+        self.__runAbaqusScript('readReactionForce', self.Device, self.FlexPart_name, self.ActSet_name, self.iStepForce, self.iStepFSI)
         with open('RF_0.txt', 'r') as f:
           self.ActLoad0 = float(f.read())
       self.iStepForce += 1
@@ -294,8 +298,8 @@ class Solver:
     histFile = open('StructHistory.dat', "a")
     xDisp, yDisp, zDisp = self.getInterfaceNodeDisp(self.getFSIMarkerID(), self.monitorID)
     if self.iStepForce == 0 or self.Act_type == 'DISPLACEMENT':
-      self.__runAbaqusScript('readReactionForce', self.FlexPart_name, self.ActSet_name, self.iStepForce, self.iStepFSI)
-      fname = 'RF_{}.txt'.format(self.iStepForce)
+      self.__runAbaqusScript('readReactionForce', self.Device, self.FlexPart_name, self.ActSet_name, self.iStepForce, self.iStepFSI)
+      fname = '{}_{}.txt'.format(self.reaction_field,self.iStepForce)
     elif self.Act_type == 'FORCE':
       fname = 'AF_{}.txt'.format(self.iStepForce)
     with open(fname, 'r') as f:
