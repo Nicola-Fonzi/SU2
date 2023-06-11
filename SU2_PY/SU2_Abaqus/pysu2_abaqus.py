@@ -112,6 +112,20 @@ class Solver:
       elif self.Device == 'LE':
         self.reaction_field = 'RM'
 
+    su2_abq_path = os.path.join(os.environ["SU2_RUN"], 'SU2_Abaqus')
+    self.abq_cmd = None
+    for abq_cmd in ['abq','abq2022','abaqus']:
+      command = '{} cae noGUI={}/abaqus_modules.py'.format(abq_cmd,su2_abq_path)
+      try:
+        return_code = subprocess.call(command, shell=True)
+        if return_code == 0:
+          self.abq_cmd = abq_cmd
+          break
+      except:
+        pass
+    if self.abq_cmd is None:
+      raise Exception('Abaqus command not found')
+
     print("\n")
     print(" Opening the model ".center(80, "-"))
     self.__readAbaqusModel()
@@ -213,9 +227,9 @@ class Solver:
       n = len(args)
       su2_path = os.environ["SU2_RUN"]
       su2_abq_path = os.path.join(su2_path, 'SU2_Abaqus')
-      str = 'abq cae noGUI={}/{}.py --' + n*' {}'
-      command = str.format(su2_abq_path, pyfun, *args)
-      process = subprocess.call(command, shell=True)
+      str = '{} cae noGUI={}/{}.py --' + n*' {}'
+      command = str.format(self.abq_cmd, su2_abq_path, pyfun, *args)
+      return_code = subprocess.call(command, shell=True)
 
   def __computeInterfacePosVel(self):
     """
