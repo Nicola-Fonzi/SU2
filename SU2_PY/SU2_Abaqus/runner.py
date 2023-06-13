@@ -28,7 +28,7 @@
 from SU2_Abaqus.abaqus_modules import *
 
 
-def runJob(modelName,iStepForce,iStepFSI):
+def runJob(modelName,iStepForce,iStepFSI,nCpus):
     
     pathName = '{}.cae'.format(modelName)
     openMdb(pathName=pathName)
@@ -44,8 +44,8 @@ def runJob(modelName,iStepForce,iStepFSI):
         explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF,
         memory=90, memoryUnits=PERCENTAGE, model=modelName, modelPrint=OFF,
         multiprocessingMode=DEFAULT, name=jobName, nodalOutputPrecision=SINGLE,
-        numCpus=1, numGPUs=0, queue=None, resultsFormat=ODB, scratch='', type=
-        type, userSubroutine='', waitHours=0, waitMinutes=0)
+        numCpus=nCpus, numDomains=nCpus, numGPUs=0, queue=None, resultsFormat=ODB, scratch='',
+        type=type, userSubroutine='', waitHours=0, waitMinutes=0)
     myJob.writeInput(consistencyChecking=OFF)
     myJob.submit(consistencyChecking=OFF)
     myJob.waitForCompletion()
@@ -60,12 +60,9 @@ def runJob(modelName,iStepForce,iStepFSI):
     mdb.saveAs(pathName=pathName)
 
 
-
 if __name__ == "__main__":
-	if len(sys.argv) > 0:
-		modelName = sys.argv[-3]
-		iStepForce = int(sys.argv[-2])
-		iStepFSI = int(sys.argv[-1])
-	else:
-		raise Exception('iStepForce and iStepFSI must be provided')
-	runJob(modelName,iStepForce,iStepFSI)
+    modelName = sys.argv[-4]
+    iStepForce = int(sys.argv[-3])
+    iStepFSI = int(sys.argv[-2])
+    nCpus = int(sys.argv[-1])
+    runJob(modelName,iStepForce,iStepFSI,nCpus)

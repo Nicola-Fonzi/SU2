@@ -57,6 +57,7 @@ class Solver:
     print("\n")
     print(" Configuring the structural solver for FSI simulation ".center(80, "-"))
     self.__readConfig()
+    self.__applyDefaults()
 
     self.Inp_file = self.Config['INP_FILE']
     self.FSI_marker = self.Config['MOVING_MARKER']
@@ -68,6 +69,7 @@ class Solver:
     self.Device = self.Config['DEVICE']
 
     self.Marker_dim = self.Config['MARKER_DIM']
+    self.nCpus = self.Config['NCPUS']
 
     self.Span = self.Config['SPAN']
     self.ActLoad0 = 0.
@@ -154,6 +156,7 @@ class Solver:
 
         # integer values
         if (this_param == "MARKER_DIM") or \
+           (this_param == "NCPUS") or \
            (this_param == "RESTART_ITER"):
           self.Config[this_param] = int(this_value)
 
@@ -188,6 +191,12 @@ class Solver:
 
         else:
           raise Exception('{} is an invalid option !'.format(this_param))
+
+
+  def __applyDefaults(self):
+
+    if "NCPUS" not in self.Config:
+        self.Config["NCPUS"] = 1
 
 
   def __readAbaqusModel(self):
@@ -258,7 +267,7 @@ class Solver:
 
     self.__SetLoads(time)
 
-    self.__runAbaqusScript('runner', self.Model_name, self.iStepForce, self.iStepFSI)
+    self.__runAbaqusScript('runner', self.Model_name, self.iStepForce, self.iStepFSI, self.nCpus)
 
     self.lastTime = time
 
