@@ -66,7 +66,6 @@ class ImposedMotionClass:
       self.vinf = parameters["V_INF"]
       self.lref = parameters["L_REF"]
       self.tmax = 2 * math.pi / self.kmax * self.lref / self.vinf
-      self.omega0 = 1 / 2 * self.kmax
       self.r = parameters["R"]
 
     elif self.typeOfMotion == "COSINUSOIDAL":
