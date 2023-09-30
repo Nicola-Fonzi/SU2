@@ -3,7 +3,7 @@
 ## \file createStep.py
 #  \brief Creation of the run for Abaqus solver
 #  \authors Vittorio Cavalieri, Nicola Fonzi
-#  \version 7.3.1 "Blackbird"
+#  \version 8.0.0 "Harrier"
 #
 # SU2 Project Website: https://su2code.github.io
 #
