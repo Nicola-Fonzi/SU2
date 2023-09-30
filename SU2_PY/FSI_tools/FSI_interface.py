@@ -1508,17 +1508,17 @@ class Interface:
             if GlobalIndex in self.FluidHaloNodeList[myid].keys():
               DispX, DispY, DispZ = self.haloNodesDisplacements[GlobalIndex]
               if self.nDim == 2:
-                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex), np.array([DispX, DispY]))
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, iVertex, (DispX, DispY))
               else:
-                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex), np.array([DispX, DispY, DispZ]))
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, iVertex, (DispX, DispY, DispZ))
             else:
               DispX = self.localFluidInterface_array_DispX[localIndex]
               DispY = self.localFluidInterface_array_DispY[localIndex]
               DispZ = self.localFluidInterface_array_DispZ[localIndex]
               if self.nDim == 2:
-                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex),np.array([DispX, DispY]))
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, iVertex, (DispX, DispY))
               else:
-                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, int(iVertex),np.array([DispX, DispY, DispZ]))
+                FluidSolver.SetMarkerDisplacements(self.fluidInterfaceIdentifier, iVertex, (DispX, DispY, DispZ))
               localIndex += 1
 
 
