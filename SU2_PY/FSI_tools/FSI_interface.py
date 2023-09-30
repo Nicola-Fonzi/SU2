@@ -1476,11 +1476,14 @@ class Interface:
         for iVertex in range(self.nLocalFluidInterfaceNodes):
             GlobalIndex = FluidSolver.GetNodeGlobalIndex(FluidSolver.GetMarkerNode(self.fluidInterfaceIdentifier, iVertex))
             if GlobalIndex not in self.FluidHaloNodeList[myid].keys():
-              loadX, loadY, loadZ = FluidSolver.GetMarkerFlowLoad(self.fluidInterfaceIdentifier, iVertex)
+              load = FluidSolver.GetMarkerFlowLoad(self.fluidInterfaceIdentifier, iVertex)
               iGlobalVertex = self.__getGlobalIndex('fluid', myid, localIndex)
-              self.fluidLoads_array_X.setValues([iGlobalVertex], loadX)
-              self.fluidLoads_array_Y.setValues([iGlobalVertex], loadY)
-              self.fluidLoads_array_Z.setValues([iGlobalVertex], loadZ)
+              self.fluidLoads_array_X.setValues([iGlobalVertex], load[0])
+              self.fluidLoads_array_Y.setValues([iGlobalVertex], load[1])
+              if self.nDim == 2:
+                self.fluidLoads_array_Z.setValues([iGlobalVertex], 0.0)
+              else:
+                self.fluidLoads_array_Z.setValues([iGlobalVertex], load[2])
               localIndex += 1
 
         self.fluidLoads_array_X.assemblyBegin()
