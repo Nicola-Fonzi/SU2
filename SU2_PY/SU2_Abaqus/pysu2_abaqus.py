@@ -3,7 +3,7 @@
 ## \file pysu2_abaqus.py
 #  \brief Structural solver using Abaqus models
 #  \authors Vittorio Cavalieri, Nicola Fonzi
-#  \version 7.3.1 "Blackbird"
+#  \version 8.0.0 "Harrier"
 #
 # SU2 Project Website: https://su2code.github.io
 #
