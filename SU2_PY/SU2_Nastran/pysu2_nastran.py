@@ -294,7 +294,7 @@ class Solver:
       print("Number of markers: {}".format(self.nMarker))
       print("Number of reference systems: {}".format(self.nRefSys))
       print("Moving marker: {}".format(self.FSI_marker))
-      print("Number of points in the moving marker".format(len(self.markers[self.FSI_marker])))
+      print("Number of points in the moving marker: {}".format(len(self.markers[self.FSI_marker])))
 
   def __checkBlankField(self, string):
     """
